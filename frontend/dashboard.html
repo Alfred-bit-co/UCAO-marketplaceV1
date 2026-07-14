@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tableau de bord | UCAO UUT Marketplace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="js/config.js" defer></script>
+  <script src="js/dashboard.js" defer></script>
+</head>
+<body>
+  <nav class="navbar"><a class="brand" href="index.html"><span class="brand__mark"><i data-lucide="graduation-cap"></i></span><span><strong>UCAO</strong> Market</span></a><div class="nav-links"><a href="products.html">Produits</a><a href="stands.html">Stands</a><a class="is-active" href="dashboard.html">Tableau de bord</a></div></nav>
+  <main>
+    <section class="page-hero"><div class="container"><p class="eyebrow"><i data-lucide="layout-dashboard"></i> Tableau de bord</p><h1>Suivi de votre activité</h1><p>Gardez une vue claire sur vos produits, demandes et validations.</p></div></section>
+    <section class="container dashboard-grid">
+      <article class="panel card-body"><span class="tag"><i data-lucide="user-check"></i> Vendeur</span><h2 id="sellerName">Invité</h2><p id="sellerRole">Connectez-vous pour gérer votre activité.</p></article>
+      <article class="panel card-body"><span class="tag"><i data-lucide="package-check"></i> Produits</span><h2 id="productsCount">0</h2><p>Produits publiés</p></article>
+      <article class="panel card-body"><span class="tag"><i data-lucide="store"></i> Stands</span><h2 id="standsCount">0</h2><p id="standLimit">Limite selon votre abonnement.</p></article>
+    </section>
+    <section class="container dashboard-actions">
+      <form class="panel card-body" id="productForm">
+        <h2>Ajouter un produit</h2>
+        <input class="input" name="nom" placeholder="Nom du produit" required>
+        <select class="select" name="categorie" required>
+          <option value="nourriture">Nourriture</option>
+          <option value="vetements">Vêtements</option>
+          <option value="numerique">Numérique</option>
+          <option value="livres">Livres</option>
+          <option value="services">Services</option>
+        </select>
+        <input class="input" name="prix" type="number" min="0" placeholder="Prix en FCFA" required>
+        <input class="input" name="image_url" type="url" placeholder="URL image Cloudinary ou autre">
+        <textarea class="textarea" name="description" placeholder="Description complète" required></textarea>
+        <button class="btn btn--primary" type="submit"><i data-lucide="circle-plus"></i> Publier</button>
+        <button class="btn btn--ghost" id="aiButton" type="button"><i data-lucide="sparkles"></i> Générer avec IA VIP</button>
+      </form>
+      <form class="panel card-body" id="standForm">
+        <h2>Créer un stand</h2>
+        <input class="input" name="nom" placeholder="Nom du stand" required>
+        <input class="input" name="banniere_url" type="url" placeholder="URL bannière Cloudinary ou autre">
+        <textarea class="textarea" name="description" placeholder="Description du stand" required></textarea>
+        <button class="btn btn--primary" type="submit"><i data-lucide="store"></i> Créer le stand</button>
+        <p class="notice" id="dashboardMessage">Les vendeurs Premium ont 3 stands maximum, les VIP 5.</p>
+      </form>
+    </section>
+    <section class="container dashboard-actions">
+      <div class="panel card-body">
+        <h2>Mes produits</h2>
+        <div class="dashboard-list" id="myProducts"></div>
+      </div>
+      <div class="panel card-body">
+        <h2>Mes stands</h2>
+        <div class="dashboard-list" id="myStands"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

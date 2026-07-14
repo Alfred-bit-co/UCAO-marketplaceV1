@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produits | UCAO UUT Marketplace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="js/config.js" defer></script>
+  <script src="js/products.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a class="brand" href="index.html"><span class="brand__mark"><i data-lucide="graduation-cap"></i></span><span><strong>UCAO</strong> Market</span></a>
+      <button class="nav-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false"><i data-lucide="menu"></i></button>
+      <div class="nav-links"><a href="index.html">Accueil</a><a class="is-active" href="products.html">Produits</a><a href="stands.html">Stands</a><a href="dashboard.html">Tableau de bord</a><a href="login.html">Connexion</a></div>
+      <a class="btn btn--primary nav-cta" href="register.html"><i data-lucide="sparkles"></i> Créer un stand</a>
+    </nav>
+  </header>
+  <main>
+    <section class="page-hero"><div class="container"><p class="eyebrow"><i data-lucide="shopping-bag"></i> Produits</p><h1>Les offres du campus</h1><p>Recherchez, filtrez et contactez les vendeurs UCAO UUT.</p></div></section>
+    <section class="container">
+      <div class="toolbar">
+        <input class="input" id="searchInput" type="search" placeholder="Rechercher un produit, un vendeur ou une catégorie">
+        <select class="select" id="categoryFilter" aria-label="Catégorie">
+          <option value="tous">Tous</option>
+          <option value="nourriture">Nourriture</option>
+          <option value="vetements">Vêtements</option>
+          <option value="numerique">Numérique</option>
+          <option value="livres">Livres</option>
+          <option value="services">Services</option>
+        </select>
+      </div>
+      <div class="product-grid" id="productsGrid"></div>
+      <div class="pagination"><button class="btn btn--ghost" id="prevPage" type="button"><i data-lucide="chevron-left"></i> Précédent</button><span id="pageInfo">Page 1</span><button class="btn btn--ghost" id="nextPage" type="button">Suivant <i data-lucide="chevron-right"></i></button></div>
+    </section>
+  </main>
+  <footer class="site-footer"><p class="copyright">© 2026 UCAO UUT Marketplace. Tous droits réservés.</p></footer>
+</body>
+</html>
