@@ -16,3 +16,6 @@ venv/
 .next/
 dist/
 build/
+
+# Local databases
+*.db

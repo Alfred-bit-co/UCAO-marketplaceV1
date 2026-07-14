@@ -1,5 +1,3 @@
-from .product import Product
-from .stand import Stand
-from .user import User
+"""Data models are owned by Supabase in the rebuilt architecture."""
 
-__all__ = ["Product", "Stand", "User"]
+__all__ = []

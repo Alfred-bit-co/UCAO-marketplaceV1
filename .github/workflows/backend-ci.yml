@@ -31,4 +31,10 @@ jobs:
         run: pip install flake8 && flake8 . --max-line-length=120
 
       - name: Lancer les tests
-        run: pip install pytest && pytest || echo "Aucun test pour le moment"
+        run: |
+          pip install pytest
+          if find . -path "*/tests/*.py" -o -name "test_*.py" | grep -q .; then
+            pytest
+          else
+            echo "Aucun test pour le moment"
+          fi

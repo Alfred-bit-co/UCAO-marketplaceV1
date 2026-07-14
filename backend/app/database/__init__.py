@@ -1,3 +1,3 @@
-from .db import bcrypt, db, init_extensions
+"""Database access is handled through Supabase clients, not Flask ORM."""
 
-__all__ = ["bcrypt", "db", "init_extensions"]
+__all__ = []

@@ -1,13 +1,15 @@
+import os
+
 import requests
-from flask import current_app
 
 
 def generate_product_description(product_name, category):
-    api_key = current_app.config.get("DEEPSEEK_API_KEY", "")
+    api_key = os.getenv("DEEPSEEK_API_KEY", "")
     if not api_key or api_key.startswith("YOUR_"):
         return (
-            f"{product_name} is a {category} offer on UCAO Marketplace. "
-            "It helps students quickly understand the product value, pricing, and benefits."
+            f"{product_name} est une offre {category} sur UCAO Marketplace. "
+            "Elle aide les étudiants à comprendre rapidement la valeur, "
+            "le prix et les bénéfices du produit."
         )
 
     response = requests.post(
@@ -17,7 +19,13 @@ def generate_product_description(product_name, category):
             "model": "deepseek-chat",
             "messages": [
                 {"role": "system", "content": "Write short, clear, professional product descriptions in French."},
-                {"role": "user", "content": f"Product: {product_name}. Category: {category}. UCAO UUT student marketplace description."},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Product: {product_name}. Category: {category}. "
+                        "UCAO UUT student marketplace description."
+                    ),
+                },
             ],
             "temperature": 0.7,
         },

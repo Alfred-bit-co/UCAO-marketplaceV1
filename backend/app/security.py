@@ -1,4 +1,6 @@
 from collections import defaultdict, deque
+import hmac
+import hashlib
 from dataclasses import dataclass
 from threading import Lock
 from time import monotonic
@@ -40,3 +42,10 @@ def clean_text(value, max_length):
 
 def clean_email(value):
     return clean_text(value, 180).lower()
+
+
+def verify_webhook_signature(payload, signature, secret):
+    if not signature or not secret:
+        return False
+    expected = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
