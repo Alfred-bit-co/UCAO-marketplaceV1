@@ -3,21 +3,27 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-ucao-green: #007a63;
-  --color-ucao-green-dark: #075746;
-  --color-ucao-gold: #f5a623;
-  --color-ucao-gold-soft: #fff3d7;
-  --color-ucao-ink: #10243f;
+  --color-ucao-navy: #0b2545;
+  --color-ucao-navy-soft: #e8eef6;
+  --color-ucao-red: #c1272d;
+  --color-ucao-red-soft: #fde9ea;
+  --color-ucao-success: #2e7d5b;
+  --color-ucao-success-soft: #e8f4ef;
+  --color-ucao-green: #2e7d5b;
+  --color-ucao-green-dark: #1f5f45;
+  --color-ucao-gold: #c1272d;
+  --color-ucao-gold-soft: #fde9ea;
+  --color-ucao-ink: #0b2545;
   --color-ucao-muted: #637083;
   --color-ucao-line: #e7edf3;
   --color-ucao-surface: #ffffff;
   --color-ucao-soft: #f6f9fb;
-  --color-ucao-danger: #d64045;
-  --color-ucao-footer: #071827;
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-ucao-danger: #c1272d;
+  --color-ucao-footer: #06172b;
+  --font-sans: var(--font-poppins), Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --radius-ucao: 8px;
-  --shadow-ucao: 0 24px 60px rgba(16, 36, 63, 0.14);
-  --shadow-card: 0 14px 32px rgba(16, 36, 63, 0.08);
+  --shadow-ucao: 0 24px 60px rgba(11, 37, 69, 0.14);
+  --shadow-card: 0 14px 32px rgba(11, 37, 69, 0.08);
 }
 
 @layer base {
@@ -29,9 +35,13 @@
     @apply bg-ucao-surface text-ucao-ink font-sans leading-relaxed antialiased;
   }
 
+  .lucide {
+    stroke-width: 2.2;
+  }
+
   .dark body,
   body.dark {
-    @apply bg-[#0a1628] text-[#e8edf4];
+    @apply bg-[#071426] text-[#e8edf4];
   }
 }
 
@@ -41,51 +51,51 @@
   }
 
   .btn {
-    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-full border-0 px-5 font-extrabold transition-all duration-200 hover:-translate-y-0.5;
+    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-ucao border-0 px-5 font-extrabold transition-all duration-200 hover:-translate-y-0.5;
   }
 
   .btn-primary {
-    @apply bg-ucao-gold text-white shadow-[0_14px_28px_rgba(245,166,35,0.28)] hover:bg-[#e99516];
+    @apply bg-ucao-red text-white shadow-[0_14px_28px_rgba(193,39,45,0.28)] hover:bg-[#a91f24];
   }
 
   .btn-light {
-    @apply bg-white text-ucao-green-dark shadow-[0_14px_28px_rgba(16,36,63,0.12)] dark:bg-[#1a2a42] dark:text-[#7dd3c0];
+    @apply bg-white text-ucao-navy shadow-[0_14px_28px_rgba(11,37,69,0.12)] dark:bg-[#142b4a] dark:text-white;
   }
 
   .btn-ghost {
-    @apply bg-ucao-gold-soft text-ucao-green dark:bg-[#2a2418] dark:text-ucao-gold;
+    @apply bg-ucao-navy-soft text-ucao-navy dark:bg-[#142b4a] dark:text-[#dbe7f5];
   }
 
   .eyebrow {
-    @apply mb-2.5 inline-flex items-center gap-2 text-[13px] font-black uppercase text-ucao-gold;
+    @apply mb-2.5 inline-flex items-center gap-2 text-[13px] font-black uppercase text-ucao-red;
   }
 
   .panel {
-    @apply overflow-hidden rounded-ucao border border-ucao-line bg-white shadow-card dark:border-[#2a3a52] dark:bg-[#132238];
+    @apply overflow-hidden rounded-ucao border border-ucao-line bg-white shadow-card dark:border-[#263d5c] dark:bg-[#10233b];
   }
 
   .input-field {
-    @apply min-h-[46px] w-full rounded-ucao border border-ucao-line bg-white px-3.5 text-ucao-ink dark:border-[#2a3a52] dark:bg-[#0f1d32] dark:text-[#e8edf4];
+    @apply min-h-[46px] w-full rounded-ucao border border-ucao-line bg-white px-3.5 text-ucao-ink dark:border-[#263d5c] dark:bg-[#0b1c31] dark:text-[#e8edf4];
   }
 
   .textarea-field {
-    @apply min-h-[120px] w-full resize-y rounded-ucao border border-ucao-line bg-white px-3.5 py-3 text-ucao-ink dark:border-[#2a3a52] dark:bg-[#0f1d32] dark:text-[#e8edf4];
+    @apply min-h-[120px] w-full resize-y rounded-ucao border border-ucao-line bg-white px-3.5 py-3 text-ucao-ink dark:border-[#263d5c] dark:bg-[#0b1c31] dark:text-[#e8edf4];
   }
 
   .select-field {
-    @apply min-h-[46px] w-full rounded-ucao border border-ucao-line bg-white px-3.5 text-ucao-ink dark:border-[#2a3a52] dark:bg-[#0f1d32] dark:text-[#e8edf4];
+    @apply min-h-[46px] w-full rounded-ucao border border-ucao-line bg-white px-3.5 text-ucao-ink dark:border-[#263d5c] dark:bg-[#0b1c31] dark:text-[#e8edf4];
   }
 
   .tag {
-    @apply inline-flex min-h-7 items-center gap-1.5 rounded-full bg-ucao-gold-soft px-2.5 text-xs font-black text-[#9a6406] dark:bg-[#2a2418] dark:text-ucao-gold;
+    @apply inline-flex min-h-7 items-center gap-1.5 rounded-ucao bg-ucao-red-soft px-2.5 text-xs font-black text-ucao-red dark:bg-[#3a171d] dark:text-[#ff9aa0];
   }
 
   .price {
-    @apply my-2 text-2xl font-black text-ucao-green dark:text-[#4dd4b8];
+    @apply my-2 text-2xl font-black text-ucao-success dark:text-[#6fd0aa];
   }
 
   .notice {
-    @apply my-3 rounded-ucao bg-ucao-gold-soft px-3.5 py-3 font-bold text-[#7a5107] dark:bg-[#2a2418] dark:text-ucao-gold;
+    @apply my-3 rounded-ucao bg-ucao-success-soft px-3.5 py-3 font-bold text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
   }
 
   .notice-error {
@@ -93,14 +103,14 @@
   }
 
   .role-badge {
-    @apply inline-flex min-h-[30px] items-center gap-1.5 rounded-full bg-[#edf3f7] px-2.5 text-xs font-black text-[#415064] dark:bg-[#1e3048] dark:text-[#a8b8cc];
+    @apply inline-flex min-h-[30px] items-center gap-1.5 rounded-ucao bg-ucao-success-soft px-2.5 text-xs font-black text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
   }
 
   .role-badge-premium {
-    @apply bg-[#e8f7ff] text-[#08759d] dark:bg-[#0a2a3a] dark:text-[#5ec8f0];
+    @apply bg-ucao-success-soft text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
   }
 
   .role-badge-vip {
-    @apply bg-ucao-gold-soft text-[#9a6406] dark:bg-[#2a2418] dark:text-ucao-gold;
+    @apply bg-ucao-red-soft text-ucao-red dark:bg-[#3a171d] dark:text-[#ff9aa0];
   }
 }

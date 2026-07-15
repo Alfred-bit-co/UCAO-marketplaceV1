@@ -1,7 +1,12 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { DEMO_PRODUCTS } from "./constants";
-import type { PaginatedResult, Product, ProductCategory, UserRole } from "./types";
+import type { PaginatedResult, Product, ProductCategory, ProductImage, UserRole } from "./types";
 import { ROLE_PRIORITY } from "./types";
+
+type ProductImageRow = {
+  url: string;
+  position: number;
+};
 
 type ProductRow = {
   id: string;
@@ -9,7 +14,7 @@ type ProductRow = {
   description: string;
   price: number;
   category: ProductCategory;
-  image_url: string | null;
+  product_images?: ProductImageRow[] | null;
   user_id: string;
   stand_id: string | null;
   created_at: string;
@@ -20,14 +25,21 @@ type ProductRow = {
   };
 };
 
+function sortImages(images?: ProductImageRow[] | null): ProductImage[] {
+  return [...(images ?? [])].sort((a, b) => a.position - b.position);
+}
+
 function mapProduct(row: ProductRow): Product {
+  const images = sortImages(row.product_images);
+
   return {
     id: row.id,
     name: row.name,
     description: row.description,
     price: row.price,
     category: row.category,
-    image_url: row.image_url,
+    images,
+    image_url: images[0]?.url ?? null,
     user_id: row.user_id,
     stand_id: row.stand_id,
     created_at: row.created_at,
@@ -88,10 +100,9 @@ export async function getProducts(options?: {
     return filterDemoProducts(page, perPage, options?.search, options?.category);
   }
 
-  // TODO: Uncomment and test once Supabase tables + RLS are created (see SETUP.md).
   let query = supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone)", { count: "exact" });
+    .select("*, profiles(full_name, role, phone), product_images(url, position)", { count: "exact" });
 
   if (options?.category && options.category !== "tous") {
     query = query.eq("category", options.category);
@@ -109,6 +120,7 @@ export async function getProducts(options?: {
     .range(from, to);
 
   if (error || !data) {
+    console.error("SUPABASE ERROR (getProducts):", error);
     return filterDemoProducts(page, perPage, options?.search, options?.category);
   }
 
@@ -133,11 +145,12 @@ export async function getProductById(id: string): Promise<Product | null> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone)")
+    .select("*, profiles(full_name, role, phone), product_images(url, position)")
     .eq("id", id)
     .single();
 
   if (error || !data) {
+    console.error("SUPABASE ERROR (getProductById):", error);
     return DEMO_PRODUCTS.find((p) => String(p.id) === id) ?? null;
   }
 
@@ -157,11 +170,14 @@ export async function getMyProducts(userId: string): Promise<Product[]> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone)")
+    .select("*, profiles(full_name, role, phone), product_images(url, position)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error || !data) return [];
+  if (error || !data) {
+    console.error("SUPABASE ERROR (getMyProducts):", error);
+    return [];
+  }
   return (data as ProductRow[]).map(mapProduct);
 }
 
@@ -172,7 +188,7 @@ export async function createProduct(
     category: ProductCategory;
     price: number;
     description: string;
-    image_url?: string;
+    image_urls?: string[];
     stand_id?: string;
   },
 ): Promise<Product | null> {
@@ -181,13 +197,36 @@ export async function createProduct(
   const supabase = createClient();
   if (!supabase) return null;
 
+  const { image_urls, ...productPayload } = payload;
   const { data, error } = await supabase
     .from("products")
-    .insert({ ...payload, user_id: userId })
-    .select("*, profiles(full_name, role, phone)")
+    .insert({ ...productPayload, user_id: userId })
+    .select("*, profiles(full_name, role, phone), product_images(url, position)")
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error("SUPABASE ERROR (createProduct):", error);
+    return null;
+  }
+
+  const imageRows = (image_urls ?? [])
+    .map((url) => url.trim())
+    .filter(Boolean)
+    .map((url, position) => ({
+      product_id: data.id,
+      url,
+      position,
+    }));
+
+  if (imageRows.length) {
+    const { error: imageError } = await supabase.from("product_images").insert(imageRows);
+    if (imageError) {
+      console.error("SUPABASE ERROR (createProduct -> product_images):", imageError);
+      return mapProduct(data as ProductRow);
+    }
+    return getProductById(data.id);
+  }
+
   return mapProduct(data as ProductRow);
 }
 
@@ -202,6 +241,10 @@ export async function deleteProduct(userId: string, productId: string): Promise<
     .delete()
     .eq("id", productId)
     .eq("user_id", userId);
+
+  if (error) {
+    console.error("SUPABASE ERROR (deleteProduct):", error);
+  }
 
   return !error;
 }

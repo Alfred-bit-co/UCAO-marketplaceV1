@@ -1,6 +1,6 @@
 # UCAO Marketplace
 
-Marketplace etudiante UCAO UUT en HTML/CSS/JavaScript vanilla avec backend Flask.
+Marketplace etudiante UCAO UUT en Next.js + Tailwind CSS avec backend Flask.
 
 ## Fonctionnalites
 

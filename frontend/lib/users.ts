@@ -1,6 +1,11 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
-import type { Profile } from "./types";
+import type { Profile, ProfileAccessRole } from "./types";
 import { getStandLimit } from "./utils";
+
+export async function getCurrentUserRole(): Promise<ProfileAccessRole | null> {
+  const profile = await getCurrentProfile();
+  return profile?.role ?? null;
+}
 
 export async function getCurrentProfile(): Promise<Profile | null> {
   if (!isSupabaseConfigured()) return null;

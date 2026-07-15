@@ -12,7 +12,7 @@ export function PageHero({
   children: React.ReactNode;
 }) {
   return (
-    <section className="bg-[linear-gradient(90deg,rgba(7,87,70,.92),rgba(16,36,63,.86)),url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=85')] bg-cover bg-center py-[88px] text-white">
+    <section className="bg-[linear-gradient(100deg,rgba(11,37,69,.94),rgba(11,37,69,.82)_58%,rgba(46,125,91,.72)),url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=85')] bg-cover bg-center py-[88px] text-white">
       <div className="container-ucao">
         <p className="eyebrow">
           <Icon size={16} /> {eyebrow}

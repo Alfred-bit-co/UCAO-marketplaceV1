@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Camera,
-  GraduationCap,
   Globe2,
   Mail,
   MapPin,
@@ -12,21 +12,22 @@ import {
   Moon,
   Network,
   Phone,
-  Sparkles,
+  CirclePlus,
   Store,
   Sun,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "./theme-provider";
 import { cn } from "@/lib/utils";
+import { getCurrentUserRole } from "@/lib/users";
+import type { ProfileAccessRole } from "@/lib/types";
+import { createClient } from "@/lib/supabase";
 
 const navItems = [
   { href: "/", label: "Accueil" },
   { href: "/products", label: "Produits" },
   { href: "/stands", label: "Stands" },
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/admin", label: "Administration" },
   { href: "/login", label: "Connexion" },
 ];
 
@@ -39,11 +40,11 @@ export function Brand({ footer = false }: { footer?: boolean }) {
         footer && "text-white",
       )}
     >
-      <span className="grid size-[42px] place-items-center rounded-full bg-ucao-gold-soft text-ucao-green">
-        <GraduationCap size={25} strokeWidth={2.6} aria-hidden />
+      <span className="grid size-10 place-items-center overflow-hidden rounded-ucao bg-white shadow-[0_8px_18px_rgba(11,37,69,0.12)]">
+        <Image src="/logo-ucao.png" alt="Logo UCAO-UUT" width={40} height={40} className="h-10 w-10 object-contain" />
       </span>
       <span>
-        <strong className="text-ucao-green">UCAO</strong> Market
+        <strong className="text-ucao-red">UCAO</strong> Market
       </span>
     </Link>
   );
@@ -51,7 +52,7 @@ export function Brand({ footer = false }: { footer?: boolean }) {
 
 export function Topbar() {
   return (
-    <div className="hidden min-h-[38px] items-center justify-between gap-4 bg-[linear-gradient(90deg,#f5a623,#ffc34f_27%,#007a63_27%)] px-[max(16px,calc((100vw-1160px)/2))] py-1.5 text-[13px] text-white lg:flex">
+    <div className="hidden min-h-[38px] items-center justify-between gap-4 bg-[linear-gradient(90deg,#0B2545,#0B2545_72%,#C1272D_72%)] px-[max(16px,calc((100vw-1160px)/2))] py-1.5 text-[13px] text-white lg:flex">
       <div className="flex items-center gap-2.5" aria-label="Réseaux UCAO UUT">
         <span>Suivez UCAO UUT</span>
         <a className="grid size-6 place-items-center rounded-full bg-white/20" href="#" aria-label="Site UCAO UUT">
@@ -82,13 +83,48 @@ export function Topbar() {
 export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [role, setRole] = useState<ProfileAccessRole | null>(null);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshRole = () => getCurrentUserRole().then((currentRole) => {
+      if (active) setRole(currentRole);
+    });
+
+    refreshRole();
+
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase?.auth.onAuthStateChange(() => {
+      refreshRole();
+    }) ?? { data: { subscription: null } };
+
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  const visibleNavItems = useMemo(() => {
+    const roleName = role?.toUpperCase();
+    const canAccessDashboard = roleName === "VENDEUR" || roleName === "ADMIN";
+    const canAccessAdmin = roleName === "ADMIN";
+
+    return [
+      ...navItems,
+      ...(canAccessDashboard ? [{ href: "/dashboard", label: "Tableau de bord" }] : []),
+      ...(canAccessAdmin ? [{ href: "/admin", label: "Administration" }] : []),
+    ];
+  }, [role]);
 
   return (
     <header className="relative z-20">
       {showTopbar && <Topbar />}
       <nav
-        className="sticky top-0 flex min-h-[70px] items-center justify-between gap-6 bg-white px-[max(16px,calc((100vw-1160px)/2))] shadow-[0_8px_24px_rgba(16,36,63,0.08)] dark:bg-[#0f1d32] lg:min-h-[78px]"
+        className="sticky top-0 flex min-h-[70px] items-center justify-between gap-6 bg-white px-[max(16px,calc((100vw-1160px)/2))] shadow-[0_8px_24px_rgba(11,37,69,0.08)] dark:bg-[#0b1c31] lg:min-h-[78px]"
         aria-label="Navigation principale"
       >
         <Brand />
@@ -103,18 +139,18 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
         </button>
         <div
           className={cn(
-            "absolute left-0 right-0 top-[70px] hidden flex-col items-start gap-5 bg-white px-4 py-5 text-sm font-bold shadow-ucao dark:bg-[#0f1d32] lg:static lg:flex lg:flex-row lg:items-center lg:bg-transparent lg:p-0 lg:shadow-none lg:dark:bg-transparent",
+            "absolute left-0 right-0 top-[70px] hidden flex-col items-start gap-5 bg-white px-4 py-5 text-sm font-bold shadow-ucao dark:bg-[#0b1c31] lg:static lg:flex lg:flex-row lg:items-center lg:bg-transparent lg:p-0 lg:shadow-none lg:dark:bg-transparent",
             open && "flex",
           )}
         >
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "text-[#263a55] hover:text-ucao-green dark:text-[#cdd7e5] dark:hover:text-ucao-gold",
+                "text-[#263a55] hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:text-[#ff8a90]",
                 (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) &&
-                  "text-ucao-green dark:text-ucao-gold",
+                  "text-ucao-red dark:text-[#ff8a90]",
               )}
             >
               {item.label}
@@ -131,7 +167,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
           </button>
         </div>
         <Link className="btn btn-primary hidden lg:inline-flex" href="/register">
-          <Sparkles size={18} /> Créer un stand
+          <CirclePlus size={18} /> Créer un stand
         </Link>
       </nav>
     </header>
