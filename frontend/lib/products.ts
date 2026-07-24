@@ -1,7 +1,7 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { DEMO_PRODUCTS } from "./constants";
-import type { PaginatedResult, Product, ProductCategory, ProductImage, UserRole } from "./types";
-import { ROLE_PRIORITY } from "./types";
+import type { PaginatedResult, Product, ProductCategory, ProductImage, SubscriptionTier } from "./types";
+import { TIER_PRIORITY } from "./types";
 
 type ProductImageRow = {
   url: string;
@@ -20,8 +20,9 @@ type ProductRow = {
   created_at: string;
   profiles?: {
     full_name: string;
-    role: UserRole;
+    role: "ACHETEUR" | "VENDEUR" | "ADMIN";
     phone: string | null;
+    subscription_tier: SubscriptionTier | null;
   };
 };
 
@@ -31,6 +32,7 @@ function sortImages(images?: ProductImageRow[] | null): ProductImage[] {
 
 function mapProduct(row: ProductRow): Product {
   const images = sortImages(row.product_images);
+  const tier = row.profiles?.subscription_tier ?? null;
 
   return {
     id: row.id,
@@ -48,9 +50,10 @@ function mapProduct(row: ProductRow): Product {
           name: row.profiles.full_name,
           role: row.profiles.role,
           phone: row.profiles.phone ?? undefined,
+          subscription_tier: tier,
         }
       : null,
-    seller_role: row.profiles?.role ?? "SIMPLE",
+    seller_tier: tier,
   };
 }
 
@@ -68,7 +71,7 @@ function filterDemoProducts(
     return matchesSearch && matchesCategory;
   }).sort(
     (a, b) =>
-      ROLE_PRIORITY[a.seller_role ?? "SIMPLE"] - ROLE_PRIORITY[b.seller_role ?? "SIMPLE"],
+      TIER_PRIORITY[a.seller_tier ?? "STANDARD"] - TIER_PRIORITY[b.seller_tier ?? "STANDARD"],
   );
 
   const start = (page - 1) * perPage;
@@ -102,7 +105,10 @@ export async function getProducts(options?: {
 
   let query = supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone), product_images(url, position)", { count: "exact" });
+    .select(
+      "*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)",
+      { count: "exact" },
+    );
 
   if (options?.category && options.category !== "tous") {
     query = query.eq("category", options.category);
@@ -125,8 +131,12 @@ export async function getProducts(options?: {
   }
 
   const total = count ?? data.length;
+  const items = (data as ProductRow[])
+    .map(mapProduct)
+    .sort((a, b) => TIER_PRIORITY[a.seller_tier ?? "STANDARD"] - TIER_PRIORITY[b.seller_tier ?? "STANDARD"]);
+
   return {
-    items: (data as ProductRow[]).map(mapProduct),
+    items,
     page,
     pages: Math.max(Math.ceil(total / perPage), 1),
     total,
@@ -145,7 +155,7 @@ export async function getProductById(id: string): Promise<Product | null> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone), product_images(url, position)")
+    .select("*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)")
     .eq("id", id)
     .single();
 
@@ -170,7 +180,7 @@ export async function getMyProducts(userId: string): Promise<Product[]> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone), product_images(url, position)")
+    .select("*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -191,22 +201,23 @@ export async function createProduct(
     image_urls?: string[];
     stand_id?: string;
   },
-): Promise<Product | null> {
-  if (!isSupabaseConfigured()) return null;
+): Promise<{ product: Product | null; error: string | null }> {
+  if (!isSupabaseConfigured()) return { product: null, error: "Supabase non configuré." };
 
   const supabase = createClient();
-  if (!supabase) return null;
+  if (!supabase) return { product: null, error: "Supabase non configuré." };
 
   const { image_urls, ...productPayload } = payload;
   const { data, error } = await supabase
     .from("products")
     .insert({ ...productPayload, user_id: userId })
-    .select("*, profiles(full_name, role, phone), product_images(url, position)")
+    .select("*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)")
     .single();
 
   if (error || !data) {
     console.error("SUPABASE ERROR (createProduct):", error);
-    return null;
+    // Le message d'erreur Postgres (ex: limite de palier atteinte) est renvoyé tel quel pour affichage.
+    return { product: null, error: error?.message ?? "Erreur inconnue." };
   }
 
   const imageRows = (image_urls ?? [])
@@ -222,12 +233,12 @@ export async function createProduct(
     const { error: imageError } = await supabase.from("product_images").insert(imageRows);
     if (imageError) {
       console.error("SUPABASE ERROR (createProduct -> product_images):", imageError);
-      return mapProduct(data as ProductRow);
+      return { product: mapProduct(data as ProductRow), error: null };
     }
-    return getProductById(data.id);
+    return { product: await getProductById(data.id), error: null };
   }
 
-  return mapProduct(data as ProductRow);
+  return { product: mapProduct(data as ProductRow), error: null };
 }
 
 export async function deleteProduct(userId: string, productId: string): Promise<boolean> {
@@ -242,9 +253,7 @@ export async function deleteProduct(userId: string, productId: string): Promise<
     .eq("id", productId)
     .eq("user_id", userId);
 
-  if (error) {
-    console.error("SUPABASE ERROR (deleteProduct):", error);
-  }
+  if (error) console.error("SUPABASE ERROR (deleteProduct):", error);
 
   return !error;
 }

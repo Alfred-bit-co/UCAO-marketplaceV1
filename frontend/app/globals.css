@@ -3,27 +3,27 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-ucao-navy: #0b2545;
-  --color-ucao-navy-soft: #e8eef6;
-  --color-ucao-red: #c1272d;
-  --color-ucao-red-soft: #fde9ea;
+  --color-ucao-navy: #1e2a6e;
+  --color-ucao-navy-soft: #e8ebf8;
+  --color-ucao-red: #7a1e2d;
+  --color-ucao-red-soft: #f6e8eb;
   --color-ucao-success: #2e7d5b;
   --color-ucao-success-soft: #e8f4ef;
   --color-ucao-green: #2e7d5b;
   --color-ucao-green-dark: #1f5f45;
-  --color-ucao-gold: #c1272d;
-  --color-ucao-gold-soft: #fde9ea;
-  --color-ucao-ink: #0b2545;
+  --color-ucao-gold: #7a1e2d;
+  --color-ucao-gold-soft: #f6e8eb;
+  --color-ucao-ink: #1e2a6e;
   --color-ucao-muted: #637083;
   --color-ucao-line: #e7edf3;
   --color-ucao-surface: #ffffff;
-  --color-ucao-soft: #f6f9fb;
-  --color-ucao-danger: #c1272d;
-  --color-ucao-footer: #06172b;
+  --color-ucao-soft: #f4f6fb;
+  --color-ucao-danger: #7a1e2d;
+  --color-ucao-footer: #11184a;
   --font-sans: var(--font-poppins), Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --radius-ucao: 8px;
-  --shadow-ucao: 0 24px 60px rgba(11, 37, 69, 0.14);
-  --shadow-card: 0 14px 32px rgba(11, 37, 69, 0.08);
+  --shadow-ucao: 0 24px 60px rgba(30, 42, 110, 0.14);
+  --shadow-card: 0 14px 32px rgba(30, 42, 110, 0.08);
 }
 
 @layer base {
@@ -55,11 +55,11 @@
   }
 
   .btn-primary {
-    @apply bg-ucao-red text-white shadow-[0_14px_28px_rgba(193,39,45,0.28)] hover:bg-[#a91f24];
+    @apply bg-ucao-red text-white shadow-[0_14px_28px_rgba(122,30,45,0.28)] hover:bg-[#651724];
   }
 
   .btn-light {
-    @apply bg-white text-ucao-navy shadow-[0_14px_28px_rgba(11,37,69,0.12)] dark:bg-[#142b4a] dark:text-white;
+    @apply bg-white text-ucao-navy shadow-[0_14px_28px_rgba(30,42,110,0.12)] dark:bg-[#142b4a] dark:text-white;
   }
 
   .btn-ghost {

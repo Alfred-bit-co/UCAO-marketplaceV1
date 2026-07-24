@@ -10,9 +10,9 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "UCAO UUT Marketplace",
+  title: "UCAO Marketplace",
   description:
-    "Marketplace officielle UCAO UUT pour stands, produits, services et projets universitaires.",
+    "Marketplace étudiante indépendante pour stands, produits, services et projets de la communauté UCAO-UUT.",
 };
 
 export default function RootLayout({

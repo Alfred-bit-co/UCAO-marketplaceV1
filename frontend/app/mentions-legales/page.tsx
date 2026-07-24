@@ -2,8 +2,8 @@ import { PageShell } from "@/components/page-shell";
 
 const sections = [
   {
-    title: "Editeur du site",
-    items: ["Nom de l'editeur : [À COMPLÉTER]", "Adresse : [À COMPLÉTER]", "Responsable de publication : [À COMPLÉTER]"],
+    title: "Éditeur du site",
+    items: ["Nom de l'éditeur : AYITOU Alfred", "Adresse : Togo — Lomé", "Responsable de publication : Alfred AYITOU"],
   },
   {
     title: "Hebergement",
@@ -15,11 +15,15 @@ const sections = [
   },
   {
     title: "Contact",
-    items: ["Email de contact : [À COMPLÉTER]", "Telephone : [À COMPLÉTER]"],
+    items: ["Email de contact : ucaomarketplace@gmail.com", "Téléphone : +228 92 98 29 26"],
+  },
+  {
+    title: "Responsable technique",
+    items: ["Email : alfredayitou@gmail.com", "Téléphone : +228 72 23 90 76"],
   },
   {
     title: "Droit applicable",
-    items: ["Droit applicable : [À COMPLÉTER]", "Juridiction competente : [À COMPLÉTER]"],
+    items: ["Droit applicable : Droit togolais", "Juridiction compétente : Tribunaux de Lomé, République togolaise"],
   },
 ];
 
@@ -28,10 +32,10 @@ export default function MentionsLegalesPage() {
     <PageShell>
       <main className="bg-ucao-soft py-16 dark:bg-[#071426]">
         <section className="container-ucao">
-          <p className="eyebrow">Informations legales</p>
-          <h1 className="mb-5 text-[clamp(32px,5vw,52px)] font-bold leading-tight">Mentions legales</h1>
+          <p className="eyebrow">Informations légales</p>
+          <h1 className="mb-5 text-[clamp(32px,5vw,52px)] font-bold leading-tight">Mentions légales</h1>
           <p className="mb-10 max-w-3xl text-ucao-muted dark:text-[#a8b8cc]">
-            Cette page sert de squelette. Les champs marques [À COMPLÉTER] doivent etre remplaces par les informations officielles.
+            Informations relatives à l&apos;éditeur, aux contacts de la plateforme et au cadre juridique applicable.
           </p>
           <div className="grid gap-5 md:grid-cols-2">
             {sections.map((section) => (

@@ -1,6 +1,6 @@
 import { DEMO_STANDS } from "./constants";
 import { createClient, isSupabaseConfigured } from "./supabase";
-import type { PaginatedResult, Stand, UserRole } from "./types";
+import type { PaginatedResult, Stand, SubscriptionTier, UserRole } from "./types";
 
 type StandRow = {
   id: string;
@@ -13,11 +13,14 @@ type StandRow = {
   profiles?: {
     full_name: string;
     role: UserRole;
+    phone: string | null;
+    subscription_tier: SubscriptionTier | null;
   };
   products?: [];
 };
 
 function mapStand(row: StandRow): Stand {
+  const tier = row.profiles?.subscription_tier ?? null;
   return {
     id: row.id,
     name: row.name,
@@ -26,17 +29,24 @@ function mapStand(row: StandRow): Stand {
     user_id: row.user_id,
     status: row.status,
     created_at: row.created_at,
-    seller: row.profiles ? { name: row.profiles.full_name, role: row.profiles.role } : null,
-    seller_role: row.profiles?.role ?? "SIMPLE",
+    seller: row.profiles
+      ? {
+          name: row.profiles.full_name,
+          role: row.profiles.role,
+          phone: row.profiles.phone ?? undefined,
+          subscription_tier: tier,
+        }
+      : null,
+    seller_tier: tier,
     products: [],
   };
 }
 
-export async function getStands(page = 1, perPage = 1): Promise<PaginatedResult<Stand>> {
+export async function getStands(page = 1, perPage = 10): Promise<PaginatedResult<Stand>> {
   if (!isSupabaseConfigured()) {
     const start = (page - 1) * perPage;
     const items = DEMO_STANDS.slice(start, start + perPage);
-    return { items, page, pages: DEMO_STANDS.length, total: DEMO_STANDS.length };
+    return { items, page, pages: Math.max(Math.ceil(DEMO_STANDS.length / perPage), 1), total: DEMO_STANDS.length };
   }
 
   const supabase = createClient();
@@ -46,14 +56,15 @@ export async function getStands(page = 1, perPage = 1): Promise<PaginatedResult<
   const to = from + perPage - 1;
   const { data, error, count } = await supabase
     .from("stands")
-    .select("*, profiles(full_name, role)", { count: "exact" })
+    .select("*, profiles(full_name, role, phone, subscription_tier)", { count: "exact" })
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .range(from, to);
 
   if (error || !data) {
+    console.error("SUPABASE ERROR (getStands):", error);
     const items = DEMO_STANDS.slice(from, to + 1);
-    return { items, page, pages: DEMO_STANDS.length, total: DEMO_STANDS.length };
+    return { items, page, pages: Math.max(Math.ceil(DEMO_STANDS.length / perPage), 1), total: DEMO_STANDS.length };
   }
 
   const total = count ?? data.length;
@@ -70,11 +81,14 @@ export async function getStandById(id: string): Promise<Stand | null> {
 
   const { data, error } = await supabase
     .from("stands")
-    .select("*, profiles(full_name, role)")
+    .select("*, profiles(full_name, role, phone, subscription_tier)")
     .eq("id", id)
     .single();
 
-  if (error || !data) return DEMO_STANDS.find((stand) => String(stand.id) === id) ?? null;
+  if (error || !data) {
+    console.error("SUPABASE ERROR (getStandById):", error);
+    return DEMO_STANDS.find((stand) => String(stand.id) === id) ?? null;
+  }
   return mapStand(data as StandRow);
 }
 
@@ -85,28 +99,34 @@ export async function getMyStands(userId: string): Promise<Stand[]> {
 
   const { data, error } = await supabase
     .from("stands")
-    .select("*, profiles(full_name, role)")
+    .select("*, profiles(full_name, role, phone, subscription_tier)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error || !data) return [];
+  if (error || !data) {
+    console.error("SUPABASE ERROR (getMyStands):", error);
+    return [];
+  }
   return (data as StandRow[]).map(mapStand);
 }
 
 export async function createStand(
   userId: string,
   payload: { name: string; description: string; banner_url?: string },
-): Promise<Stand | null> {
-  if (!isSupabaseConfigured()) return null;
+): Promise<{ stand: Stand | null; error: string | null }> {
+  if (!isSupabaseConfigured()) return { stand: null, error: "Supabase non configuré." };
   const supabase = createClient();
-  if (!supabase) return null;
+  if (!supabase) return { stand: null, error: "Supabase non configuré." };
 
   const { data, error } = await supabase
     .from("stands")
     .insert({ ...payload, user_id: userId, status: "pending" })
-    .select("*, profiles(full_name, role)")
+    .select("*, profiles(full_name, role, phone, subscription_tier)")
     .single();
 
-  if (error || !data) return null;
-  return mapStand(data as StandRow);
+  if (error || !data) {
+    console.error("SUPABASE ERROR (createStand):", error);
+    return { stand: null, error: error?.message ?? "Erreur inconnue." };
+  }
+  return { stand: mapStand(data as StandRow), error: null };
 }

@@ -1,10 +1,10 @@
 "use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Camera,
+  CirclePlus,
   Globe2,
   Mail,
   MapPin,
@@ -12,17 +12,16 @@ import {
   Moon,
   Network,
   Phone,
-  CirclePlus,
   Store,
   Sun,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useTheme } from "./theme-provider";
+import { createClient } from "@/lib/supabase";
+import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getCurrentUserRole } from "@/lib/users";
-import type { ProfileAccessRole } from "@/lib/types";
-import { createClient } from "@/lib/supabase";
+import { useTheme } from "./theme-provider";
 
 const navItems = [
   { href: "/", label: "Accueil" },
@@ -40,11 +39,11 @@ export function Brand({ footer = false }: { footer?: boolean }) {
         footer && "text-white",
       )}
     >
-      <span className="grid size-10 place-items-center overflow-hidden rounded-ucao bg-white shadow-[0_8px_18px_rgba(11,37,69,0.12)]">
+      <span className="grid size-10 place-items-center overflow-hidden rounded-ucao bg-white shadow-[0_8px_18px_rgba(30,42,110,0.12)]">
         <Image src="/logo-ucao.png" alt="Logo UCAO-UUT" width={40} height={40} className="h-10 w-10 object-contain" />
       </span>
       <span>
-        <strong className="text-ucao-red">UCAO</strong> Market
+        <strong className="text-ucao-red">UCAO</strong> Marketplace
       </span>
     </Link>
   );
@@ -52,10 +51,10 @@ export function Brand({ footer = false }: { footer?: boolean }) {
 
 export function Topbar() {
   return (
-    <div className="hidden min-h-[38px] items-center justify-between gap-4 bg-[linear-gradient(90deg,#0B2545,#0B2545_72%,#C1272D_72%)] px-[max(16px,calc((100vw-1160px)/2))] py-1.5 text-[13px] text-white lg:flex">
+    <div className="hidden min-h-[38px] items-center justify-between gap-4 bg-[linear-gradient(90deg,#1E2A6E,#1E2A6E_72%,#7A1E2D_72%)] px-[max(16px,calc((100vw-1160px)/2))] py-1.5 text-[13px] text-white lg:flex">
       <div className="flex items-center gap-2.5" aria-label="Réseaux UCAO UUT">
         <span>Suivez UCAO UUT</span>
-        <a className="grid size-6 place-items-center rounded-full bg-white/20" href="#" aria-label="Site UCAO UUT">
+        <a className="grid size-6 place-items-center rounded-full bg-white/20" href="https://ucao-uut.tg" target="_blank" rel="noopener noreferrer" aria-label="Site UCAO UUT">
           <Globe2 size={15} />
         </a>
         <a className="grid size-6 place-items-center rounded-full bg-white/20" href="#" aria-label="Galerie du campus">
@@ -70,10 +69,10 @@ export function Topbar() {
           <MapPin size={15} /> Campus UCAO UUT
         </span>
         <span className="flex items-center gap-2.5">
-          <Mail size={15} /> marketplace@ucao-uut.edu
+          <Mail size={15} /> ucaomarketplace@gmail.com
         </span>
         <span className="flex items-center gap-2.5">
-          <Phone size={15} /> +221 77 000 00 00
+          <Phone size={15} /> +228 92 98 29 26
         </span>
       </div>
     </div>
@@ -83,48 +82,40 @@ export function Topbar() {
 export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [role, setRole] = useState<ProfileAccessRole | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
   const { theme, toggleTheme } = useTheme();
-
   useEffect(() => {
     let active = true;
-
-    const refreshRole = () => getCurrentUserRole().then((currentRole) => {
-      if (active) setRole(currentRole);
-    });
-
+    const refreshRole = () =>
+      getCurrentUserRole().then((currentRole) => {
+        if (active) setRole(currentRole);
+      });
     refreshRole();
-
     const supabase = createClient();
     const {
       data: { subscription },
     } = supabase?.auth.onAuthStateChange(() => {
       refreshRole();
     }) ?? { data: { subscription: null } };
-
     return () => {
       active = false;
       subscription?.unsubscribe();
     };
   }, []);
-
   const visibleNavItems = useMemo(() => {
-    const roleName = role?.toUpperCase();
-    const canAccessDashboard = roleName === "VENDEUR" || roleName === "ADMIN";
-    const canAccessAdmin = roleName === "ADMIN";
-
+    const canAccessDashboard = role === "VENDEUR" || role === "ADMIN";
+    const canAccessAdmin = role === "ADMIN";
     return [
       ...navItems,
       ...(canAccessDashboard ? [{ href: "/dashboard", label: "Tableau de bord" }] : []),
       ...(canAccessAdmin ? [{ href: "/admin", label: "Administration" }] : []),
     ];
   }, [role]);
-
   return (
     <header className="relative z-20">
       {showTopbar && <Topbar />}
       <nav
-        className="sticky top-0 flex min-h-[70px] items-center justify-between gap-6 bg-white px-[max(16px,calc((100vw-1160px)/2))] shadow-[0_8px_24px_rgba(11,37,69,0.08)] dark:bg-[#0b1c31] lg:min-h-[78px]"
+        className="sticky top-0 flex min-h-[70px] items-center justify-between gap-6 bg-white px-[max(16px,calc((100vw-1160px)/2))] shadow-[0_8px_24px_rgba(30,42,110,0.08)] dark:bg-[#0b1c31] lg:min-h-[78px]"
         aria-label="Navigation principale"
       >
         <Brand />
@@ -148,9 +139,9 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "text-[#263a55] hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:text-[#ff8a90]",
+                "text-[#263a55] hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:text-[#ff9aa0]",
                 (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) &&
-                  "text-ucao-red dark:text-[#ff8a90]",
+                  "text-ucao-red dark:text-[#ff9aa0]",
               )}
             >
               {item.label}
@@ -166,9 +157,11 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         </div>
-        <Link className="btn btn-primary hidden lg:inline-flex" href="/register">
-          <CirclePlus size={18} /> Créer un stand
-        </Link>
+        <div className="hidden items-center gap-3 lg:flex">
+          <Link className="btn btn-primary" href="/devenir-vendeur">
+            <CirclePlus size={18} /> Devenir vendeur
+          </Link>
+        </div>
       </nav>
     </header>
   );
@@ -176,8 +169,8 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
 
 export function StandNavbarCta() {
   return (
-    <Link className="btn btn-primary hidden lg:inline-flex" href="/register">
-      <Store size={18} /> Créer un stand
+    <Link className="btn btn-primary hidden lg:inline-flex" href="/devenir-vendeur">
+      <Store size={18} /> Devenir vendeur
     </Link>
   );
 }

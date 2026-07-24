@@ -67,7 +67,7 @@ export default function CommentCaMarchePage() {
   return (
     <PageShell fullFooter>
       <main className="bg-ucao-soft dark:bg-[#071426]">
-        <section className="bg-[linear-gradient(110deg,rgba(11,37,69,.96),rgba(11,37,69,.82)_52%,rgba(46,125,91,.72)),url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1800&q=85')] bg-cover bg-center py-20 text-white">
+        <section className="bg-[linear-gradient(110deg,rgba(30,42,110,.96),rgba(30,42,110,.82)_52%,rgba(122,30,45,.68)),url('/images/hero-etudiants-campus.jpg')] bg-cover bg-center py-20 text-white">
           <div className="container-ucao">
             <p className="mb-4 inline-flex items-center gap-2 rounded-ucao bg-ucao-success px-3 py-2 text-sm font-black uppercase">
               <ShieldCheck size={17} strokeWidth={ICON_STROKE} /> Guide étudiant
@@ -109,8 +109,8 @@ export default function CommentCaMarchePage() {
               <Link className="btn btn-primary" href="/products">
                 Voir les produits
               </Link>
-              <Link className="btn bg-ucao-success text-white hover:bg-ucao-green-dark" href="/register">
-                Créer un stand
+              <Link className="btn btn-primary" href="/register">
+                Devenir vendeur
               </Link>
             </div>
           </div>

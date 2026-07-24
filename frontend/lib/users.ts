@@ -1,8 +1,7 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
-import type { Profile, ProfileAccessRole } from "./types";
-import { getStandLimit } from "./utils";
+import type { Profile, UserRole } from "./types";
 
-export async function getCurrentUserRole(): Promise<ProfileAccessRole | null> {
+export async function getCurrentUserRole(): Promise<UserRole | null> {
   const profile = await getCurrentProfile();
   return profile?.role ?? null;
 }
@@ -27,8 +26,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     email: user.email ?? data.email ?? "",
     role: data.role,
     phone: data.phone,
-    subscription_type: data.subscription_type,
+    subscription_tier: data.subscription_tier,
     subscription_expires_at: data.subscription_expires_at,
-    stand_limit: data.stand_limit ?? getStandLimit(data.role),
   };
 }

@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CirclePlus,
+  ExternalLink,
   GraduationCap,
   HandCoins,
   ShieldCheck,
@@ -71,7 +72,7 @@ export function HomePage({ featuredProducts }: { featuredProducts: Product[] }) 
             />
           ))}
         </div>
-        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(7,20,38,.92),rgba(11,37,69,.76)_48%,rgba(46,125,91,.62)_78%,rgba(193,39,45,.45))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(7,20,38,.92),rgba(30,42,110,.76)_48%,rgba(46,125,91,.54)_78%,rgba(122,30,45,.45))]" />
         <div className="absolute bottom-0 left-0 right-0 h-28 bg-[linear-gradient(0deg,rgba(246,249,251,1),rgba(246,249,251,0))] dark:bg-[linear-gradient(0deg,rgba(7,20,38,1),rgba(7,20,38,0))]" />
 
         <button
@@ -109,8 +110,8 @@ export function HomePage({ featuredProducts }: { featuredProducts: Product[] }) 
               <Link className="btn btn-light" href="/comment-ca-marche">
                 <Sparkles size={18} strokeWidth={ICON_STROKE} /> Comment ça marche
               </Link>
-              <Link className="btn bg-ucao-success text-white shadow-[0_14px_28px_rgba(46,125,91,0.3)] hover:bg-ucao-green-dark" href="/register">
-                <CirclePlus size={18} strokeWidth={ICON_STROKE} /> Créer un stand
+              <Link className="btn btn-primary" href="/register">
+                <CirclePlus size={18} strokeWidth={ICON_STROKE} /> Devenir vendeur
               </Link>
             </div>
           </div>
@@ -166,6 +167,34 @@ export function HomePage({ featuredProducts }: { featuredProducts: Product[] }) 
               <strong className="mt-3 block text-ucao-navy dark:text-white">{label}</strong>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="bg-ucao-soft py-[86px] dark:bg-[#071426]">
+        <div className="container-ucao grid gap-8 md:grid-cols-[1.05fr_.95fr] md:items-center">
+          <div>
+            <p className="eyebrow">
+              <GraduationCap size={16} strokeWidth={ICON_STROKE} /> Notre université
+            </p>
+            <h2 className="mb-4 text-[clamp(30px,4vw,48px)] font-bold leading-tight">
+              Une plateforme née dans la communauté UCAO-UUT.
+            </h2>
+            <p className="max-w-xl text-ucao-muted dark:text-[#a8b8cc]">
+              UCAO Marketplace a été pensée au sein de la communauté étudiante de l&apos;UCAO-UUT pour faciliter les achats, les ventes et les services entre membres du campus.
+            </p>
+            <a className="btn btn-ghost mt-6" href="https://ucao-uut.tg" target="_blank" rel="noopener noreferrer">
+              Visiter le site de l&apos;université <ExternalLink size={18} strokeWidth={ICON_STROKE} />
+            </a>
+          </div>
+          <div className="relative min-h-[340px] overflow-hidden rounded-ucao shadow-ucao">
+            <Image
+              src="/images/universite-batiment.jpg"
+              alt="Bâtiment de l'UCAO-UUT"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
         </div>
       </section>
 

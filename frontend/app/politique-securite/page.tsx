@@ -5,7 +5,7 @@ const sections = [
     title: "Mesures techniques",
     items: [
       "Chiffrement des mots de passe et sessions via Supabase Auth",
-      "Row Level Security activee sur toutes les tables",
+      "Row Level Security activée sur toutes les tables",
       "HTTPS obligatoire",
       "Verification de signature sur les webhooks de paiement",
     ],
@@ -13,9 +13,9 @@ const sections = [
   {
     title: "Signalement d'une faille",
     items: [
-      "Adresse de signalement : [À COMPLÉTER]",
-      "Informations a transmettre : description de la faille, etapes de reproduction, impact estime",
-      "Delai de reponse indicatif : [À COMPLÉTER]",
+      "Adresse de signalement : ucaomarketplace@gmail.com",
+      "Informations à transmettre : description de la faille, étapes de reproduction, impact estimé",
+      "Délai de réponse indicatif : 30 minutes à 48 heures",
     ],
   },
 ];
@@ -25,10 +25,10 @@ export default function PolitiqueSecuritePage() {
     <PageShell>
       <main className="bg-ucao-soft py-16 dark:bg-[#071426]">
         <section className="container-ucao">
-          <p className="eyebrow">Securite</p>
-          <h1 className="mb-5 text-[clamp(32px,5vw,52px)] font-bold leading-tight">Politique de securite</h1>
+          <p className="eyebrow">Sécurité</p>
+          <h1 className="mb-5 text-[clamp(32px,5vw,52px)] font-bold leading-tight">Politique de sécurité</h1>
           <p className="mb-10 max-w-3xl text-ucao-muted dark:text-[#a8b8cc]">
-            Cette page resume les mesures de securite prevues et la procedure de signalement. Les champs marques [À COMPLÉTER] restent a personnaliser.
+            Cette page résume les mesures de sécurité prévues et la procédure de signalement.
           </p>
           <div className="grid gap-5 md:grid-cols-2">
             {sections.map((section) => (

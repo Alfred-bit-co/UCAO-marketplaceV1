@@ -6,7 +6,8 @@ export function Footer({ full = false }: { full?: boolean }) {
     return (
       <footer className="bg-ucao-footer px-4 py-6 text-center text-white/75">
         <div className="container-ucao flex flex-col items-center justify-between gap-3 text-sm md:flex-row">
-          <p>© 2026 UCAO UUT Marketplace. Tous droits réservés.</p>
+          <p>© 2026 UCAO Marketplace. Tous droits réservés.</p>
+          <p>UCAO Marketplace est un projet étudiant indépendant, non affilié officiellement à l&apos;administration de l&apos;UCAO-UUT.</p>
           <LegalLinks />
         </div>
       </footer>
@@ -19,6 +20,7 @@ export function Footer({ full = false }: { full?: boolean }) {
         <div>
           <Brand footer />
           <p className="my-2">La marketplace universitaire de UCAO UUT.</p>
+          <p className="my-2 text-sm">UCAO Marketplace est un projet étudiant indépendant, non affilié officiellement à l&apos;administration de l&apos;UCAO-UUT.</p>
         </div>
         <div>
           <h2 className="mb-3.5 text-base font-bold text-white">Navigation</h2>
@@ -34,7 +36,7 @@ export function Footer({ full = false }: { full?: boolean }) {
         </div>
         <div>
           <h2 className="mb-3.5 text-base font-bold text-white">Contact</h2>
-          <p className="my-2">marketplace@ucao-uut.edu</p>
+          <p className="my-2">ucaomarketplace@gmail.com</p>
           <p className="my-2">Campus UCAO UUT</p>
         </div>
         <div>
@@ -43,7 +45,7 @@ export function Footer({ full = false }: { full?: boolean }) {
         </div>
       </div>
       <p className="mx-auto mt-10 border-t border-white/10 pt-5 text-center">
-        © 2026 UCAO UUT Marketplace. Tous droits réservés.
+        © 2026 UCAO Marketplace. Tous droits réservés.
       </p>
     </footer>
   );

@@ -61,7 +61,7 @@ export default function DashboardPage() {
             </div>
           </form>
           <form className="panel p-5">
-            <h2 className="mb-4 text-2xl font-bold">Créer un stand</h2>
+            <h2 className="mb-4 text-2xl font-bold">Nouveau stand</h2>
             <div className="grid gap-4">
               <label className="sr-only" htmlFor="stand-name">Nom du stand</label>
               <input id="stand-name" className="input-field" name="name" placeholder="Nom du stand" required />

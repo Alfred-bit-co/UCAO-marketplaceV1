@@ -1,8 +1,7 @@
 "use client";
-
 import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
-import { PRODUCT_CATEGORIES, ROLE_PRIORITY } from "@/lib/types";
+import { PRODUCT_CATEGORIES, TIER_PRIORITY } from "@/lib/types";
 import type { Product } from "@/lib/types";
 import { ProductCard } from "./product-card";
 
@@ -11,7 +10,6 @@ export function ProductsBrowser({ initialProducts }: { initialProducts: Product[
   const [category, setCategory] = useState("tous");
   const [page, setPage] = useState(1);
   const perPage = 5;
-
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return initialProducts
@@ -19,12 +17,10 @@ export function ProductsBrowser({ initialProducts }: { initialProducts: Product[
         const haystack = `${product.name} ${product.seller?.name || ""} ${product.category}`.toLowerCase();
         return (!query || haystack.includes(query)) && (category === "tous" || product.category === category);
       })
-      .sort((a, b) => ROLE_PRIORITY[a.seller_role ?? "SIMPLE"] - ROLE_PRIORITY[b.seller_role ?? "SIMPLE"]);
+      .sort((a, b) => TIER_PRIORITY[a.seller_tier ?? "STANDARD"] - TIER_PRIORITY[b.seller_tier ?? "STANDARD"]);
   }, [category, initialProducts, search]);
-
   const pages = Math.max(Math.ceil(filtered.length / perPage), 1);
   const items = filtered.slice((page - 1) * perPage, page * perPage);
-
   return (
     <section className="container-ucao">
       <div className="my-8 flex flex-wrap gap-3.5">
