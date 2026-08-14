@@ -3,6 +3,8 @@ from flask_cors import CORS
 
 from .config import Config
 from .routes.payments import payments_bp
+from .routes.subscriptions import subscriptions_bp
+from .routes.admin import admin_bp
 
 
 def create_app():
@@ -11,6 +13,8 @@ def create_app():
 
     CORS(app, resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}})
     app.register_blueprint(payments_bp, url_prefix="/api/payments")
+    app.register_blueprint(subscriptions_bp, url_prefix="/api")
+    app.register_blueprint(admin_bp, url_prefix="/api")
 
     @app.after_request
     def add_security_headers(response):

@@ -60,16 +60,24 @@ export async function getMySubscriptionStatus(): Promise<SubscriptionStatus | nu
   };
 }
 
-export async function initiateSubscriptionPayment(
-  tier: SubscriptionTier,
-): Promise<{ paymentUrl: string } | null> {
+export type InitiatePaymentResult =
+  | { ok: true; paymentUrl: string }
+  | { ok: false; reason: "not_authenticated" | "network_error" | "server_error"; message: string };
+
+export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promise<InitiatePaymentResult> {
   const supabase = createClient();
-  if (!supabase) return null;
+  if (!supabase) {
+    return { ok: false, reason: "server_error", message: "Supabase non configuré." };
+  }
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) return null;
+
+  if (!session) {
+    console.error("SUBSCRIPTION ERROR: aucune session Supabase active.");
+    return { ok: false, reason: "not_authenticated", message: "Vous devez être connecté." };
+  }
 
   try {
     const response = await fetch(`${PAYMENT_API_URL}/subscriptions/initiate`, {
@@ -81,12 +89,30 @@ export async function initiateSubscriptionPayment(
       body: JSON.stringify({ tier }),
     });
 
-    if (!response.ok) return null;
+    const data = await response.json().catch(() => null);
 
-    const data = await response.json();
-    return { paymentUrl: data.payment_url };
-  } catch {
-    return null;
+    if (!response.ok) {
+      console.error("SUBSCRIPTION ERROR: réponse serveur non OK", response.status, data);
+      return {
+        ok: false,
+        reason: "server_error",
+        message: data?.error || `Erreur serveur (code ${response.status}).`,
+      };
+    }
+
+    if (!data?.payment_url) {
+      console.error("SUBSCRIPTION ERROR: pas d'URL de paiement dans la réponse", data);
+      return { ok: false, reason: "server_error", message: "Réponse serveur incomplète." };
+    }
+
+    return { ok: true, paymentUrl: data.payment_url };
+  } catch (err) {
+    console.error("SUBSCRIPTION ERROR: échec réseau lors de l'appel au backend", err);
+    return {
+      ok: false,
+      reason: "network_error",
+      message: "Impossible de joindre le serveur de paiement. Vérifiez qu'il est bien démarré.",
+    };
   }
 }
 

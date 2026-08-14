@@ -191,6 +191,25 @@ export async function getMyProducts(userId: string): Promise<Product[]> {
   return (data as ProductRow[]).map(mapProduct);
 }
 
+async function replaceProductImages(
+  supabase: ReturnType<typeof createClient>,
+  productId: string,
+  image_urls?: string[],
+) {
+  if (!supabase) return;
+  await supabase.from("product_images").delete().eq("product_id", productId);
+
+  const imageRows = (image_urls ?? [])
+    .map((url) => url.trim())
+    .filter(Boolean)
+    .map((url, position) => ({ product_id: productId, url, position }));
+
+  if (imageRows.length) {
+    const { error } = await supabase.from("product_images").insert(imageRows);
+    if (error) console.error("SUPABASE ERROR (replaceProductImages):", error);
+  }
+}
+
 export async function createProduct(
   userId: string,
   payload: {
@@ -216,29 +235,49 @@ export async function createProduct(
 
   if (error || !data) {
     console.error("SUPABASE ERROR (createProduct):", error);
-    // Le message d'erreur Postgres (ex: limite de palier atteinte) est renvoyé tel quel pour affichage.
     return { product: null, error: error?.message ?? "Erreur inconnue." };
   }
 
-  const imageRows = (image_urls ?? [])
-    .map((url) => url.trim())
-    .filter(Boolean)
-    .map((url, position) => ({
-      product_id: data.id,
-      url,
-      position,
-    }));
-
-  if (imageRows.length) {
-    const { error: imageError } = await supabase.from("product_images").insert(imageRows);
-    if (imageError) {
-      console.error("SUPABASE ERROR (createProduct -> product_images):", imageError);
-      return { product: mapProduct(data as ProductRow), error: null };
-    }
+  if (image_urls?.length) {
+    await replaceProductImages(supabase, data.id, image_urls);
     return { product: await getProductById(data.id), error: null };
   }
 
   return { product: mapProduct(data as ProductRow), error: null };
+}
+
+export async function updateProduct(
+  userId: string,
+  productId: string,
+  payload: {
+    name: string;
+    category: ProductCategory;
+    price: number;
+    description: string;
+    image_urls?: string[];
+  },
+): Promise<{ product: Product | null; error: string | null }> {
+  if (!isSupabaseConfigured()) return { product: null, error: "Supabase non configuré." };
+
+  const supabase = createClient();
+  if (!supabase) return { product: null, error: "Supabase non configuré." };
+
+  const { image_urls, ...productPayload } = payload;
+  const { data, error } = await supabase
+    .from("products")
+    .update(productPayload)
+    .eq("id", productId)
+    .eq("user_id", userId)
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    console.error("SUPABASE ERROR (updateProduct):", error);
+    return { product: null, error: error?.message ?? "Erreur inconnue." };
+  }
+
+  await replaceProductImages(supabase, productId, image_urls);
+  return { product: await getProductById(productId), error: null };
 }
 
 export async function deleteProduct(userId: string, productId: string): Promise<boolean> {

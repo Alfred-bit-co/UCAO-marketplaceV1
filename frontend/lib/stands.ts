@@ -130,3 +130,30 @@ export async function createStand(
   }
   return { stand: mapStand(data as StandRow), error: null };
 }
+
+export async function getAllStandsForAdmin(): Promise<Stand[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = createClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("stands")
+    .select("*, profiles(full_name, role, phone, subscription_tier)")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("SUPABASE ERROR (getAllStandsForAdmin):", error);
+    return [];
+  }
+  return (data as StandRow[]).map(mapStand);
+}
+
+export async function updateStandStatus(standId: string, status: "approved" | "rejected"): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  const supabase = createClient();
+  if (!supabase) return false;
+
+  const { error } = await supabase.from("stands").update({ status }).eq("id", standId);
+  if (error) console.error("SUPABASE ERROR (updateStandStatus):", error);
+  return !error;
+}

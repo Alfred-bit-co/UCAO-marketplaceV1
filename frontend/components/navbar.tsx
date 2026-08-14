@@ -1,11 +1,12 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Camera,
   CirclePlus,
   Globe2,
+  LogOut,
   Mail,
   MapPin,
   Menu,
@@ -20,14 +21,13 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getCurrentUserRole } from "@/lib/users";
+import { getCurrentUserRole, signOut } from "@/lib/users";
 import { useTheme } from "./theme-provider";
 
 const navItems = [
   { href: "/", label: "Accueil" },
   { href: "/products", label: "Produits" },
   { href: "/stands", label: "Stands" },
-  { href: "/login", label: "Connexion" },
 ];
 
 export function Brand({ footer = false }: { footer?: boolean }) {
@@ -40,7 +40,7 @@ export function Brand({ footer = false }: { footer?: boolean }) {
       )}
     >
       <span className="grid size-10 place-items-center overflow-hidden rounded-ucao bg-white shadow-[0_8px_18px_rgba(30,42,110,0.12)]">
-        <Image src="/logo-ucao.png" alt="Logo UCAO-UUT" width={40} height={40} className="h-10 w-10 object-contain" />
+        <Image src="/logo-ucao.png" alt="Logo UCAO Marketplace" width={40} height={40} className="h-10 w-10 object-contain" />
       </span>
       <span>
         <strong className="text-ucao-red">UCAO</strong> Marketplace
@@ -81,9 +81,11 @@ export function Topbar() {
 
 export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<UserRole | null>(null);
   const { theme, toggleTheme } = useTheme();
+
   useEffect(() => {
     let active = true;
     const refreshRole = () =>
@@ -102,6 +104,15 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
       subscription?.unsubscribe();
     };
   }, []);
+
+  async function handleSignOut() {
+    await signOut();
+    setRole(null);
+    setOpen(false);
+    router.push("/");
+    router.refresh();
+  }
+
   const visibleNavItems = useMemo(() => {
     const canAccessDashboard = role === "VENDEUR" || role === "ADMIN";
     const canAccessAdmin = role === "ADMIN";
@@ -111,6 +122,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
       ...(canAccessAdmin ? [{ href: "/admin", label: "Administration" }] : []),
     ];
   }, [role]);
+
   return (
     <header className="relative z-20">
       {showTopbar && <Topbar />}
@@ -147,6 +159,22 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
               {item.label}
             </Link>
           ))}
+          {!role && (
+            <Link
+              href="/login"
+              className={cn(
+                "text-[#263a55] hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:text-[#ff9aa0]",
+                pathname === "/login" && "text-ucao-red dark:text-[#ff9aa0]",
+              )}
+            >
+              Connexion
+            </Link>
+          )}
+          {role && (
+            <button type="button" className="btn btn-ghost min-h-10 px-3" onClick={handleSignOut}>
+              <LogOut size={18} /> Déconnexion
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleTheme}
@@ -158,6 +186,11 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
           </button>
         </div>
         <div className="hidden items-center gap-3 lg:flex">
+          {role && (
+            <button type="button" className="btn btn-ghost" onClick={handleSignOut}>
+              <LogOut size={18} /> Déconnexion
+            </button>
+          )}
           <Link className="btn btn-primary" href="/devenir-vendeur">
             <CirclePlus size={18} /> Devenir vendeur
           </Link>

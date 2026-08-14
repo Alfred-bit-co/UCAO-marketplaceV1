@@ -30,3 +30,9 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     subscription_expires_at: data.subscription_expires_at,
   };
 }
+
+export async function signOut(): Promise<void> {
+  const supabase = createClient();
+  if (!supabase) return;
+  await supabase.auth.signOut();
+}

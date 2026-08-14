@@ -72,7 +72,7 @@ export function HomePage({ featuredProducts }: { featuredProducts: Product[] }) 
             />
           ))}
         </div>
-        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(7,20,38,.92),rgba(30,42,110,.76)_48%,rgba(46,125,91,.54)_78%,rgba(122,30,45,.45))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(7,20,38,.65),rgba(30,42,110,.5)_48%,rgba(46,125,91,.35)_78%,rgba(122,30,45,.3))]" />
         <div className="absolute bottom-0 left-0 right-0 h-28 bg-[linear-gradient(0deg,rgba(246,249,251,1),rgba(246,249,251,0))] dark:bg-[linear-gradient(0deg,rgba(7,20,38,1),rgba(7,20,38,0))]" />
 
         <button
