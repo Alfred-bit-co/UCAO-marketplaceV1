@@ -21,11 +21,23 @@ import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { HERO_IMAGES } from "@/lib/constants";
 import type { Product } from "@/lib/types";
+import { BecomeVendorBanner } from "./become-vendor-banner";
+import { CategoryStrip } from "./category-strip";
+import { PlatformStats } from "./platform-stats";
 import { ProductCard } from "./product-card";
+import { Testimonials } from "./testimonials";
 
 const ICON_STROKE = 2.2;
 
-export function HomePage({ featuredProducts }: { featuredProducts: Product[] }) {
+export function HomePage({
+  featuredProducts,
+  initialProducts,
+  initialVendors,
+}: {
+  featuredProducts: Product[];
+  initialProducts: number;
+  initialVendors: number;
+}) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -136,7 +148,9 @@ export function HomePage({ featuredProducts }: { featuredProducts: Product[] }) 
         </div>
       </section>
 
-      <section className="container-ucao relative z-10 -mt-8 grid gap-5 md:grid-cols-2" aria-label="Avantages de la plateforme">
+      <CategoryStrip />
+
+      <section className="container-ucao relative z-10 mt-8 grid gap-5 md:grid-cols-2" aria-label="Avantages de la plateforme">
         {promises.map(({ Icon, title, text, tone }) => (
           <article key={title} className="panel p-6">
             <span className={`mb-5 grid size-[54px] place-items-center rounded-ucao text-white ${tone === "green" ? "bg-ucao-success" : "bg-ucao-navy"}`}>
@@ -216,6 +230,10 @@ export function HomePage({ featuredProducts }: { featuredProducts: Product[] }) 
           ))}
         </div>
       </section>
+
+      <PlatformStats initialProducts={initialProducts} initialVendors={initialVendors} />
+      <Testimonials />
+      <BecomeVendorBanner />
     </main>
   );
 }

@@ -1,15 +1,21 @@
 "use client";
-import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, PackageOpen, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PRODUCT_CATEGORIES, TIER_PRIORITY } from "@/lib/types";
 import type { Product } from "@/lib/types";
 import { ProductCard } from "./product-card";
 
-export function ProductsBrowser({ initialProducts }: { initialProducts: Product[] }) {
+export function ProductsBrowser({
+  initialProducts,
+  initialCategory,
+}: {
+  initialProducts: Product[];
+  initialCategory?: string;
+}) {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("tous");
+  const [category, setCategory] = useState(initialCategory || "tous");
   const [page, setPage] = useState(1);
-  const perPage = 5;
+  const perPage = 6;
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return initialProducts
@@ -54,14 +60,44 @@ export function ProductsBrowser({ initialProducts }: { initialProducts: Product[
             ))}
           </select>
         </label>
+        <button className="btn btn-primary" type="button">
+          <Search size={16} /> Rechercher
+        </button>
       </div>
+
+      <div className="mb-6 flex flex-wrap gap-3">
+        {PRODUCT_CATEGORIES.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            onClick={() => {
+              setCategory(item.value);
+              setPage(1);
+            }}
+            className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+              category === item.value
+                ? "border-ucao-red bg-ucao-red text-white"
+                : "border-ucao-line text-ucao-navy hover:border-ucao-red hover:text-ucao-red dark:border-[#1c3050] dark:text-white"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid gap-6 pb-[84px] md:grid-cols-2 lg:grid-cols-3">
         {items.length ? (
           items.map((product) => <ProductCard key={product.id} product={product} showDescription />)
         ) : (
-          <p className="notice md:col-span-2 lg:col-span-3">
-            <ShoppingBag className="mr-2 inline" size={18} /> Aucun produit ne correspond à votre recherche.
-          </p>
+          <div className="notice md:col-span-2 lg:col-span-3 flex items-center gap-4 p-6">
+            <span className="grid size-14 shrink-0 place-items-center rounded-full bg-ucao-success-soft text-ucao-success">
+              <PackageOpen size={26} />
+            </span>
+            <div>
+              <p className="font-bold">Aucun produit ne correspond à votre recherche.</p>
+              <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">Essayez avec d&apos;autres mots-clés ou explorez nos catégories.</p>
+            </div>
+          </div>
         )}
       </div>
       <div className="flex items-center justify-center gap-3 pb-[84px]">

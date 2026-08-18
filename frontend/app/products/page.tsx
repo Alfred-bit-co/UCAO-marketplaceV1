@@ -4,7 +4,12 @@ import { PageShell } from "@/components/page-shell";
 import { ProductsBrowser } from "@/components/products-browser";
 import { getProducts } from "@/lib/products";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category } = await searchParams;
   const products = await getProducts({ page: 1, perPage: 100 });
 
   return (
@@ -13,7 +18,7 @@ export default async function ProductsPage() {
         <PageHero icon={ShoppingBag} eyebrow="Produits" title="Les offres du campus">
           Recherchez, filtrez et contactez les vendeurs UCAO UUT.
         </PageHero>
-        <ProductsBrowser initialProducts={products.items} />
+        <ProductsBrowser initialProducts={products.items} initialCategory={category} />
       </main>
     </PageShell>
   );

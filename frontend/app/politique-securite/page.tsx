@@ -13,7 +13,7 @@ const sections = [
   {
     title: "Signalement d'une faille",
     items: [
-      "Adresse de signalement : ucaomarketplace@gmail.com",
+      "Adresse de signalement : ucaomarketplace2026@gmail.com",
       "Informations à transmettre : description de la faille, étapes de reproduction, impact estimé",
       "Délai de réponse indicatif : 30 minutes à 48 heures",
     ],

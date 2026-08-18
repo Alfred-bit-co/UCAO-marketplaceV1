@@ -16,8 +16,10 @@ type StandRow = {
     phone: string | null;
     subscription_tier: SubscriptionTier | null;
   };
-  products?: [];
+  products?: { id: string; category: string }[];
 };
+
+const STAND_SELECT = "*, profiles(full_name, role, phone, subscription_tier), products(id, category)";
 
 function mapStand(row: StandRow): Stand {
   const tier = row.profiles?.subscription_tier ?? null;
@@ -38,7 +40,7 @@ function mapStand(row: StandRow): Stand {
         }
       : null,
     seller_tier: tier,
-    products: [],
+    products: (row.products ?? []) as any,
   };
 }
 
@@ -56,7 +58,7 @@ export async function getStands(page = 1, perPage = 10): Promise<PaginatedResult
   const to = from + perPage - 1;
   const { data, error, count } = await supabase
     .from("stands")
-    .select("*, profiles(full_name, role, phone, subscription_tier)", { count: "exact" })
+    .select(STAND_SELECT, { count: "exact" })
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -81,7 +83,7 @@ export async function getStandById(id: string): Promise<Stand | null> {
 
   const { data, error } = await supabase
     .from("stands")
-    .select("*, profiles(full_name, role, phone, subscription_tier)")
+    .select(STAND_SELECT)
     .eq("id", id)
     .single();
 
@@ -99,7 +101,7 @@ export async function getMyStands(userId: string): Promise<Stand[]> {
 
   const { data, error } = await supabase
     .from("stands")
-    .select("*, profiles(full_name, role, phone, subscription_tier)")
+    .select(STAND_SELECT)
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -121,7 +123,7 @@ export async function createStand(
   const { data, error } = await supabase
     .from("stands")
     .insert({ ...payload, user_id: userId, status: "pending" })
-    .select("*, profiles(full_name, role, phone, subscription_tier)")
+    .select(STAND_SELECT)
     .single();
 
   if (error || !data) {
@@ -138,7 +140,7 @@ export async function getAllStandsForAdmin(): Promise<Stand[]> {
 
   const { data, error } = await supabase
     .from("stands")
-    .select("*, profiles(full_name, role, phone, subscription_tier)")
+    .select(STAND_SELECT)
     .order("created_at", { ascending: false });
 
   if (error || !data) {
@@ -157,3 +159,4 @@ export async function updateStandStatus(standId: string, status: "approved" | "r
   if (error) console.error("SUPABASE ERROR (updateStandStatus):", error);
   return !error;
 }
+

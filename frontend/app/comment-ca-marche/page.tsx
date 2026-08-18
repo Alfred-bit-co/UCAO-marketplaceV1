@@ -1,13 +1,13 @@
 import Link from "next/link";
 import {
   BadgeCheck,
-  CreditCard,
+  Eye,
+  Handshake,
+  MessageCircle,
   PackagePlus,
   Search,
   ShieldCheck,
-  ShoppingCart,
   Store,
-  Truck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
@@ -21,14 +21,14 @@ const buyerSteps: { Icon: LucideIcon; title: string; text: string }[] = [
     text: "Explore les produits, services et stands disponibles sur le campus.",
   },
   {
-    Icon: ShoppingCart,
-    title: "Ajoute au panier",
-    text: "Choisis ce qu'il te faut et vérifie les informations du vendeur.",
+    Icon: Eye,
+    title: "Consulte la fiche produit",
+    text: "Vérifie le prix, les photos et les informations du vendeur avant de le contacter.",
   },
   {
-    Icon: CreditCard,
-    title: "Paie via Mobile Money",
-    text: "Finalise la transaction avec un paiement mobile simple et sécurisé.",
+    Icon: MessageCircle,
+    title: "Contacte le vendeur sur WhatsApp",
+    text: "Convenez ensemble du prix, du lieu et de l'heure pour finaliser l'échange en personne, sur le campus.",
   },
 ];
 
@@ -44,22 +44,22 @@ const sellerSteps: { Icon: LucideIcon; title: string; text: string }[] = [
     text: "Ajoute photos, prix et descriptions claires pour attirer les acheteurs.",
   },
   {
-    Icon: Truck,
-    title: "Reçois les commandes",
-    text: "Suis les demandes et organise la remise sur le campus.",
+    Icon: Handshake,
+    title: "Échange avec les acheteurs",
+    text: "Réponds-leur sur WhatsApp et organise la remise du produit en personne, sur le campus.",
   },
 ];
 
 const securityItems: { Icon: LucideIcon; title: string; text: string }[] = [
   {
     Icon: BadgeCheck,
-    title: "Vendeurs vérifiés",
-    text: "Les stands sérieux sont mieux identifiés pour limiter les échanges douteux.",
+    title: "Vendeurs identifiés",
+    text: "Chaque vendeur a payé un abonnement pour publier, ce qui limite les comptes créés à la légère.",
   },
   {
     Icon: ShieldCheck,
-    title: "Paiement sécurisé",
-    text: "La plateforme s'appuie sur Supabase Auth, RLS et une vérification des paiements.",
+    title: "Échanges sur le campus",
+    text: "Le paiement et la remise du produit se font toujours en personne, sur le campus. Vérifiez la marchandise avant de payer en espèces.",
   },
 ];
 
@@ -76,7 +76,7 @@ export default function CommentCaMarchePage() {
               Comment ça marche ?
             </h1>
             <p className="mt-5 max-w-2xl text-lg font-medium text-white/88">
-              Acheter, vendre et payer entre étudiants UCAO UUT, sans compliquer les choses.
+              Acheter et vendre entre étudiants UCAO UUT, simplement, via WhatsApp et en personne sur le campus.
             </p>
           </div>
         </section>
@@ -109,7 +109,7 @@ export default function CommentCaMarchePage() {
               <Link className="btn btn-primary" href="/products">
                 Voir les produits
               </Link>
-              <Link className="btn btn-primary" href="/register">
+              <Link className="btn btn-primary" href="/devenir-vendeur">
                 Devenir vendeur
               </Link>
             </div>

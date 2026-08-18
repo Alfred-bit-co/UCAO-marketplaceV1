@@ -15,7 +15,7 @@ const sections = [
   },
   {
     title: "Contact",
-    items: ["Email de contact : ucaomarketplace@gmail.com", "Téléphone : +228 92 98 29 26"],
+    items: ["Email de contact : ucaomarketplace2026@gmail.com", "Téléphone : +228 92 98 29 26"],
   },
   {
     title: "Responsable technique",

@@ -85,6 +85,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             Mot de passe
             <input className="input-field" name="password" type="password" required minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} />
           </label>
+          {mode === "login" && (
+            <Link className="mt-2 block text-right text-sm font-bold text-ucao-red hover:underline" href="/mot-de-passe-oublie">
+              Mot de passe oublié ?
+            </Link>
+          )}
           {message && <div className={`notice ${error ? "notice-error" : ""}`}>{message}</div>}
           <button className="btn btn-primary mt-5 w-full" type="submit">
             {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Facebook, Instagram, MessageCircle, Twitter } from "lucide-react";
 import { Brand } from "./navbar";
 
 export function Footer({ full = false }: { full?: boolean }) {
@@ -16,31 +17,47 @@ export function Footer({ full = false }: { full?: boolean }) {
 
   return (
     <footer className="bg-ucao-footer pt-[60px] pb-6 text-white/75">
-      <div className="container-ucao grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div>
+      <div className="container-ucao grid gap-10 sm:grid-cols-2 md:grid-cols-5">
+        <div className="sm:col-span-2 md:col-span-1">
           <Brand footer />
           <p className="my-2">La marketplace universitaire de UCAO UUT.</p>
           <p className="my-2 text-sm">UCAO Marketplace est un projet étudiant indépendant, non affilié officiellement à l&apos;administration de l&apos;UCAO-UUT.</p>
+          <div className="mt-4 flex gap-2">
+            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="Facebook">
+              <Facebook size={16} />
+            </a>
+            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="Instagram">
+              <Instagram size={16} />
+            </a>
+            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="Twitter">
+              <Twitter size={16} />
+            </a>
+            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="WhatsApp">
+              <MessageCircle size={16} />
+            </a>
+          </div>
         </div>
         <div>
           <h2 className="mb-3.5 text-base font-bold text-white">Navigation</h2>
-          <Link className="my-2 block" href="/products">
-            Produits
-          </Link>
-          <Link className="my-2 block" href="/stands">
-            Stands
-          </Link>
-          <Link className="my-2 block" href="/dashboard">
-            Tableau de bord
-          </Link>
+          <Link className="my-2 block" href="/products">Produits</Link>
+          <Link className="my-2 block" href="/stands">Stands</Link>
+          <Link className="my-2 block" href="/devenir-vendeur">Devenir vendeur</Link>
+          <Link className="my-2 block" href="/dashboard">Tableau de bord</Link>
         </div>
         <div>
-          <h2 className="mb-3.5 text-base font-bold text-white">Contact</h2>
-          <p className="my-2">ucaomarketplace@gmail.com</p>
-          <p className="my-2">Campus UCAO UUT</p>
+          <h2 className="mb-3.5 text-base font-bold text-white">Informations</h2>
+          <Link className="my-2 block" href="/a-propos">À propos</Link>
+          <Link className="my-2 block" href="/comment-ca-marche">Comment ça marche</Link>
+          <a className="my-2 block" href="mailto:ucaomarketplace2026@gmail.com">Nous contacter</a>
         </div>
         <div>
-          <h2 className="mb-3.5 text-base font-bold text-white">Informations légales</h2>
+          <h2 className="mb-3.5 text-base font-bold text-white">Aide &amp; Support</h2>
+          <Link className="my-2 block" href="/faq">Centre d&apos;aide</Link>
+          <a className="my-2 block" href="mailto:ucaomarketplace2026@gmail.com">Support</a>
+          <Link className="my-2 block" href="/faq">FAQ</Link>
+        </div>
+        <div>
+          <h2 className="mb-3.5 text-base font-bold text-white">Légal</h2>
           <LegalLinks stacked />
         </div>
       </div>
@@ -56,15 +73,10 @@ function LegalLinks({ stacked = false }: { stacked?: boolean }) {
 
   return (
     <nav aria-label="Liens légaux" className={stacked ? "" : "flex flex-wrap justify-center gap-x-2 gap-y-1"}>
-      <Link className={className} href="/mentions-legales">
-        Mentions légales
-      </Link>
-      <Link className={className} href="/politique-confidentialite">
-        Confidentialité
-      </Link>
-      <Link className={className} href="/politique-securite">
-        Sécurité
-      </Link>
+      <Link className={className} href="/mentions-legales">Mentions légales</Link>
+      <Link className={className} href="/politique-confidentialite">Confidentialité</Link>
+      <Link className={className} href="/politique-securite">Sécurité</Link>
+      <Link className={className} href="/conditions-generales">CGU</Link>
     </nav>
   );
 }

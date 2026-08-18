@@ -19,7 +19,7 @@ const sections = [
   },
   {
     title: "Droits de l'utilisateur",
-    items: ["Accès", "Rectification", "Suppression", "Contact pour exercer les droits : ucaomarketplace@gmail.com"],
+    items: ["Accès", "Rectification", "Suppression", "Contact pour exercer les droits : ucaomarketplace2026@gmail.com"],
   },
   {
     title: "Sous-traitants",
