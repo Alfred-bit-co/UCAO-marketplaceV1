@@ -9,6 +9,35 @@ export type PlatformReview = {
   author: { name: string; role: string } | null;
 };
 
+type ReviewRow = {
+  id: string;
+  rating: number;
+  comment: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  profiles?: { full_name: string; role: string }[] | null;
+};
+
+type MyReviewRow = {
+  id: string;
+  rating: number;
+  comment: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+};
+
+function mapReviewRow(row: ReviewRow): PlatformReview {
+  const profile = row.profiles?.[0] ?? null;
+  return {
+    id: row.id,
+    rating: row.rating,
+    comment: row.comment,
+    status: row.status,
+    created_at: row.created_at,
+    author: profile ? { name: profile.full_name, role: profile.role } : null,
+  };
+}
+
 export async function getApprovedReviews(limit = 6): Promise<PlatformReview[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
@@ -26,14 +55,7 @@ export async function getApprovedReviews(limit = 6): Promise<PlatformReview[]> {
     return [];
   }
 
-  return data.map((row: any) => ({
-    id: row.id,
-    rating: row.rating,
-    comment: row.comment,
-    status: row.status,
-    created_at: row.created_at,
-    author: row.profiles ? { name: row.profiles.full_name, role: row.profiles.role } : null,
-  }));
+  return (data as unknown as ReviewRow[]).map(mapReviewRow);
 }
 
 export async function getMyReview(userId: string): Promise<PlatformReview | null> {
@@ -51,7 +73,7 @@ export async function getMyReview(userId: string): Promise<PlatformReview | null
     console.error("SUPABASE ERROR (getMyReview):", error);
     return null;
   }
-  return data ? { ...(data as any), author: null } : null;
+  return data ? { ...(data as unknown as MyReviewRow), author: null } : null;
 }
 
 export async function submitReview(
@@ -89,14 +111,7 @@ export async function getPendingReviewsForAdmin(): Promise<PlatformReview[]> {
     return [];
   }
 
-  return data.map((row: any) => ({
-    id: row.id,
-    rating: row.rating,
-    comment: row.comment,
-    status: row.status,
-    created_at: row.created_at,
-    author: row.profiles ? { name: row.profiles.full_name, role: row.profiles.role } : null,
-  }));
+  return (data as unknown as ReviewRow[]).map(mapReviewRow);
 }
 
 export async function updateReviewStatus(

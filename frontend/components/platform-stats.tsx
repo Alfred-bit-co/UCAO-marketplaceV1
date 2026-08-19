@@ -3,6 +3,8 @@ import { Headset, Package, ShieldCheck, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
 
+type ProfileUpdatePayload = { new: { id?: string } };
+
 export function PlatformStats({
   initialProducts,
   initialVendors,
@@ -26,8 +28,8 @@ export function PlatformStats({
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles", filter: "role=eq.VENDEUR" },
-        (payload: any) => {
-          const id = payload.new?.id as string | undefined;
+        (payload: ProfileUpdatePayload) => {
+          const id = payload.new?.id;
           if (id && !countedVendorIds.current.has(id)) {
             countedVendorIds.current.add(id);
             setVendors((value) => value + 1);
@@ -64,4 +66,4 @@ export function PlatformStats({
       </div>
     </section>
   );
-} 
+}

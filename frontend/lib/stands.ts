@@ -1,6 +1,6 @@
 import { DEMO_STANDS } from "./constants";
 import { createClient, isSupabaseConfigured } from "./supabase";
-import type { PaginatedResult, Stand, SubscriptionTier, UserRole } from "./types";
+import type { PaginatedResult, Product, Stand, SubscriptionTier, UserRole } from "./types";
 
 type StandRow = {
   id: string;
@@ -15,14 +15,15 @@ type StandRow = {
     role: UserRole;
     phone: string | null;
     subscription_tier: SubscriptionTier | null;
-  };
-  products?: { id: string; category: string }[];
+  }[] | null;
+  products?: { id: string; category: string }[] | null;
 };
 
 const STAND_SELECT = "*, profiles(full_name, role, phone, subscription_tier), products(id, category)";
 
 function mapStand(row: StandRow): Stand {
-  const tier = row.profiles?.subscription_tier ?? null;
+  const profile = row.profiles?.[0] ?? null;
+  const tier = profile?.subscription_tier ?? null;
   return {
     id: row.id,
     name: row.name,
@@ -31,16 +32,16 @@ function mapStand(row: StandRow): Stand {
     user_id: row.user_id,
     status: row.status,
     created_at: row.created_at,
-    seller: row.profiles
+    seller: profile
       ? {
-          name: row.profiles.full_name,
-          role: row.profiles.role,
-          phone: row.profiles.phone ?? undefined,
+          name: profile.full_name,
+          role: profile.role,
+          phone: profile.phone ?? undefined,
           subscription_tier: tier,
         }
       : null,
     seller_tier: tier,
-    products: (row.products ?? []) as any,
+    products: (row.products ?? []) as unknown as Product[],
   };
 }
 
@@ -70,7 +71,12 @@ export async function getStands(page = 1, perPage = 10): Promise<PaginatedResult
   }
 
   const total = count ?? data.length;
-  return { items: (data as StandRow[]).map(mapStand), page, pages: Math.max(Math.ceil(total / perPage), 1), total };
+  return {
+    items: (data as unknown as StandRow[]).map(mapStand),
+    page,
+    pages: Math.max(Math.ceil(total / perPage), 1),
+    total,
+  };
 }
 
 export async function getStandById(id: string): Promise<Stand | null> {
@@ -91,7 +97,7 @@ export async function getStandById(id: string): Promise<Stand | null> {
     console.error("SUPABASE ERROR (getStandById):", error);
     return DEMO_STANDS.find((stand) => String(stand.id) === id) ?? null;
   }
-  return mapStand(data as StandRow);
+  return mapStand(data as unknown as StandRow);
 }
 
 export async function getMyStands(userId: string): Promise<Stand[]> {
@@ -109,7 +115,7 @@ export async function getMyStands(userId: string): Promise<Stand[]> {
     console.error("SUPABASE ERROR (getMyStands):", error);
     return [];
   }
-  return (data as StandRow[]).map(mapStand);
+  return (data as unknown as StandRow[]).map(mapStand);
 }
 
 export async function createStand(
@@ -130,7 +136,7 @@ export async function createStand(
     console.error("SUPABASE ERROR (createStand):", error);
     return { stand: null, error: error?.message ?? "Erreur inconnue." };
   }
-  return { stand: mapStand(data as StandRow), error: null };
+  return { stand: mapStand(data as unknown as StandRow), error: null };
 }
 
 export async function getAllStandsForAdmin(): Promise<Stand[]> {
@@ -147,7 +153,7 @@ export async function getAllStandsForAdmin(): Promise<Stand[]> {
     console.error("SUPABASE ERROR (getAllStandsForAdmin):", error);
     return [];
   }
-  return (data as StandRow[]).map(mapStand);
+  return (data as unknown as StandRow[]).map(mapStand);
 }
 
 export async function updateStandStatus(standId: string, status: "approved" | "rejected"): Promise<boolean> {
@@ -159,4 +165,3 @@ export async function updateStandStatus(standId: string, status: "approved" | "r
   if (error) console.error("SUPABASE ERROR (updateStandStatus):", error);
   return !error;
 }
-
