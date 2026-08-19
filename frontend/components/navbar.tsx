@@ -122,7 +122,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     if (role) {
       links.push({ href: "/profil", label: "Mon profil" });
     }
-    if (role === "VENDEUR" || role === "ADMIN") {
+    if (role === "VENDEUR") {
       links.push({ href: "/dashboard", label: "Tableau de bord" });
     }
     if (role === "ADMIN") {
