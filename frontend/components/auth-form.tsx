@@ -70,8 +70,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                 </label>
               </div>
               <label className="mt-4 grid gap-1">
-                Téléphone vendeur
-                <input className="input-field" name="phone" type="tel" placeholder="+221 77 000 00 00" />
+                Téléphone
+                <input className="input-field" name="phone" type="tel" placeholder="+228 90 00 00 00" required />
               </label>
             </>
           )}

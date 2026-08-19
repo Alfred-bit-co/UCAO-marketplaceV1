@@ -119,6 +119,9 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
 
   const roleLinks = useMemo(() => {
     const links: { href: string; label: string }[] = [];
+    if (role) {
+      links.push({ href: "/profil", label: "Mon profil" });
+    }
     if (role === "VENDEUR" || role === "ADMIN") {
       links.push({ href: "/dashboard", label: "Tableau de bord" });
     }

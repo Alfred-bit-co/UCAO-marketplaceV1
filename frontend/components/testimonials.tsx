@@ -1,7 +1,7 @@
 "use client";
-import { MessageSquareQuote, Send, Star } from "lucide-react";
+import { MessageSquareQuote, Send, Star, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getApprovedReviews, getMyReview, submitReview } from "@/lib/reviews";
+import { deleteReview, getApprovedReviews, getMyReview, submitReview } from "@/lib/reviews";
 import type { PlatformReview } from "@/lib/reviews";
 import { getCurrentProfile } from "@/lib/users";
 
@@ -97,7 +97,32 @@ export function Testimonials() {
 
       {userId && (
         <form className="panel mx-auto max-w-xl p-6" onSubmit={handleSubmit}>
-          <h3 className="mb-3 text-lg font-bold">{myReview ? "Modifier mon avis" : "Laisser un avis"}</h3>
+          <h3 className="mb-3 text-lg font-bold">{myReview ? "Mon avis" : "Laisser un avis"}</h3>
+          {myReview ? (
+            <>
+              <Stars rating={myReview.rating} />
+              <p className="my-3 text-ucao-muted dark:text-[#a8b8cc]">&laquo;{myReview.comment}&raquo;</p>
+              <p className="notice">Vous avez déjà envoyé votre avis. Vous pouvez le supprimer pour en rédiger un nouveau.</p>
+              <button
+                className="btn btn-ghost mt-4 text-ucao-red"
+                type="button"
+                onClick={async () => {
+                  if (!window.confirm("Supprimer votre avis ?")) return;
+                  const ok = await deleteReview(myReview.id, userId);
+                  if (!ok) {
+                    setMessage("Impossible de supprimer votre avis.");
+                    return;
+                  }
+                  setMyReview(null);
+                  setComment("");
+                  setMessage("Votre avis a été supprimé.");
+                }}
+              >
+                <Trash2 size={16} /> Supprimer mon avis
+              </button>
+            </>
+          ) : (
+            <>
           <div className="mb-3 flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} étoile(s)`} className="text-ucao-gold">
@@ -115,12 +140,11 @@ export function Testimonials() {
             required
           />
           {message && <p className="notice mt-3">{message}</p>}
-          {myReview?.status === "pending" && !message && (
-            <p className="notice mt-3">Votre avis est en attente de validation.</p>
-          )}
           <button className="btn btn-primary mt-4" type="submit" disabled={status === "saving"}>
-            <Send size={16} /> {status === "saving" ? "Envoi..." : myReview ? "Mettre à jour" : "Envoyer"}
+            <Send size={16} /> {status === "saving" ? "Envoi..." : "Envoyer"}
           </button>
+            </>
+          )}
         </form>
       )}
     </section>

@@ -15,7 +15,7 @@ type ReviewRow = {
   comment: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
-  profiles?: { full_name: string; role: string }[] | null;
+  profiles?: { full_name: string; role: string } | { full_name: string; role: string }[] | null;
 };
 
 type MyReviewRow = {
@@ -27,7 +27,7 @@ type MyReviewRow = {
 };
 
 function mapReviewRow(row: ReviewRow): PlatformReview {
-  const profile = row.profiles?.[0] ?? null;
+  const profile = Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null;
   return {
     id: row.id,
     rating: row.rating,
@@ -138,4 +138,60 @@ export async function getPlatformStats(): Promise<{ products: number; vendors: n
   ]);
 
   return { products: products ?? 0, vendors: vendors ?? 0 };
+}
+
+export async function deleteReview(reviewId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  const supabase = createClient();
+  if (!supabase) return false;
+
+  const { error } = await supabase
+    .from("platform_reviews")
+    .delete()
+    .eq("id", reviewId)
+    .eq("user_id", userId);
+  if (error) console.error("SUPABASE ERROR (deleteReview):", error);
+  return !error;
+}
+
+export async function getAllReviewsForAdmin(): Promise<PlatformReview[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = createClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("platform_reviews")
+    .select("id, rating, comment, status, created_at, profiles(full_name, role)")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("SUPABASE ERROR (getAllReviewsForAdmin):", error);
+    return [];
+  }
+  return (data as unknown as ReviewRow[]).map(mapReviewRow);
+}
+
+export async function getReviewStats(): Promise<{
+  total: number;
+  approved: number;
+  pending: number;
+  rejected: number;
+}> {
+  if (!isSupabaseConfigured()) return { total: 0, approved: 0, pending: 0, rejected: 0 };
+  const supabase = createClient();
+  if (!supabase) return { total: 0, approved: 0, pending: 0, rejected: 0 };
+
+  const [{ count: total }, { count: approved }, { count: pending }, { count: rejected }] = await Promise.all([
+    supabase.from("platform_reviews").select("id", { count: "exact", head: true }),
+    supabase.from("platform_reviews").select("id", { count: "exact", head: true }).eq("status", "approved"),
+    supabase.from("platform_reviews").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("platform_reviews").select("id", { count: "exact", head: true }).eq("status", "rejected"),
+  ]);
+
+  return {
+    total: total ?? 0,
+    approved: approved ?? 0,
+    pending: pending ?? 0,
+    rejected: rejected ?? 0,
+  };
 }

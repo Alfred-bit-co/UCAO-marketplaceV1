@@ -15,7 +15,7 @@ import { PageShell } from "@/components/page-shell";
 import { Stars } from "@/components/testimonials";
 import { deleteUserAccount, getVendorSignupsByMonth, searchProfiles } from "@/lib/admin";
 import type { MonthlySignup } from "@/lib/admin";
-import { getPendingReviewsForAdmin, updateReviewStatus } from "@/lib/reviews";
+import { getAllReviewsForAdmin, getReviewStats, updateReviewStatus } from "@/lib/reviews";
 import type { PlatformReview } from "@/lib/reviews";
 import { getAllStandsForAdmin, updateStandStatus } from "@/lib/stands";
 import type { Profile, Stand } from "@/lib/types";
@@ -36,21 +36,24 @@ export default function AdminPage() {
   const [signups, setSignups] = useState<MonthlySignup[]>([]);
   const [stands, setStands] = useState<Stand[]>([]);
   const [users, setUsers] = useState<Profile[]>([]);
-  const [pendingReviews, setPendingReviews] = useState<PlatformReview[]>([]);
+  const [reviews, setReviews] = useState<PlatformReview[]>([]);
+  const [reviewStats, setReviewStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [search, setSearch] = useState("");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   async function refreshAll() {
-    const [signupsData, standsData, usersData, reviewsData] = await Promise.all([
+    const [signupsData, standsData, usersData, reviewsData, reviewStatsData] = await Promise.all([
       getVendorSignupsByMonth(),
       getAllStandsForAdmin(),
       searchProfiles(""),
-      getPendingReviewsForAdmin(),
+      getAllReviewsForAdmin(),
+      getReviewStats(),
     ]);
     setSignups(signupsData);
     setStands(standsData);
     setUsers(usersData);
-    setPendingReviews(reviewsData);
+    setReviews(reviewsData);
+    setReviewStats(reviewStatsData);
   }
 
   useEffect(() => {
@@ -93,7 +96,8 @@ export default function AdminPage() {
       setActionMessage("Impossible de mettre à jour cet avis.");
       return;
     }
-    setPendingReviews((current) => current.filter((r) => r.id !== reviewId));
+    setReviews((current) => current.map((review) => review.id === reviewId ? { ...review, status } : review));
+    setReviewStats(await getReviewStats());
   }
 
   async function handleDeleteUser(userId: string, name: string) {
@@ -171,9 +175,9 @@ export default function AdminPage() {
           </article>
           <article className="panel p-5">
             <span className="tag">
-              <MessageSquareQuote size={16} /> Avis en attente
+              <MessageSquareQuote size={16} /> Avis total
             </span>
-            <h2 className="mt-3 text-3xl font-bold">{pendingReviews.length}</h2>
+            <h2 className="mt-3 text-3xl font-bold">{reviewStats.total}</h2>
           </article>
         </section>
 
@@ -240,11 +244,14 @@ export default function AdminPage() {
 
         <section className="container-ucao panel mb-[54px] overflow-x-auto p-5">
           <h2 className="mb-4 text-2xl font-bold">Modération des avis</h2>
-          {pendingReviews.length === 0 ? (
-            <p className="text-ucao-muted dark:text-[#a8b8cc]">Aucun avis en attente de validation.</p>
+          <p className="mb-4 text-sm text-ucao-muted dark:text-[#a8b8cc]">
+            {reviewStats.approved} validé(s), {reviewStats.pending} en attente, {reviewStats.rejected} rejeté(s).
+          </p>
+          {reviews.length === 0 ? (
+            <p className="text-ucao-muted dark:text-[#a8b8cc]">Aucun avis enregistré.</p>
           ) : (
             <ul className="space-y-4">
-              {pendingReviews.map((review) => (
+              {reviews.map((review) => (
                 <li key={review.id} className="rounded-ucao border border-ucao-line p-4 dark:border-[#2a3a52]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -254,13 +261,16 @@ export default function AdminPage() {
                         {review.author?.name ?? "Utilisateur"} — {review.author?.role ?? ""}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="tag">{review.status}</span>
+                      {review.status === "pending" && <>
                       <button className="btn btn-primary" type="button" onClick={() => handleReviewDecision(review.id, "approved")}>
                         <Check size={16} /> Valider
                       </button>
                       <button className="btn btn-ghost" type="button" onClick={() => handleReviewDecision(review.id, "rejected")}>
                         <X size={16} /> Rejeter
                       </button>
+                      </>}
                     </div>
                   </div>
                 </li>
