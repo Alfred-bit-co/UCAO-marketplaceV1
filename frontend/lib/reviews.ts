@@ -114,46 +114,6 @@ export async function getPendingReviewsForAdmin(): Promise<PlatformReview[]> {
   return (data as unknown as ReviewRow[]).map(mapReviewRow);
 }
 
-export async function updateReviewStatus(
-  reviewId: string,
-  status: "approved" | "rejected",
-): Promise<boolean> {
-  if (!isSupabaseConfigured()) return false;
-  const supabase = createClient();
-  if (!supabase) return false;
-
-  const { error } = await supabase.from("platform_reviews").update({ status }).eq("id", reviewId);
-  if (error) console.error("SUPABASE ERROR (updateReviewStatus):", error);
-  return !error;
-}
-
-export async function getPlatformStats(): Promise<{ products: number; vendors: number }> {
-  if (!isSupabaseConfigured()) return { products: 0, vendors: 0 };
-  const supabase = createClient();
-  if (!supabase) return { products: 0, vendors: 0 };
-
-  const [{ count: products }, { count: vendors }] = await Promise.all([
-    supabase.from("products").select("id", { count: "exact", head: true }),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "VENDEUR"),
-  ]);
-
-  return { products: products ?? 0, vendors: vendors ?? 0 };
-}
-
-export async function deleteReview(reviewId: string, userId: string): Promise<boolean> {
-  if (!isSupabaseConfigured()) return false;
-  const supabase = createClient();
-  if (!supabase) return false;
-
-  const { error } = await supabase
-    .from("platform_reviews")
-    .delete()
-    .eq("id", reviewId)
-    .eq("user_id", userId);
-  if (error) console.error("SUPABASE ERROR (deleteReview):", error);
-  return !error;
-}
-
 export async function getAllReviewsForAdmin(): Promise<PlatformReview[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
@@ -168,6 +128,7 @@ export async function getAllReviewsForAdmin(): Promise<PlatformReview[]> {
     console.error("SUPABASE ERROR (getAllReviewsForAdmin):", error);
     return [];
   }
+
   return (data as unknown as ReviewRow[]).map(mapReviewRow);
 }
 
@@ -194,4 +155,44 @@ export async function getReviewStats(): Promise<{
     pending: pending ?? 0,
     rejected: rejected ?? 0,
   };
+}
+
+export async function deleteReview(reviewId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  const supabase = createClient();
+  if (!supabase) return false;
+
+  const { error } = await supabase
+    .from("platform_reviews")
+    .delete()
+    .eq("id", reviewId)
+    .eq("user_id", userId);
+  if (error) console.error("SUPABASE ERROR (deleteReview):", error);
+  return !error;
+}
+
+export async function updateReviewStatus(
+  reviewId: string,
+  status: "approved" | "rejected",
+): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  const supabase = createClient();
+  if (!supabase) return false;
+
+  const { error } = await supabase.from("platform_reviews").update({ status }).eq("id", reviewId);
+  if (error) console.error("SUPABASE ERROR (updateReviewStatus):", error);
+  return !error;
+}
+
+export async function getPlatformStats(): Promise<{ products: number; vendors: number }> {
+  if (!isSupabaseConfigured()) return { products: 0, vendors: 0 };
+  const supabase = createClient();
+  if (!supabase) return { products: 0, vendors: 0 };
+
+  const [{ count: products }, { count: vendors }] = await Promise.all([
+    supabase.from("products").select("id", { count: "exact", head: true }),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "VENDEUR"),
+  ]);
+
+  return { products: products ?? 0, vendors: vendors ?? 0 };
 }
