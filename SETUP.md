@@ -35,6 +35,62 @@ create table public.profiles (
   created_at timestamptz not null default now()
 );
 
+-- Cree automatiquement le profil applicatif apres une inscription Supabase.
+-- Le role utilise la valeur par defaut definie sur public.profiles.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, full_name, email, phone)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', ''),
+    new.email,
+    new.raw_user_meta_data ->> 'phone'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
+-- Rattrape les comptes crees avant la mise en place du declencheur.
+insert into public.profiles (id, full_name, email, phone)
+select
+  users.id,
+  coalesce(users.raw_user_meta_data ->> 'full_name', ''),
+  users.email,
+  users.raw_user_meta_data ->> 'phone'
+from auth.users as users
+where not exists (
+  select 1 from public.profiles where profiles.id = users.id
+);
+
+create or replace function public.prevent_profile_phone_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.phone is distinct from old.phone then
+    raise exception 'Le numero de telephone ne peut pas etre modifie';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger prevent_profile_phone_change
+before update on public.profiles
+for each row execute function public.prevent_profile_phone_change();
+
 create table public.stands (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -67,10 +123,20 @@ create table public.orders (
   created_at timestamptz not null default now()
 );
 
+create table public.platform_reviews (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.profiles(id) on delete cascade,
+  rating integer not null check (rating between 1 and 5),
+  comment text not null check (char_length(comment) between 10 and 500),
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  created_at timestamptz not null default now()
+);
+
 alter table public.profiles enable row level security;
 alter table public.stands enable row level security;
 alter table public.products enable row level security;
 alter table public.orders enable row level security;
+alter table public.platform_reviews enable row level security;
 
 create policy "Profiles are readable" on public.profiles for select using (true);
 create policy "Users update own profile" on public.profiles for update using (auth.uid() = id);
@@ -85,9 +151,68 @@ create policy "Users update own products" on public.products for update using (a
 create policy "Users delete own products" on public.products for delete using (auth.uid() = user_id);
 
 create policy "Users read own orders" on public.orders for select using (auth.uid() = user_id);
+
+create policy "Users read own reviews" on public.platform_reviews
+for select using (auth.uid() = user_id);
+
+create policy "Users create own reviews" on public.platform_reviews
+for insert with check (auth.uid() = user_id);
+
+create policy "Users update own reviews" on public.platform_reviews
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "Users delete own reviews" on public.platform_reviews
+for delete using (auth.uid() = user_id);
+
+create policy "Everyone reads approved reviews" on public.platform_reviews
+for select using (status = 'approved');
+
+create policy "Admins manage reviews" on public.platform_reviews
+for all using (
+  exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role::text = 'ADMIN')
+) with check (
+  exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role::text = 'ADMIN')
+);
 ```
 
 Crée aussi un bucket Supabase Storage, par exemple `marketplace-media`, pour les images produits et bannières.
+
+### Mise à jour d'une base existante
+
+Si les tables existent déjà, exécute ce bloc pour réactiver proprement la lecture et la modération des avis sans recréer les données :
+
+```sql
+alter table public.platform_reviews enable row level security;
+
+drop policy if exists "Users read own reviews" on public.platform_reviews;
+drop policy if exists "Users create own reviews" on public.platform_reviews;
+drop policy if exists "Users update own reviews" on public.platform_reviews;
+drop policy if exists "Users delete own reviews" on public.platform_reviews;
+drop policy if exists "Everyone reads approved reviews" on public.platform_reviews;
+drop policy if exists "Admins manage reviews" on public.platform_reviews;
+
+create policy "Users read own reviews" on public.platform_reviews
+for select using (auth.uid() = user_id);
+
+create policy "Users create own reviews" on public.platform_reviews
+for insert with check (auth.uid() = user_id);
+
+create policy "Users update own reviews" on public.platform_reviews
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "Users delete own reviews" on public.platform_reviews
+for delete using (auth.uid() = user_id);
+
+create policy "Everyone reads approved reviews" on public.platform_reviews
+for select using (status = 'approved');
+
+create policy "Admins manage reviews" on public.platform_reviews
+for all using (
+  exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role::text = 'ADMIN')
+) with check (
+  exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role::text = 'ADMIN')
+);
+```
 
 ## 3. FedaPay
 

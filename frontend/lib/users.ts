@@ -39,7 +39,7 @@ export async function signOut(): Promise<void> {
 
 export async function updateProfile(
   userId: string,
-  payload: { full_name?: string; phone?: string },
+  payload: { full_name?: string },
 ): Promise<{ error: string | null }> {
   const supabase = createClient();
   if (!supabase) return { error: "Supabase non configuré." };
@@ -47,12 +47,21 @@ export async function updateProfile(
   const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
   if (error) {
     console.error("SUPABASE ERROR (updateProfile):", error);
-    if (error.code === "23505") {
-      return { error: "Ce numéro de téléphone est déjà associé à un autre compte." };
-    }
     return { error: error.message };
   }
   return { error: null };
+}
+
+export async function updateCurrentProfile(payload: { full_name: string }): Promise<{ error: string | null }> {
+  const supabase = createClient();
+  if (!supabase) return { error: "Supabase non configuré." };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Session utilisateur introuvable." };
+
+  return updateProfile(user.id, payload);
 }
 
 export async function changePassword(newPassword: string): Promise<{ error: string | null }> {

@@ -9,6 +9,11 @@ export type PlatformReview = {
   author: { name: string; role: string } | null;
 };
 
+export type ReviewAdminResult = {
+  reviews: PlatformReview[];
+  error: string | null;
+};
+
 type ReviewRow = {
   id: string;
   rating: number;
@@ -114,10 +119,10 @@ export async function getPendingReviewsForAdmin(): Promise<PlatformReview[]> {
   return (data as unknown as ReviewRow[]).map(mapReviewRow);
 }
 
-export async function getAllReviewsForAdmin(): Promise<PlatformReview[]> {
-  if (!isSupabaseConfigured()) return [];
+export async function getAllReviewsForAdmin(): Promise<ReviewAdminResult> {
+  if (!isSupabaseConfigured()) return { reviews: [], error: "Supabase non configuré." };
   const supabase = createClient();
-  if (!supabase) return [];
+  if (!supabase) return { reviews: [], error: "Supabase non configuré." };
 
   const { data, error } = await supabase
     .from("platform_reviews")
@@ -126,10 +131,13 @@ export async function getAllReviewsForAdmin(): Promise<PlatformReview[]> {
 
   if (error || !data) {
     console.error("SUPABASE ERROR (getAllReviewsForAdmin):", error);
-    return [];
+    return {
+      reviews: [],
+      error: error?.message || "Impossible de charger les avis. Vérifiez la table et les policies Supabase.",
+    };
   }
 
-  return (data as unknown as ReviewRow[]).map(mapReviewRow);
+  return { reviews: (data as unknown as ReviewRow[]).map(mapReviewRow), error: null };
 }
 
 export async function getReviewStats(): Promise<{
@@ -168,6 +176,16 @@ export async function deleteReview(reviewId: string, userId: string): Promise<bo
     .eq("id", reviewId)
     .eq("user_id", userId);
   if (error) console.error("SUPABASE ERROR (deleteReview):", error);
+  return !error;
+}
+
+export async function deleteReviewForAdmin(reviewId: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  const supabase = createClient();
+  if (!supabase) return false;
+
+  const { error } = await supabase.from("platform_reviews").delete().eq("id", reviewId);
+  if (error) console.error("SUPABASE ERROR (deleteReviewForAdmin):", error);
   return !error;
 }
 

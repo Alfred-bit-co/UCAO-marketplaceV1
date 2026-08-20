@@ -3,6 +3,7 @@ import { MessageSquareQuote, Send, Star, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { deleteReview, getApprovedReviews, getMyReview, submitReview } from "@/lib/reviews";
 import type { PlatformReview } from "@/lib/reviews";
+import { createClient } from "@/lib/supabase";
 import { getCurrentProfile } from "@/lib/users";
 
 function initials(name: string) {
@@ -27,6 +28,7 @@ export function Testimonials() {
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -40,6 +42,10 @@ export function Testimonials() {
           setRating(existing.rating);
           setComment(existing.comment);
         }
+      } else {
+        const supabase = createClient();
+        const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+        setProfileError(Boolean(user));
       }
     })();
   }, []);
@@ -64,7 +70,7 @@ export function Testimonials() {
     }
   }
 
-  if (!reviews.length && !userId) return null;
+  if (!reviews.length && !userId && !profileError) return null;
 
   return (
     <section className="container-ucao py-[64px]">
@@ -146,6 +152,9 @@ export function Testimonials() {
             </>
           )}
         </form>
+      )}
+      {profileError && !userId && (
+        <p className="notice notice-error">Votre profil n&apos;est pas encore prêt. Reconnectez-vous après la confirmation de votre email ou contactez l&apos;administration.</p>
       )}
     </section>
   );

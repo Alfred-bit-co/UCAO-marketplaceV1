@@ -62,3 +62,11 @@ Commande de demarrage Render:
 ```text
 gunicorn run:app
 ```
+
+## Dernieres modifications du profil
+
+- Le profil permet maintenant de modifier separement le prenom et le nom.
+- L'adresse email et le numero de telephone sont affiches en lecture seule.
+- Le numero de telephone n'est plus transmis par la fonction de mise a jour du profil.
+- Une regle SQL Supabase bloque aussi toute modification directe du numero de telephone (voir `SETUP.md`).
+- La page profil affiche un resume du compte, le role et des messages de confirmation ou d'erreur.

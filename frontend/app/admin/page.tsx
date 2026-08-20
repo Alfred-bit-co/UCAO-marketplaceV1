@@ -15,10 +15,11 @@ import { PageShell } from "@/components/page-shell";
 import { Stars } from "@/components/testimonials";
 import { deleteUserAccount, getVendorSignupsByMonth, searchProfiles } from "@/lib/admin";
 import type { MonthlySignup } from "@/lib/admin";
-import { getAllReviewsForAdmin, getReviewStats, updateReviewStatus } from "@/lib/reviews";
+import { deleteReviewForAdmin, getAllReviewsForAdmin, getReviewStats, updateReviewStatus } from "@/lib/reviews";
 import type { PlatformReview } from "@/lib/reviews";
 import { getAllStandsForAdmin, updateStandStatus } from "@/lib/stands";
 import type { Profile, Stand } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { getCurrentProfile } from "@/lib/users";
 
 function initials(name: string) {
@@ -42,7 +43,7 @@ export default function AdminPage() {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   async function refreshAll() {
-    const [signupsData, standsData, usersData, reviewsData, reviewStatsData] = await Promise.all([
+    const [signupsData, standsData, usersData, reviewsResult, reviewStatsData] = await Promise.all([
       getVendorSignupsByMonth(),
       getAllStandsForAdmin(),
       searchProfiles(""),
@@ -52,8 +53,11 @@ export default function AdminPage() {
     setSignups(signupsData);
     setStands(standsData);
     setUsers(usersData);
-    setReviews(reviewsData);
+    setReviews(reviewsResult.reviews);
     setReviewStats(reviewStatsData);
+    if (reviewsResult.error) {
+      setActionMessage(`Avis : ${reviewsResult.error}`);
+    }
   }
 
   useEffect(() => {
@@ -97,6 +101,18 @@ export default function AdminPage() {
       return;
     }
     setReviews((current) => current.map((review) => review.id === reviewId ? { ...review, status } : review));
+    setReviewStats(await getReviewStats());
+  }
+
+  async function handleDeleteReview(reviewId: string) {
+    if (!window.confirm("Supprimer définitivement cet avis ? Cette action est irréversible.")) return;
+    setActionMessage(null);
+    const ok = await deleteReviewForAdmin(reviewId);
+    if (!ok) {
+      setActionMessage("Impossible de supprimer cet avis.");
+      return;
+    }
+    setReviews((current) => current.filter((review) => review.id !== reviewId));
     setReviewStats(await getReviewStats());
   }
 
@@ -248,7 +264,9 @@ export default function AdminPage() {
             {reviewStats.approved} validé(s), {reviewStats.pending} en attente, {reviewStats.rejected} rejeté(s).
           </p>
           {reviews.length === 0 ? (
-            <p className="text-ucao-muted dark:text-[#a8b8cc]">Aucun avis enregistré.</p>
+            <p className="text-ucao-muted dark:text-[#a8b8cc]">
+              {actionMessage?.startsWith("Avis :") ? "Les avis ne peuvent pas être chargés." : "Aucun avis enregistré."}
+            </p>
           ) : (
             <ul className="space-y-4">
               {reviews.map((review) => (
@@ -262,7 +280,22 @@ export default function AdminPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="tag">{review.status}</span>
+                      <span className={cn(
+                        "tag",
+                        review.status === "approved" && "bg-ucao-success-soft text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad]",
+                        review.status === "rejected" && "bg-[#ffe8e8] text-ucao-danger dark:bg-[#3a1a1c] dark:text-[#ff8a8e]",
+                      )}>
+                        {review.status}
+                      </span>
+                      <button
+                        className="btn btn-ghost text-ucao-red"
+                        type="button"
+                        onClick={() => handleDeleteReview(review.id)}
+                        aria-label="Supprimer cet avis"
+                        title="Supprimer cet avis"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                       {review.status === "pending" && <>
                       <button className="btn btn-primary" type="button" onClick={() => handleReviewDecision(review.id, "approved")}>
                         <Check size={16} /> Valider
