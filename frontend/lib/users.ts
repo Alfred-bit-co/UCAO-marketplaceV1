@@ -31,37 +31,38 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   };
 }
 
-export async function updateCurrentProfile(payload: {
-  full_name: string;
-  phone: string;
-}): Promise<{ error: string | null }> {
+export async function signOut(): Promise<void> {
+  const supabase = createClient();
+  if (!supabase) return;
+  await supabase.auth.signOut();
+}
+
+export async function updateProfile(
+  userId: string,
+  payload: { full_name?: string; phone?: string },
+): Promise<{ error: string | null }> {
   const supabase = createClient();
   if (!supabase) return { error: "Supabase non configuré." };
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté." };
-
-  const fullName = payload.full_name.trim();
-  const phone = payload.phone.trim();
-  if (fullName.length < 2) return { error: "Le nom complet est obligatoire." };
-  if (!phone) return { error: "Le numéro de téléphone est obligatoire." };
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({ full_name: fullName, phone })
-    .eq("id", user.id);
-
+  const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
   if (error) {
-    console.error("SUPABASE ERROR (updateCurrentProfile):", error);
+    console.error("SUPABASE ERROR (updateProfile):", error);
+    if (error.code === "23505") {
+      return { error: "Ce numéro de téléphone est déjà associé à un autre compte." };
+    }
     return { error: error.message };
   }
   return { error: null };
 }
 
-export async function signOut(): Promise<void> {
+export async function changePassword(newPassword: string): Promise<{ error: string | null }> {
   const supabase = createClient();
-  if (!supabase) return;
-  await supabase.auth.signOut();
+  if (!supabase) return { error: "Supabase non configuré." };
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) {
+    console.error("SUPABASE ERROR (changePassword):", error);
+    return { error: error.message };
+  }
+  return { error: null };
 }
