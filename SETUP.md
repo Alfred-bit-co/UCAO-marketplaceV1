@@ -184,33 +184,58 @@ Si les tables existent déjà, exécute ce bloc pour réactiver proprement la le
 ```sql
 alter table public.platform_reviews enable row level security;
 
-drop policy if exists "Users read own reviews" on public.platform_reviews;
-drop policy if exists "Users create own reviews" on public.platform_reviews;
-drop policy if exists "Users update own reviews" on public.platform_reviews;
-drop policy if exists "Users delete own reviews" on public.platform_reviews;
-drop policy if exists "Everyone reads approved reviews" on public.platform_reviews;
-drop policy if exists "Admins manage reviews" on public.platform_reviews;
+-- Supprime aussi les anciennes policies portant d'autres noms.
+do $$
+declare
+  policy_record record;
+begin
+  for policy_record in
+    select policyname
+    from pg_policies
+    where schemaname = 'public' and tablename = 'platform_reviews'
+  loop
+    execute format('drop policy if exists %I on public.platform_reviews', policy_record.policyname);
+  end loop;
+end;
+$$;
 
-create policy "Users read own reviews" on public.platform_reviews
-for select using (auth.uid() = user_id);
+create policy "Reviews select" on public.platform_reviews
+for select using (
+  (select auth.uid()) = user_id
+  or status = 'approved'
+  or exists (
+    select 1 from public.profiles
+    where profiles.id = (select auth.uid()) and profiles.role::text = 'ADMIN'
+  )
+);
 
-create policy "Users create own reviews" on public.platform_reviews
-for insert with check (auth.uid() = user_id);
+create policy "Reviews insert" on public.platform_reviews
+for insert with check ((select auth.uid()) = user_id);
 
-create policy "Users update own reviews" on public.platform_reviews
-for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Reviews update" on public.platform_reviews
+for update
+using (
+  (select auth.uid()) = user_id
+  or exists (
+    select 1 from public.profiles
+    where profiles.id = (select auth.uid()) and profiles.role::text = 'ADMIN'
+  )
+)
+with check (
+  (select auth.uid()) = user_id
+  or exists (
+    select 1 from public.profiles
+    where profiles.id = (select auth.uid()) and profiles.role::text = 'ADMIN'
+  )
+);
 
-create policy "Users delete own reviews" on public.platform_reviews
-for delete using (auth.uid() = user_id);
-
-create policy "Everyone reads approved reviews" on public.platform_reviews
-for select using (status = 'approved');
-
-create policy "Admins manage reviews" on public.platform_reviews
-for all using (
-  exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role::text = 'ADMIN')
-) with check (
-  exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role::text = 'ADMIN')
+create policy "Reviews delete" on public.platform_reviews
+for delete using (
+  (select auth.uid()) = user_id
+  or exists (
+    select 1 from public.profiles
+    where profiles.id = (select auth.uid()) and profiles.role::text = 'ADMIN'
+  )
 );
 ```
 
