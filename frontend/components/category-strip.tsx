@@ -14,7 +14,11 @@ const CATEGORY_ICONS: { value: ProductCategory; label: string; Icon: LucideIcon 
 export function CategoryStrip() {
   return (
     <nav className="border-b border-ucao-line bg-white py-4 dark:border-[#1c3050] dark:bg-[#0b1c31]" aria-label="Catégories rapides">
-      <div className="container-ucao flex flex-wrap justify-center gap-3 md:justify-start">
+      <div className="container-ucao flex flex-col items-center gap-3">
+        <h2 className="text-center text-sm font-black uppercase tracking-wide text-ucao-navy dark:text-white">
+          Accès rapide aux catégories produits
+        </h2>
+        <div className="flex flex-wrap justify-center gap-3">
         {CATEGORY_ICONS.map(({ value, label, Icon }) => (
           <Link
             key={value}
@@ -25,6 +29,7 @@ export function CategoryStrip() {
             {label}
           </Link>
         ))}
+        </div>
       </div>
     </nav>
   );

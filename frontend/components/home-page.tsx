@@ -7,13 +7,11 @@ import {
   BadgeCheck,
   ChevronLeft,
   ChevronRight,
-  CirclePlus,
   ExternalLink,
   GraduationCap,
   HandCoins,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Store,
   UsersRound,
 } from "lucide-react";
@@ -117,13 +115,13 @@ export function HomePage({
             </p>
             <div className="flex flex-wrap gap-3.5">
               <Link className="btn btn-primary" href="/products">
-                <ShoppingBag size={18} strokeWidth={ICON_STROKE} /> Explorer
+                Explorer
               </Link>
               <Link className="btn btn-light" href="/comment-ca-marche">
-                <Sparkles size={18} strokeWidth={ICON_STROKE} /> Comment ça marche
+                Comment ça marche
               </Link>
               <Link className="btn btn-primary" href="/register">
-                <CirclePlus size={18} strokeWidth={ICON_STROKE} /> Devenir vendeur
+                Devenir vendeur
               </Link>
             </div>
           </div>
