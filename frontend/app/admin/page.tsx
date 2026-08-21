@@ -154,14 +154,15 @@ export default function AdminPage() {
           Contrôlez les inscriptions, les vendeurs et gardez la marketplace fiable.
         </PageHero>
 
-        <section className="container-ucao flex items-center gap-4 pt-[42px]">
-          <span className="grid size-16 place-items-center rounded-full bg-ucao-navy text-xl font-black text-white">
+        <section className="container-ucao flex items-center justify-between gap-3 pt-[30px]">
+          <span className="grid size-12 place-items-center rounded-full bg-ucao-navy text-lg font-black text-white">
             {initials(me.full_name || "Admin")}
           </span>
           <div>
-            <p className="text-2xl font-bold">Bonjour, {me.full_name} 👋</p>
+            <p className="text-xl font-bold">Bonjour, {me.full_name} 👋</p>
             <p className="text-ucao-muted dark:text-[#a8b8cc]">Ravi de vous revoir sur l&apos;administration.</p>
           </div>
+          <span className="tag ml-auto hidden sm:inline-flex"><ShieldCheck size={15} /> Accès administrateur</span>
         </section>
 
         {actionMessage && (
@@ -170,26 +171,26 @@ export default function AdminPage() {
           </section>
         )}
 
-        <section className="container-ucao grid gap-5 py-[42px] md:grid-cols-4">
-          <article className="panel p-5">
+        <section className="container-ucao grid gap-4 py-[30px] md:grid-cols-4">
+          <article className="panel border-l-4 border-l-ucao-red p-4">
             <span className="tag">
               <ShieldCheck size={16} /> Stands en attente
             </span>
             <h2 className="mt-3 text-3xl font-bold">{pendingStands.length}</h2>
           </article>
-          <article className="panel p-5">
+          <article className="panel border-l-4 border-l-ucao-success p-4">
             <span className="tag">
               <ShieldCheck size={16} /> Stands validés
             </span>
             <h2 className="mt-3 text-3xl font-bold">{stands.filter((s) => s.status === "approved").length}</h2>
           </article>
-          <article className="panel p-5">
+          <article className="panel border-l-4 border-l-ucao-navy p-4">
             <span className="tag">
               <TrendingUp size={16} /> Vendeurs (total historique)
             </span>
             <h2 className="mt-3 text-3xl font-bold">{signups.reduce((sum, item) => sum + item.count, 0)}</h2>
           </article>
-          <article className="panel p-5">
+          <article className="panel border-l-4 border-l-ucao-gold p-4">
             <span className="tag">
               <MessageSquareQuote size={16} /> Avis total
             </span>
@@ -197,8 +198,14 @@ export default function AdminPage() {
           </article>
         </section>
 
-        <section className="container-ucao panel mb-[54px] p-5">
-          <h2 className="mb-4 text-2xl font-bold">Nouveaux vendeurs par mois</h2>
+        <section className="container-ucao panel mb-[42px] p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow mb-1"><TrendingUp size={15} /> Activité</p>
+              <h2 className="text-xl font-bold">Nouveaux vendeurs par mois</h2>
+            </div>
+            <span className="hidden text-sm text-ucao-muted sm:block dark:text-[#a8b8cc]">Données réelles de la plateforme</span>
+          </div>
           {signups.length === 0 ? (
             <p className="text-ucao-muted dark:text-[#a8b8cc]">
               Aucune souscription payée enregistrée pour le moment.
@@ -218,25 +225,25 @@ export default function AdminPage() {
           )}
         </section>
 
-        <section className="container-ucao panel mb-[54px] overflow-x-auto p-5">
-          <h2 className="mb-4 text-2xl font-bold">Validation des stands</h2>
+        <section className="container-ucao panel mb-[42px] overflow-x-auto p-4">
+          <h2 className="mb-3 text-xl font-bold">Validation des stands</h2>
           {pendingStands.length === 0 ? (
             <p className="text-ucao-muted dark:text-[#a8b8cc]">Aucun stand en attente.</p>
           ) : (
             <table className="w-full min-w-[640px] border-collapse">
               <thead>
                 <tr>
-                  <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Stand</th>
-                  <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Responsable</th>
-                  <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Action</th>
+                  <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Stand</th>
+                  <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Responsable</th>
+                  <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {pendingStands.map((stand) => (
                   <tr key={stand.id}>
-                    <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">{stand.name}</td>
-                    <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">{stand.seller?.name}</td>
-                    <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">
+                    <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">{stand.name}</td>
+                    <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">{stand.seller?.name}</td>
+                    <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">
                       <div className="flex gap-2">
                         <button className="btn btn-primary" type="button" onClick={() => handleStandDecision(String(stand.id), "approved")}>
                           <Check size={16} /> Valider
@@ -258,9 +265,9 @@ export default function AdminPage() {
           )}
         </section>
 
-        <section className="container-ucao panel mb-[54px] overflow-x-auto p-5">
-          <h2 className="mb-4 text-2xl font-bold">Modération des avis</h2>
-          <p className="mb-4 text-sm text-ucao-muted dark:text-[#a8b8cc]">
+        <section className="container-ucao panel mb-[42px] overflow-x-auto p-4">
+          <h2 className="mb-3 text-xl font-bold">Modération des avis</h2>
+          <p className="mb-3 text-sm text-ucao-muted dark:text-[#a8b8cc]">
             {reviewStats.approved} validé(s), {reviewStats.pending} en attente, {reviewStats.rejected} rejeté(s).
           </p>
           {reviews.length === 0 ? (
@@ -268,7 +275,7 @@ export default function AdminPage() {
               {actionMessage?.startsWith("Avis :") ? "Les avis ne peuvent pas être chargés." : "Aucun avis enregistré."}
             </p>
           ) : (
-            <ul className="space-y-4">
+            <ul className="space-y-3">
               {reviews.map((review) => (
                 <li key={review.id} className="rounded-ucao border border-ucao-line p-4 dark:border-[#2a3a52]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -312,13 +319,13 @@ export default function AdminPage() {
           )}
         </section>
 
-        <section className="container-ucao panel mb-[84px] overflow-x-auto p-5">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-bold">Utilisateurs</h2>
-            <div className="relative min-w-[260px]">
+        <section className="container-ucao panel mb-[60px] overflow-x-auto p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-bold">Utilisateurs</h2>
+            <div className="relative min-w-[240px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ucao-muted" size={16} />
               <input
-                className="input-field pl-9"
+                className="input-field min-h-10 py-2 pl-9 text-sm"
                 type="search"
                 placeholder="Rechercher un nom ou un email..."
                 value={search}
@@ -329,21 +336,21 @@ export default function AdminPage() {
           <table className="w-full min-w-[640px] border-collapse">
             <thead>
               <tr>
-                <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Nom</th>
-                <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Email</th>
-                <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Rôle</th>
-                <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Palier</th>
-                <th className="border-b border-ucao-line p-3.5 text-left dark:border-[#2a3a52]">Action</th>
+                <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Nom</th>
+                <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Email</th>
+                <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Rôle</th>
+                <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Palier</th>
+                <th className="border-b border-ucao-line px-2.5 py-2 text-left text-sm dark:border-[#2a3a52]">Action</th>
               </tr>
             </thead>
             <tbody>
               {users.map((user) => (
                 <tr key={user.id}>
-                  <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">{user.full_name}</td>
-                  <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">{user.email}</td>
-                  <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">{user.role}</td>
-                  <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">{user.subscription_tier ?? "—"}</td>
-                  <td className="border-b border-ucao-line p-3.5 dark:border-[#2a3a52]">
+                  <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">{user.full_name}</td>
+                  <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">{user.email}</td>
+                  <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">{user.role}</td>
+                  <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">{user.subscription_tier ?? "—"}</td>
+                  <td className="border-b border-ucao-line px-2.5 py-2 dark:border-[#2a3a52]">
                     {user.id !== me.id && (
                       <button
                         className="btn btn-ghost text-ucao-red"

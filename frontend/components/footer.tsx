@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, MessageCircle, Twitter } from "lucide-react";
+import { Instagram, MessageCircle } from "lucide-react";
 import { Brand } from "./navbar";
 
 export function Footer({ full = false }: { full?: boolean }) {
@@ -23,16 +23,10 @@ export function Footer({ full = false }: { full?: boolean }) {
           <p className="my-2">La marketplace universitaire de UCAO UUT.</p>
           <p className="my-2 text-sm">UCAO Marketplace est un projet étudiant indépendant, non affilié officiellement à l&apos;administration de l&apos;UCAO-UUT.</p>
           <div className="mt-4 flex gap-2">
-            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="Facebook">
-              <Facebook size={16} />
-            </a>
-            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="Instagram">
+            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="https://www.instagram.com/ucaomarketplace?igsi=MTFuZnQ5Y3JyM2FhcA==" target="_blank" rel="noopener noreferrer" aria-label="Instagram UCAO Marketplace">
               <Instagram size={16} />
             </a>
-            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="Twitter">
-              <Twitter size={16} />
-            </a>
-            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="#" aria-label="WhatsApp">
+            <a className="grid size-9 place-items-center rounded-full bg-white/10 transition-colors hover:bg-white/20" href="https://wa.me/22892982926" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp UCAO Marketplace">
               <MessageCircle size={16} />
             </a>
           </div>

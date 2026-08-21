@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
@@ -68,9 +69,13 @@ export default function ProfilPage() {
             <h2 className="text-xl font-black">{profile.full_name}</h2>
             <p className="mt-1 flex items-center gap-2 text-sm text-ucao-muted dark:text-[#a8b8cc]"><Mail size={15} /> {profile.email}</p>
             <span className="tag mt-4"><ShieldCheck size={15} /> {profile.role}</span>
+            <button className="btn btn-primary mt-5 w-full" form="profile-form" type="submit" disabled={saving}>
+              <Check size={16} />{saving ? "Enregistrement..." : "Enregistrer les changements"}
+            </button>
+            {message && <Link className="text-center text-sm font-bold text-ucao-red hover:underline" href="/">Retour à la page d&apos;accueil</Link>}
           </aside>
 
-          <form className="panel grid gap-5 p-6" onSubmit={handleSubmit}>
+          <form id="profile-form" className="panel grid gap-5 p-6" onSubmit={handleSubmit}>
             <div>
               <h2 className="text-xl font-black">Informations personnelles</h2>
               <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">Votre nom sera affiché sur la marketplace.</p>
@@ -89,7 +94,6 @@ export default function ProfilPage() {
             </label>
             {error && <p className="notice notice-error">{error}</p>}
             {message && <p className="notice">{message}</p>}
-            <button className="btn btn-primary mt-1 w-full sm:w-fit" type="submit" disabled={saving}><Check size={16} />{saving ? "Enregistrement..." : "Enregistrer les changements"}</button>
           </form>
         </section>
       </main>

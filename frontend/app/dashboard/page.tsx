@@ -266,10 +266,10 @@ export default function DashboardPage() {
           </article>
         </section>
 
-        <section className="container-ucao grid gap-5 pb-[84px] md:grid-cols-2">
-          <form className="panel p-5" onSubmit={handleProductSubmit} key={editingProduct ? String(editingProduct.id) : "new"}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">
+        <section className="container-ucao grid gap-4 pb-[60px] md:grid-cols-2">
+          <form className="panel p-4" onSubmit={handleProductSubmit} key={editingProduct ? String(editingProduct.id) : "new"}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-xl font-bold">
                 {editingProduct ? "Modifier le produit" : "Ajouter un produit"}
               </h2>
               {editingProduct && (
@@ -285,11 +285,11 @@ export default function DashboardPage() {
                 </button>
               )}
             </div>
-            <div className="grid gap-4">
+            <div className="grid gap-2.5">
               <label className="sr-only" htmlFor="product-name">Nom du produit</label>
               <input
                 id="product-name"
-                className="input-field"
+                className="input-field min-h-10 py-2"
                 name="name"
                 placeholder="Nom du produit"
                 defaultValue={editingProduct?.name ?? ""}
@@ -298,7 +298,7 @@ export default function DashboardPage() {
               <label className="sr-only" htmlFor="product-category">Catégorie</label>
               <select
                 id="product-category"
-                className="select-field"
+                className="select-field min-h-10 py-2"
                 name="category"
                 required
                 defaultValue={editingProduct?.category ?? ""}
@@ -311,7 +311,7 @@ export default function DashboardPage() {
               <label className="sr-only" htmlFor="product-price">Prix en FCFA</label>
               <input
                 id="product-price"
-                className="input-field"
+                className="input-field min-h-10 py-2"
                 name="price"
                 type="number"
                 min="0"
@@ -322,7 +322,7 @@ export default function DashboardPage() {
               <label className="sr-only" htmlFor="product-images">Images</label>
               <input
                 id="product-images"
-                className="input-field"
+                className="input-field min-h-10 py-2"
                 name="image_urls"
                 type="text"
                 placeholder="URL(s) image Supabase Storage, séparées par une virgule"
@@ -331,7 +331,7 @@ export default function DashboardPage() {
               <label className="sr-only" htmlFor="product-description">Description complète</label>
               <textarea
                 id="product-description"
-                className="textarea-field"
+                className="textarea-field min-h-[90px] py-2"
                 name="description"
                 placeholder="Description complète"
                 defaultValue={editingProduct?.description ?? ""}
@@ -359,15 +359,15 @@ export default function DashboardPage() {
             </div>
           </form>
 
-          <form className="panel p-5" onSubmit={handleStandSubmit}>
-            <h2 className="mb-4 text-2xl font-bold">Nouveau stand</h2>
-            <div className="grid gap-4">
+          <form className="panel p-4" onSubmit={handleStandSubmit}>
+            <h2 className="mb-3 text-xl font-bold">Nouveau stand</h2>
+            <div className="grid gap-2.5">
               <label className="sr-only" htmlFor="stand-name">Nom du stand</label>
-              <input id="stand-name" className="input-field" name="name" placeholder="Nom du stand" required />
+              <input id="stand-name" className="input-field min-h-10 py-2" name="name" placeholder="Nom du stand" required />
               <label className="sr-only" htmlFor="stand-banner">URL bannière</label>
-              <input id="stand-banner" className="input-field" name="banner_url" type="url" placeholder="URL bannière Supabase Storage" />
+              <input id="stand-banner" className="input-field min-h-10 py-2" name="banner_url" type="url" placeholder="URL bannière Supabase Storage" />
               <label className="sr-only" htmlFor="stand-description">Description du stand</label>
-              <textarea id="stand-description" className="textarea-field" name="description" placeholder="Description du stand" required />
+              <textarea id="stand-description" className="textarea-field min-h-[90px] py-2" name="description" placeholder="Description du stand" required />
               {standError && (
                 <p className="notice notice-error flex items-center gap-2">
                   <AlertTriangle size={16} /> {standError}

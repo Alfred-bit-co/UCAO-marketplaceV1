@@ -3,16 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Camera,
   CirclePlus,
   Globe2,
+  Instagram,
   LogOut,
   Mail,
   MapPin,
   Menu,
   Moon,
-  Network,
   Phone,
+  MessageCircle,
   Store,
   Sun,
   X,
@@ -57,11 +57,11 @@ export function Topbar() {
         <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="https://ucao-uut.tg" target="_blank" rel="noopener noreferrer" aria-label="Site UCAO UUT">
           <Globe2 size={14} />
         </a>
-        <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="#" aria-label="Galerie du campus">
-          <Camera size={14} />
+        <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="https://www.instagram.com/ucaomarketplace?igsi=MTFuZnQ5Y3JyM2FhcA==" target="_blank" rel="noopener noreferrer" aria-label="Instagram UCAO Marketplace">
+          <Instagram size={14} />
         </a>
-        <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="#" aria-label="Réseau professionnel">
-          <Network size={14} />
+        <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="https://wa.me/22892982926" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp UCAO Marketplace">
+          <MessageCircle size={14} />
         </a>
       </div>
       <div className="flex items-center gap-5">

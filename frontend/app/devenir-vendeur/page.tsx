@@ -1,6 +1,6 @@
 "use client";
-import { Check, CheckCircle2, Crown, Loader2, Mail, Phone, Send, ShieldAlert, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { BadgeCheck, Check, CheckCircle2, Crown, Gem, Loader2, Mail, Phone, ShieldAlert, Store, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscriptions";
@@ -10,14 +10,14 @@ import type { SubscriptionTier } from "@/lib/types";
 
 const PHONE_PATTERN = /^\+\d{8,15}$/;
 
-const TIER_STYLES: Record<SubscriptionTier, { Icon: typeof Send; iconBg: string; button: string }> = {
+const TIER_STYLES: Record<SubscriptionTier, { Icon: typeof Store; iconBg: string; button: string }> = {
   STANDARD: {
-    Icon: Send,
+    Icon: BadgeCheck,
     iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
     button: "border-2 border-ucao-navy bg-transparent text-ucao-navy hover:bg-ucao-navy hover:text-white dark:text-white dark:border-white/40",
   },
   PREMIUM: {
-    Icon: Star,
+    Icon: Gem,
     iconBg: "bg-red-50 text-ucao-red dark:bg-red-500/10",
     button: "btn-primary",
   },
@@ -37,6 +37,7 @@ export default function DevenirVendeurPage() {
   const [savingForm, setSavingForm] = useState(false);
   const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const tiersSectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     getCurrentProfile().then((currentProfile) => {
@@ -76,6 +77,12 @@ export default function DevenirVendeurPage() {
     setProfile({ ...profile, full_name: name });
     setFormCompleted(true);
   }
+
+  useEffect(() => {
+    if (formCompleted) {
+      tiersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [formCompleted]);
 
   async function handleChoose(tier: SubscriptionTier) {
     setError(null);
@@ -150,12 +157,17 @@ export default function DevenirVendeurPage() {
                   {savingForm ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
                   {formCompleted ? "Informations validées" : "Continuer vers les paliers"}
                 </button>
+                {formCompleted && (
+                  <p className="notice" aria-live="polite">
+                    Vos informations sont validées. Le choix de votre palier se trouve juste en dessous.
+                  </p>
+                )}
               </>
             )}
           </form>
         </section>
 
-        {formCompleted && <section className="container-ucao grid gap-6 pb-[54px] md:grid-cols-3">
+        {formCompleted && <section ref={tiersSectionRef} className="container-ucao grid scroll-mt-24 gap-6 pb-[54px] md:grid-cols-3">
           <div className="md:col-span-3">
             <p className="eyebrow">Étape 2</p>
             <h2 className="text-2xl font-black">Choisissez votre palier</h2>
@@ -187,7 +199,11 @@ export default function DevenirVendeurPage() {
                     <CheckCircle2 size={16} className="text-ucao-success" /> {plan.productLimit} produits maximum
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-ucao-success" />
+                    {plan.standLimit === 0 ? (
+                      <XCircle size={18} className="text-ucao-red" aria-hidden="true" />
+                    ) : (
+                      <CheckCircle2 size={16} className="text-ucao-success" aria-hidden="true" />
+                    )}
                     {plan.standLimit === 0 ? "Aucun stand" : `${plan.standLimit} stand(s) maximum`}
                   </li>
                 </ul>

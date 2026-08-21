@@ -11,7 +11,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_PATTERN = /^\+\d{8,15}$/;
 const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({ mode, embedded = false }: { mode: "login" | "register"; embedded?: boolean }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -101,9 +101,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     setMessage(resendError ? resendError.message : "L'email de confirmation a été renvoyé. Vérifiez aussi vos spams.");
   }
 
-  return (
-    <ThemeProvider>
-      <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
+  const formContent = (
+    <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
         <form className="panel w-[min(520px,100%)] p-8" onSubmit={submit}>
           <Link
             className="mb-5 inline-flex size-10 items-center justify-center rounded-ucao text-ucao-ink transition-colors hover:bg-ucao-soft dark:text-white dark:hover:bg-white/10"
@@ -228,7 +227,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             {mode === "login" ? "Devenir vendeur" : "J’ai déjà un compte"}
           </Link>
         </form>
-      </main>
-    </ThemeProvider>
+    </main>
   );
+
+  if (embedded) return formContent;
+  return <ThemeProvider>{formContent}</ThemeProvider>;
 }
