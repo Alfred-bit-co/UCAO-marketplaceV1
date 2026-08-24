@@ -6,6 +6,8 @@ import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { createClient } from "@/lib/supabase";
 
+const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
 export default function ReinitialiserMotDePassePage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
@@ -29,11 +31,13 @@ export default function ReinitialiserMotDePassePage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (password.length < 8) {
-      setMessage("Le mot de passe doit contenir au moins 8 caractères.");
+    if (!PASSWORD_PATTERN.test(password)) {
+      setStatus("error");
+      setMessage("Le mot de passe doit contenir au moins 8 caractères, un chiffre et un caractère spécial.");
       return;
     }
     if (password !== confirmPassword) {
+      setStatus("error");
       setMessage("Les deux mots de passe ne correspondent pas.");
       return;
     }
@@ -81,7 +85,10 @@ export default function ReinitialiserMotDePassePage() {
                 id="password"
                 className="input-field"
                 type="password"
-                placeholder="Nouveau mot de passe (8 caractères min.)"
+                placeholder="8 caractères min., chiffre et caractère spécial"
+                minLength={8}
+                pattern="(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}"
+                title="8 caractères minimum, avec au moins un chiffre et un caractère spécial."
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -92,6 +99,7 @@ export default function ReinitialiserMotDePassePage() {
                 className="input-field"
                 type="password"
                 placeholder="Confirmer le mot de passe"
+                minLength={8}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 required

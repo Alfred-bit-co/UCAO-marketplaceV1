@@ -145,7 +145,7 @@ export async function getProducts(options?: {
 
 export async function getProductById(id: string): Promise<Product | null> {
   if (!isSupabaseConfigured()) {
-    return DEMO_PRODUCTS.find((p) => String(p.id) === id) ?? DEMO_PRODUCTS[0] ?? null;
+    return DEMO_PRODUCTS.find((p) => String(p.id) === id) ?? null;
   }
 
   const supabase = createClient();
@@ -161,7 +161,7 @@ export async function getProductById(id: string): Promise<Product | null> {
 
   if (error || !data) {
     console.error("SUPABASE ERROR (getProductById):", error);
-    return DEMO_PRODUCTS.find((p) => String(p.id) === id) ?? null;
+    return null;
   }
 
   return mapProduct(data as ProductRow);

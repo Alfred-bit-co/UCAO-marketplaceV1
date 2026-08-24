@@ -8,16 +8,18 @@ export const IMAGE_ASSETS = {
   heroStudents: "/images/hero-etudiants-campus.jpg",
   universityBuilding: "/images/universite-batiment.jpg",
   pageHeroCampus: "/images/page-hero-campus.jpg",
-  productSupplies: "/images/product-fournitures-etudiant.jpg",
-  productCvDesign: "/images/product-service-design-cv.jpg",
-  productTshirt: "/images/product-tshirt-ucao.jpg",
-  productLunch: "/images/product-dejeuner-campus.jpg",
-  productComputerRepair: "/images/product-reparation-ordinateur.jpg",
-  productEconomyBook: "/images/product-livre-economie.jpg",
-  standBookshop: "/images/stand-librairie-campus.jpg",
-  standFood: "/images/stand-ucao-food.jpg",
-  standDigital: "/images/stand-studio-digital.jpg",
-  standFallback: "/images/stand-banniere-campus.jpg",
+  // Ces visuels existent réellement dans public/images. Les anciens noms
+  // pointaient vers des fichiers absents et produisaient des images cassées.
+  productSupplies: "/images/hero-etudiants-campus.jpg",
+  productCvDesign: "/images/hero-campus.jpg",
+  productTshirt: "/images/hero-universite-batiment.jpg",
+  productLunch: "/images/page-hero-campus.jpg",
+  productComputerRepair: "/images/universite-batiment.jpg",
+  productEconomyBook: "/images/hero-etudiants-campus.jpg",
+  standBookshop: "/images/universite-batiment.jpg",
+  standFood: "/images/hero-campus.jpg",
+  standDigital: "/images/hero-etudiants-campus.jpg",
+  standFallback: "/images/page-hero-campus.jpg",
 };
 
 export const DEMO_PRODUCTS: Product[] = [

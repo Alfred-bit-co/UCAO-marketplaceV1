@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
+
+export const metadata: Metadata = {
+  title: "Politique de sécurité — UCAO Marketplace",
+  description: "Mesures de sécurité et procédure de signalement d'une faille.",
+};
 
 const sections = [
   {

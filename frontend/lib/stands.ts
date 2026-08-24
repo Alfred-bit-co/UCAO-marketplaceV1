@@ -81,7 +81,7 @@ export async function getStands(page = 1, perPage = 10): Promise<PaginatedResult
 
 export async function getStandById(id: string): Promise<Stand | null> {
   if (!isSupabaseConfigured()) {
-    return DEMO_STANDS.find((stand) => String(stand.id) === id) ?? DEMO_STANDS[0] ?? null;
+    return DEMO_STANDS.find((stand) => String(stand.id) === id) ?? null;
   }
 
   const supabase = createClient();
@@ -95,7 +95,7 @@ export async function getStandById(id: string): Promise<Stand | null> {
 
   if (error || !data) {
     console.error("SUPABASE ERROR (getStandById):", error);
-    return DEMO_STANDS.find((stand) => String(stand.id) === id) ?? null;
+    return null;
   }
   return mapStand(data as unknown as StandRow);
 }

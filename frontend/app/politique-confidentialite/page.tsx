@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
+
+export const metadata: Metadata = {
+  title: "Politique de confidentialité — UCAO Marketplace",
+  description: "Découvrez les données traitées et vos droits sur UCAO Marketplace.",
+};
 
 const sections = [
   {

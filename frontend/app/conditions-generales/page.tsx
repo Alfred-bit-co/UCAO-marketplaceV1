@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { FileText } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
+
+export const metadata: Metadata = {
+  title: "Conditions générales d'utilisation — UCAO Marketplace",
+  description: "Règles d'utilisation et conditions des abonnements vendeur UCAO Marketplace.",
+};
 
 export default function ConditionsGeneralesPage() {
   return (

@@ -22,7 +22,7 @@ export function PageHero({
       "
     >
       <div className="container-ucao">
-        <p className="eyebrow text-[#8B1E2D]">
+        <p className="eyebrow text-white/85">
           <Icon size={16} />
           {eyebrow}
         </p>

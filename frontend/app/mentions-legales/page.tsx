@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
+
+export const metadata: Metadata = {
+  title: "Mentions légales — UCAO Marketplace",
+  description: "Informations légales, contacts et cadre juridique d'UCAO Marketplace.",
+};
 
 const sections = [
   {

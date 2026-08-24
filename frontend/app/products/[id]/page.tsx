@@ -1,15 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { RoleBadge } from "@/components/role-badge";
 import { getProductById } from "@/lib/products";
 import { formatPrice } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { IMAGE_ASSETS } from "@/lib/constants";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await getProductById(id);
+  if (!product) notFound();
   const whatsapp = product
     ? buildWhatsAppUrl(
         product.seller?.phone,
@@ -19,11 +22,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   return (
     <PageShell>
       <main className="container-ucao grid gap-8 py-[54px] md:grid-cols-2">
-        {product && (
-          <>
+        <>
             <div className="relative min-h-[420px] overflow-hidden rounded-ucao shadow-ucao">
               <Image
-                src={product.image_url || "/images/product-fournitures-etudiant.jpg"}
+                src={product.image_url || IMAGE_ASSETS.productSupplies}
                 alt={product.name}
                 fill
                 className="object-cover"
@@ -54,8 +56,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </Link>
               </div>
             </section>
-          </>
-        )}
+        </>
       </main>
     </PageShell>
   );

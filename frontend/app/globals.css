@@ -39,6 +39,18 @@
     stroke-width: 2.2;
   }
 
+  :focus-visible {
+    outline: 3px solid #2e7d5b;
+    outline-offset: 3px;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+
   .dark body,
   body.dark {
     @apply bg-[#071426] text-[#e8edf4];
@@ -51,7 +63,7 @@
   }
 
   .btn {
-    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-ucao border-0 px-5 font-extrabold transition-all duration-200 hover:-translate-y-0.5;
+    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-ucao border-0 px-5 font-extrabold transition-all duration-200 hover:-translate-y-0.5 disabled:hover:translate-y-0;
   }
 
   .btn-primary {

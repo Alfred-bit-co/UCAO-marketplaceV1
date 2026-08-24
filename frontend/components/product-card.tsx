@@ -4,6 +4,7 @@ import { Eye, MessageCircle } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { IMAGE_ASSETS } from "@/lib/constants";
 import { RoleBadge } from "./role-badge";
 
 export function ProductCard({ product, showDescription = false }: { product: Product; showDescription?: boolean }) {
@@ -15,7 +16,7 @@ export function ProductCard({ product, showDescription = false }: { product: Pro
     <article className="panel">
       <div className="relative h-[220px] w-full">
         <Image
-          src={product.image_url || "/images/product-fournitures-etudiant.jpg"}
+          src={product.image_url || IMAGE_ASSETS.productSupplies}
           alt={product.name}
           fill
           className="object-cover"

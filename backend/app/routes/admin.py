@@ -1,4 +1,5 @@
 import requests
+from uuid import UUID
 from flask import Blueprint, current_app, jsonify, request
 
 from ..security import check_rate_limit, client_ip
@@ -16,16 +17,21 @@ def _supabase_headers():
 
 
 def _get_authenticated_user(req):
+    if not current_app.config["SUPABASE_URL"] or not current_app.config["SUPABASE_ANON_KEY"]:
+        return None
     auth_header = req.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         return None
     access_token = auth_header.split(" ", 1)[1]
-    anon_key = current_app.config.get("SUPABASE_ANON_KEY") or current_app.config["SUPABASE_SERVICE_ROLE_KEY"]
-    response = requests.get(
-        f"{current_app.config['SUPABASE_URL']}/auth/v1/user",
-        headers={"apikey": anon_key, "Authorization": f"Bearer {access_token}"},
-        timeout=10,
-    )
+    try:
+        response = requests.get(
+            f"{current_app.config['SUPABASE_URL']}/auth/v1/user",
+            headers={"apikey": current_app.config["SUPABASE_ANON_KEY"], "Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+    except requests.RequestException:
+        current_app.logger.exception("Impossible de vérifier la session administrateur.")
+        return None
     if response.status_code != 200:
         return None
     return response.json()
@@ -58,6 +64,10 @@ def delete_user(user_id):
 
     if user_id == admin_user["id"]:
         return jsonify({"error": "Vous ne pouvez pas supprimer votre propre compte administrateur."}), 400
+    try:
+        UUID(user_id)
+    except ValueError:
+        return jsonify({"error": "Identifiant utilisateur invalide."}), 400
 
     response = requests.delete(
         f"{current_app.config['SUPABASE_URL']}/auth/v1/admin/users/{user_id}",

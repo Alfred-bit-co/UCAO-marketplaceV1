@@ -16,7 +16,7 @@
 Exécute ce SQL dans l’éditeur SQL Supabase.
 
 ```sql
-create type public.user_role as enum ('SIMPLE', 'PREMIUM', 'VIP');
+create type public.user_role as enum ('ACHETEUR', 'VENDEUR', 'ADMIN');
 create type public.stand_status as enum ('pending', 'approved', 'rejected');
 create type public.product_category as enum ('nourriture', 'vetements', 'numerique', 'livres', 'services');
 create type public.order_status as enum ('pending', 'paid', 'failed', 'cancelled');
@@ -25,13 +25,10 @@ create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
   email text,
-  role public.user_role not null default 'SIMPLE',
+  role public.user_role not null default 'ACHETEUR',
   phone text,
-  subscription_type text,
+  subscription_tier text check (subscription_tier in ('STANDARD', 'PREMIUM', 'VIP')),
   subscription_expires_at timestamptz,
-  stand_limit integer generated always as (
-    case role when 'VIP' then 5 when 'PREMIUM' then 3 else 0 end
-  ) stored,
   created_at timestamptz not null default now()
 );
 
@@ -80,7 +77,9 @@ security definer
 set search_path = public
 as $$
 begin
-  if new.phone is distinct from old.phone then
+  -- Un compte historique sans téléphone peut le renseigner une seule fois.
+  -- Un numéro déjà défini ne peut ensuite plus être remplacé depuis le client.
+  if old.phone is not null and new.phone is distinct from old.phone then
     raise exception 'Le numero de telephone ne peut pas etre modifie';
   end if;
   return new;
@@ -113,6 +112,43 @@ create table public.products (
   created_at timestamptz not null default now()
 );
 
+create table public.product_images (
+  product_id uuid not null references public.products(id) on delete cascade,
+  url text not null,
+  position integer not null default 0 check (position >= 0),
+  primary key (product_id, position)
+);
+
+create table public.subscription_payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  tier text not null check (tier in ('STANDARD', 'PREMIUM', 'VIP')),
+  amount integer not null check (amount > 0),
+  fedapay_transaction_id text unique,
+  status public.order_status not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+create or replace function public.activate_or_renew_subscription(p_user_id uuid, p_tier text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_tier not in ('STANDARD', 'PREMIUM', 'VIP') then
+    raise exception 'Palier invalide';
+  end if;
+
+  update public.profiles
+  set
+    role = 'VENDEUR',
+    subscription_tier = p_tier,
+    subscription_expires_at = greatest(coalesce(subscription_expires_at, now()), now()) + interval '30 days'
+  where id = p_user_id;
+end;
+$$;
+
 create table public.orders (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
@@ -135,20 +171,133 @@ create table public.platform_reviews (
 alter table public.profiles enable row level security;
 alter table public.stands enable row level security;
 alter table public.products enable row level security;
+alter table public.product_images enable row level security;
+alter table public.subscription_payments enable row level security;
 alter table public.orders enable row level security;
 alter table public.platform_reviews enable row level security;
 
 create policy "Profiles are readable" on public.profiles for select using (true);
 create policy "Users update own profile" on public.profiles for update using (auth.uid() = id);
 
-create policy "Approved stands are readable" on public.stands for select using (status = 'approved' or auth.uid() = user_id);
-create policy "Users create own stands" on public.stands for insert with check (auth.uid() = user_id);
-create policy "Users update own stands" on public.stands for update using (auth.uid() = user_id);
+-- Empêche un client authentifié de s'accorder un rôle ou un palier.
+revoke update on public.profiles from anon, authenticated;
+grant update (full_name, phone) on public.profiles to authenticated;
 
-create policy "Products are readable" on public.products for select using (true);
-create policy "Users create own products" on public.products for insert with check (auth.uid() = user_id);
-create policy "Users update own products" on public.products for update using (auth.uid() = user_id);
+create policy "Approved active stands are readable" on public.stands for select using (
+  auth.uid() = user_id
+  or exists (
+    select 1 from public.profiles
+    where id = stands.user_id
+      and role = 'VENDEUR'
+      and subscription_expires_at >= now()
+      and stands.status = 'approved'
+  )
+);
+create policy "Active vendors create own stands" on public.stands for insert with check (
+  auth.uid() = user_id
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role = 'VENDEUR'
+      and subscription_expires_at >= now()
+  )
+);
+create policy "Active vendors update own stands" on public.stands for update
+using (auth.uid() = user_id)
+with check (
+  auth.uid() = user_id
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role = 'VENDEUR'
+      and subscription_expires_at >= now()
+  )
+);
+create policy "Admins update stands" on public.stands for update
+using (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'))
+with check (exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN'));
+
+create policy "Active vendor products are readable" on public.products for select using (
+  auth.uid() = user_id
+  or exists (
+    select 1 from public.profiles
+    where id = products.user_id
+      and role = 'VENDEUR'
+      and subscription_expires_at >= now()
+  )
+);
+create policy "Active vendors create own products" on public.products for insert with check (
+  auth.uid() = user_id
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role = 'VENDEUR'
+      and subscription_expires_at >= now()
+  )
+);
+create policy "Active vendors update own products" on public.products for update
+using (auth.uid() = user_id)
+with check (
+  auth.uid() = user_id
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role = 'VENDEUR'
+      and subscription_expires_at >= now()
+  )
+);
 create policy "Users delete own products" on public.products for delete using (auth.uid() = user_id);
+
+create or replace function public.enforce_seller_limits()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_tier text;
+  product_limit integer;
+  stand_limit integer;
+begin
+  select subscription_tier into current_tier
+  from public.profiles
+  where id = new.user_id
+    and role = 'VENDEUR'
+    and subscription_expires_at >= now();
+
+  if current_tier is null then
+    raise exception 'Un abonnement vendeur actif est requis';
+  end if;
+
+  product_limit := case current_tier when 'STANDARD' then 5 when 'PREMIUM' then 10 when 'VIP' then 30 else 0 end;
+  stand_limit := case current_tier when 'STANDARD' then 0 when 'PREMIUM' then 1 when 'VIP' then 5 else 0 end;
+
+  if tg_table_name = 'products' and tg_op = 'INSERT'
+    and (select count(*) from public.products where user_id = new.user_id) >= product_limit then
+    raise exception 'Limite de produits atteinte';
+  end if;
+
+  if tg_table_name = 'stands' and tg_op = 'INSERT'
+    and (select count(*) from public.stands where user_id = new.user_id) >= stand_limit then
+    raise exception 'Limite de stands atteinte';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger enforce_product_limit
+before insert on public.products
+for each row execute function public.enforce_seller_limits();
+
+create trigger enforce_stand_limit
+before insert on public.stands
+for each row execute function public.enforce_seller_limits();
+
+create policy "Product images are readable" on public.product_images for select using (true);
+create policy "Users manage own product images" on public.product_images for all
+using (exists (select 1 from public.products where products.id = product_id and products.user_id = auth.uid()))
+with check (exists (select 1 from public.products where products.id = product_id and products.user_id = auth.uid()));
 
 create policy "Users read own orders" on public.orders for select using (auth.uid() = user_id);
 
@@ -173,6 +322,9 @@ for all using (
 ) with check (
   exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role::text = 'ADMIN')
 );
+
+-- Les paiements sont uniquement créés et modifiés par le backend avec la
+-- service_role ; aucun navigateur n'a besoin d'y accéder directement.
 ```
 
 Crée aussi un bucket Supabase Storage, par exemple `marketplace-media`, pour les images produits et bannières.

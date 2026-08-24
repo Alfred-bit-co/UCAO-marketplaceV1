@@ -1,30 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { RoleBadge } from "@/components/role-badge";
 import { getStandById } from "@/lib/stands";
-
-function whatsappUrl(phone?: string) {
-  if (!phone) return null;
-  const normalized = phone.replace(/[^\d]/g, "");
-  if (!normalized) return null;
-  const message = encodeURIComponent("Bonjour, je suis intéressé(e) par vos produits sur UCAO Marketplace.");
-  return `https://wa.me/${normalized}?text=${message}`;
-}
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { IMAGE_ASSETS } from "@/lib/constants";
 
 export default async function StandDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const stand = await getStandById(id);
-  const whatsapp = whatsappUrl(stand?.seller?.phone);
+  if (!stand) notFound();
+  const whatsapp = buildWhatsAppUrl(stand.seller?.phone);
   return (
     <PageShell>
       <main className="container-ucao grid gap-8 py-[54px] md:grid-cols-2">
-        {stand && (
-          <>
+        <>
             <div className="relative min-h-[420px] overflow-hidden rounded-ucao shadow-ucao">
               <Image
-                src={stand.banner_url || "/images/stand-banniere-campus.jpg"}
+                src={stand.banner_url || IMAGE_ASSETS.standFallback}
                 alt={stand.name}
                 fill
                 className="object-cover"
@@ -57,8 +52,7 @@ export default async function StandDetailPage({ params }: { params: Promise<{ id
                 </Link>
               </div>
             </section>
-          </>
-        )}
+        </>
       </main>
     </PageShell>
   );

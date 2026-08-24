@@ -4,14 +4,14 @@ Marketplace etudiante UCAO UUT en Next.js + Tailwind CSS avec backend Flask.
 
 ## Fonctionnalites
 
-- Register / login avec mot de passe hashe par bcrypt.
-- Roles vendeurs: `SIMPLE`, `PREMIUM`, `VIP`.
+- Inscription / connexion via Supabase Auth.
+- Rôles applicatifs : `ACHETEUR`, `VENDEUR`, `ADMIN` ; les paliers vendeur sont `STANDARD`, `PREMIUM`, `VIP`.
 - Produits avec categories: nourriture, vetements, numerique, livres, services.
 - Pagination produits: 5 par page.
 - Tri d'affichage: VIP, Premium, Simple.
 - Stands en bandes larges avec pagination 1 par 1.
-- Dashboard vendeur: ajout produit, creation stand, suppression produit.
-- Limites de stands: Premium 3, VIP 5, Simple 0.
+- Dashboard vendeur : ajout, modification et suppression de produits ; création de stand.
+- Limites de stands : STANDARD 0, PREMIUM 1, VIP 5.
 - IA DeepSeek preparee cote backend, reservee aux vendeurs VIP.
 - Paiements TMoney/Flooz preparés dans `.env`, activation manuelle par admin.
 - Garde-fous OWASP Top 10: validation d'entree, hash de mot de passe, JWT, CORS limite, cache-control, rate limit simple, controle d'acces par role.
@@ -24,16 +24,18 @@ python -m pip install -r requirements.txt
 python run.py
 ```
 
-Dans un deuxieme terminal:
+Dans un deuxième terminal :
 
 ```powershell
-python -m http.server 8000 --directory frontend
+cd C:\Users\alfre\Desktop\ucao-marketplace\frontend
+npm install
+npm run dev
 ```
 
 Ouvre ensuite:
 
 ```text
-http://127.0.0.1:8000/index.html
+http://127.0.0.1:3000
 ```
 
 ## Configuration
@@ -67,6 +69,6 @@ gunicorn run:app
 
 - Le profil permet maintenant de modifier separement le prenom et le nom.
 - L'adresse email et le numero de telephone sont affiches en lecture seule.
-- Le numero de telephone n'est plus transmis par la fonction de mise a jour du profil.
-- Une regle SQL Supabase bloque aussi toute modification directe du numero de telephone (voir `SETUP.md`).
+- Un compte historique sans téléphone peut le renseigner une seule fois depuis le parcours vendeur.
+- Une règle SQL Supabase bloque ensuite toute modification directe de ce numéro (voir `SETUP.md`).
 - La page profil affiche un resume du compte, le role et des messages de confirmation ou d'erreur.

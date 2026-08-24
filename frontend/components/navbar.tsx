@@ -184,6 +184,15 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
 
           <div className="my-2 h-px w-full bg-black/5 dark:bg-white/5 lg:hidden" />
 
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-[#263a55] transition-colors hover:bg-ucao-soft dark:text-[#cdd7e5] dark:hover:bg-white/5 lg:hidden"
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === "dark" ? "Mode clair" : "Mode sombre"}
+          </button>
+
           {!role && (
             <Link
               href="/login"
