@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { ShoppingBag } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { ProductsBrowser } from "@/components/products-browser";
 import { getProducts } from "@/lib/products";
+
+export const metadata: Metadata = {
+  title: "Produits — UCAO Marketplace",
+  description: "Parcourez les produits proposés par les vendeurs étudiants de l'UCAO-UUT.",
+};
 
 export default async function ProductsPage({
   searchParams,

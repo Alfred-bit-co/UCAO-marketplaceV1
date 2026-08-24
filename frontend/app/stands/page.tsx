@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { Store } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { StandsBrowser } from "@/components/stands-browser";
 import { getStands } from "@/lib/stands";
+
+export const metadata: Metadata = {
+  title: "Stands — UCAO Marketplace",
+  description: "Découvrez les stands des vendeurs étudiants de l'UCAO-UUT.",
+};
 
 export default async function StandsPage({
   searchParams,

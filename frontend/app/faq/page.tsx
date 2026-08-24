@@ -1,6 +1,12 @@
 import { HelpCircle } from "lucide-react";
+import type { Metadata } from "next";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
+
+export const metadata: Metadata = {
+  title: "Questions fréquentes — UCAO Marketplace",
+  description: "Réponses aux questions les plus posées sur UCAO Marketplace.",
+};
 
 const FAQ_ITEMS = [
   {

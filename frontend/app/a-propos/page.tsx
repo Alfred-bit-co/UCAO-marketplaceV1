@@ -1,6 +1,12 @@
 import { GraduationCap } from "lucide-react";
+import type { Metadata } from "next";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
+
+export const metadata: Metadata = {
+  title: "À propos — UCAO Marketplace",
+  description: "L'histoire et la mission d'UCAO Marketplace, projet étudiant indépendant.",
+};
 
 export default function AProposPage() {
   return (

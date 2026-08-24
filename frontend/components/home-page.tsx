@@ -120,7 +120,7 @@ export function HomePage({
               <Link className="btn btn-light" href="/comment-ca-marche">
                 Comment ça marche
               </Link>
-              <Link className="btn btn-primary" href="/register">
+              <Link className="btn btn-primary" href="/devenir-vendeur">
                 Devenir vendeur
               </Link>
             </div>

@@ -223,7 +223,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
             {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
             {mode === "login" ? "Se connecter" : "Créer mon compte vendeur"}
           </button>
-          <Link className="mt-5 block text-center font-bold text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/register" : "/login"}>
+          <Link className="mt-5 block text-center font-bold text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/devenir-vendeur" : "/login"}>
             {mode === "login" ? "Devenir vendeur" : "J’ai déjà un compte"}
           </Link>
         </form>

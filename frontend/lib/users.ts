@@ -39,7 +39,7 @@ export async function signOut(): Promise<void> {
 
 export async function updateProfile(
   userId: string,
-  payload: { full_name?: string },
+  payload: { full_name?: string; phone?: string },
 ): Promise<{ error: string | null }> {
   const supabase = createClient();
   if (!supabase) return { error: "Supabase non configuré." };

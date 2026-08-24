@@ -10,7 +10,13 @@ import {
   Store,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
+
+export const metadata: Metadata = {
+  title: "Comment ça marche — UCAO Marketplace",
+  description: "Découvrez comment acheter et vendre entre étudiants sur UCAO Marketplace.",
+};
 
 const ICON_STROKE = 2.2;
 
