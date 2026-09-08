@@ -1,3 +1,4 @@
+import { getPublicProfiles, type PublicProfile } from "./public-profiles";
 import { createClient, isSupabaseConfigured } from "./supabase";
 
 export type PlatformReview = {
@@ -16,11 +17,11 @@ export type ReviewAdminResult = {
 
 type ReviewRow = {
   id: string;
+  user_id: string;
   rating: number;
   comment: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
-  profiles?: { full_name: string; role: string } | { full_name: string; role: string }[] | null;
 };
 
 type MyReviewRow = {
@@ -31,8 +32,7 @@ type MyReviewRow = {
   created_at: string;
 };
 
-function mapReviewRow(row: ReviewRow): PlatformReview {
-  const profile = Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null;
+function mapReviewRow(row: ReviewRow, profile?: PublicProfile): PlatformReview {
   return {
     id: row.id,
     rating: row.rating,
@@ -50,7 +50,7 @@ export async function getApprovedReviews(limit = 6): Promise<PlatformReview[]> {
 
   const { data, error } = await supabase
     .from("platform_reviews")
-    .select("id, rating, comment, status, created_at, profiles(full_name, role)")
+    .select("id, user_id, rating, comment, status, created_at")
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -60,7 +60,7 @@ export async function getApprovedReviews(limit = 6): Promise<PlatformReview[]> {
     return [];
   }
 
-  return (data as unknown as ReviewRow[]).map(mapReviewRow);
+  return mapReviewRows(data as unknown as ReviewRow[]);
 }
 
 export async function getMyReview(userId: string): Promise<PlatformReview | null> {
@@ -107,7 +107,7 @@ export async function getPendingReviewsForAdmin(): Promise<PlatformReview[]> {
 
   const { data, error } = await supabase
     .from("platform_reviews")
-    .select("id, rating, comment, status, created_at, profiles(full_name, role)")
+    .select("id, user_id, rating, comment, status, created_at")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -116,7 +116,7 @@ export async function getPendingReviewsForAdmin(): Promise<PlatformReview[]> {
     return [];
   }
 
-  return (data as unknown as ReviewRow[]).map(mapReviewRow);
+  return mapReviewRows(data as unknown as ReviewRow[]);
 }
 
 export async function getAllReviewsForAdmin(): Promise<ReviewAdminResult> {
@@ -126,7 +126,7 @@ export async function getAllReviewsForAdmin(): Promise<ReviewAdminResult> {
 
   const { data, error } = await supabase
     .from("platform_reviews")
-    .select("id, rating, comment, status, created_at, profiles(full_name, role)")
+    .select("id, user_id, rating, comment, status, created_at")
     .order("created_at", { ascending: false });
 
   if (error || !data) {
@@ -137,7 +137,7 @@ export async function getAllReviewsForAdmin(): Promise<ReviewAdminResult> {
     };
   }
 
-  return { reviews: (data as unknown as ReviewRow[]).map(mapReviewRow), error: null };
+  return { reviews: await mapReviewRows(data as unknown as ReviewRow[]), error: null };
 }
 
 export async function getReviewStats(): Promise<{
@@ -209,8 +209,13 @@ export async function getPlatformStats(): Promise<{ products: number; vendors: n
 
   const [{ count: products }, { count: vendors }] = await Promise.all([
     supabase.from("products").select("id", { count: "exact", head: true }),
-    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "VENDEUR"),
+    supabase.from("public_profiles").select("id", { count: "exact", head: true }).eq("role", "VENDEUR"),
   ]);
 
   return { products: products ?? 0, vendors: vendors ?? 0 };
+}
+
+async function mapReviewRows(rows: ReviewRow[]): Promise<PlatformReview[]> {
+  const profiles = await getPublicProfiles(rows.map((row) => row.user_id));
+  return rows.map((row) => mapReviewRow(row, profiles.get(row.user_id)));
 }

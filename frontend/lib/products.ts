@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
+import { getPublicProfiles, toSeller, type PublicProfile } from "./public-profiles";
 import { PRODUCTS_PER_PAGE, DEMO_PRODUCTS } from "./constants";
 import { escapeIlike } from "./utils";
 import type { PaginatedResult, Product, ProductCategory, ProductImage, SubscriptionTier } from "./types";
@@ -19,21 +20,15 @@ type ProductRow = {
   user_id: string;
   stand_id: string | null;
   created_at: string;
-  profiles?: {
-    full_name: string;
-    role: "ACHETEUR" | "VENDEUR" | "ADMIN";
-    phone: string | null;
-    subscription_tier: SubscriptionTier | null;
-  };
 };
 
 function sortImages(images?: ProductImageRow[] | null): ProductImage[] {
   return [...(images ?? [])].sort((a, b) => a.position - b.position);
 }
 
-function mapProduct(row: ProductRow): Product {
+function mapProduct(row: ProductRow, profile?: PublicProfile): Product {
   const images = sortImages(row.product_images);
-  const tier = row.profiles?.subscription_tier ?? null;
+  const tier = profile?.subscription_tier ?? null;
 
   return {
     id: row.id,
@@ -46,16 +41,14 @@ function mapProduct(row: ProductRow): Product {
     user_id: row.user_id,
     stand_id: row.stand_id,
     created_at: row.created_at,
-    seller: row.profiles
-      ? {
-          name: row.profiles.full_name,
-          role: row.profiles.role,
-          phone: row.profiles.phone ?? undefined,
-          subscription_tier: tier,
-        }
-      : null,
+    seller: toSeller(profile),
     seller_tier: tier,
   };
+}
+
+async function mapProducts(rows: ProductRow[]): Promise<Product[]> {
+  const profiles = await getPublicProfiles(rows.map((row) => row.user_id));
+  return rows.map((row) => mapProduct(row, profiles.get(row.user_id)));
 }
 
 function filterDemoProducts(
@@ -107,7 +100,7 @@ export async function getProducts(options?: {
   let query = supabase
     .from("products")
     .select(
-      "*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)",
+      "*, product_images(url, position)",
       { count: "exact" },
     );
 
@@ -131,8 +124,7 @@ export async function getProducts(options?: {
   }
 
   const total = count ?? data.length;
-  const items = (data as ProductRow[])
-    .map(mapProduct)
+  const items = (await mapProducts(data as ProductRow[]))
     .sort((a, b) => TIER_PRIORITY[a.seller_tier ?? "STANDARD"] - TIER_PRIORITY[b.seller_tier ?? "STANDARD"]);
 
   return {
@@ -155,7 +147,7 @@ export async function getProductById(id: string): Promise<Product | null> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)")
+    .select("*, product_images(url, position)")
     .eq("id", id)
     .single();
 
@@ -164,7 +156,7 @@ export async function getProductById(id: string): Promise<Product | null> {
     return null;
   }
 
-  return mapProduct(data as ProductRow);
+  return (await mapProducts([data as ProductRow]))[0] ?? null;
 }
 
 export async function getFeaturedProducts(limit = 3): Promise<Product[]> {
@@ -180,7 +172,7 @@ export async function getMyProducts(userId: string): Promise<Product[]> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)")
+    .select("*, product_images(url, position)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -188,7 +180,7 @@ export async function getMyProducts(userId: string): Promise<Product[]> {
     console.error("SUPABASE ERROR (getMyProducts):", error);
     return [];
   }
-  return (data as ProductRow[]).map(mapProduct);
+  return mapProducts(data as ProductRow[]);
 }
 
 async function replaceProductImages(
@@ -230,7 +222,7 @@ export async function createProduct(
   const { data, error } = await supabase
     .from("products")
     .insert({ ...productPayload, user_id: userId })
-    .select("*, profiles(full_name, role, phone, subscription_tier), product_images(url, position)")
+    .select("*, product_images(url, position)")
     .single();
 
   if (error || !data) {
@@ -243,7 +235,7 @@ export async function createProduct(
     return { product: await getProductById(data.id), error: null };
   }
 
-  return { product: mapProduct(data as ProductRow), error: null };
+  return { product: (await mapProducts([data as ProductRow]))[0] ?? null, error: null };
 }
 
 export async function updateProduct(

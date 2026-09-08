@@ -176,7 +176,11 @@ alter table public.subscription_payments enable row level security;
 alter table public.orders enable row level security;
 alter table public.platform_reviews enable row level security;
 
-create policy "Profiles are readable" on public.profiles for select using (true);
+create policy "Users read own profile or admins read profiles" on public.profiles
+for select using (
+  auth.uid() = id
+  or exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN')
+);
 create policy "Users update own profile" on public.profiles for update using (auth.uid() = id);
 
 -- Empêche un client authentifié de s'accorder un rôle ou un palier.
@@ -327,7 +331,7 @@ for all using (
 -- service_role ; aucun navigateur n'a besoin d'y accéder directement.
 ```
 
-Crée aussi un bucket Supabase Storage public `marketplace-media` pour les images produits, bannières et cartes d'étudiant.
+Exécute ensuite la migration `supabase/migrations/20260908_security_and_storage.sql` dans l'éditeur SQL Supabase. Elle crée le bucket public `marketplace-media` pour les produits et bannières, ainsi que le bucket privé `student-ids` pour les cartes d'étudiant et toutes les policies nécessaires.
 
 ### Mise à jour : vérification étudiante, commandes et statistiques admin
 
@@ -341,7 +345,8 @@ alter table public.profiles
   add column if not exists student_id_url text,
   add column if not exists verification_note text;
 
-update public.profiles set verification_status = 'approved' where verification_status = 'pending';
+-- Ne valide jamais automatiquement les comptes existants : ils doivent envoyer
+-- une carte, puis être approuvés par un administrateur.
 
 create table if not exists public.order_items (
   id uuid primary key default gen_random_uuid(),

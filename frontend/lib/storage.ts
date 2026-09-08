@@ -4,6 +4,23 @@ import { createClient } from "./supabase";
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
+function extensionFor(file: File): "jpg" | "png" | "webp" {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  return "jpg";
+}
+
+function storageErrorMessage(message: string, bucket: string): string {
+  const detail = message.toLowerCase();
+  if (detail.includes("bucket not found") || detail.includes("not found")) {
+    return `Le stockage « ${bucket} » n'existe pas encore. Exécutez la migration Supabase fournie dans le projet.`;
+  }
+  if (detail.includes("row-level security") || detail.includes("permission") || detail.includes("not authorized")) {
+    return "Supabase bloque cet envoi : les règles Storage n'ont pas encore été appliquées. Exécutez la migration Supabase puis réessayez.";
+  }
+  return "Impossible d'envoyer l'image pour le moment. Réessayez dans quelques instants.";
+}
+
 export async function uploadImage(
   file: File,
   folder: string,
@@ -23,8 +40,7 @@ export async function uploadImage(
   } = await supabase.auth.getUser();
   if (!user) return { url: null, error: "Connectez-vous pour envoyer une image." };
 
-  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `${folder}/${user.id}/${Date.now()}.${extension}`;
+  const path = `${folder}/${user.id}/${crypto.randomUUID()}.${extensionFor(file)}`;
 
   const { error: uploadError } = await supabase.storage
     .from(STORAGE_BUCKET)
@@ -62,7 +78,7 @@ export async function uploadStudentIdCard(file: File): Promise<{ path: string | 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { path: null, error: "Connectez-vous pour envoyer votre carte." };
 
-  const path = `${user.id}/carte.jpg`;
+  const path = `${user.id}/carte-${Date.now()}.${extensionFor(file)}`;
   const { error } = await supabase.storage.from("student-ids").upload(path, file, {
     upsert: true,
     contentType: file.type,
