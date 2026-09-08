@@ -13,10 +13,11 @@ export const metadata: Metadata = {
 export default async function StandsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; search?: string; page?: string }>;
 }) {
-  const { category } = await searchParams;
-  const stands = await getStands(1, 100);
+  const params = await searchParams;
+  const page = Math.max(Number(params.page) || 1, 1);
+  const stands = await getStands({ page, perPage: 12, category: params.category, search: params.search });
 
   return (
     <PageShell>
@@ -24,7 +25,7 @@ export default async function StandsPage({
         <PageHero icon={Store} eyebrow="Stands" title="Les vitrines étudiantes">
           Chaque stand met en avant un projet, une activité ou un service du campus.
         </PageHero>
-        <StandsBrowser stands={stands.items} initialCategory={category} />
+        <StandsBrowser initialData={stands} initialCategory={params.category} initialSearch={params.search} />
       </main>
     </PageShell>
   );

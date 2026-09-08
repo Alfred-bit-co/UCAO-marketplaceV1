@@ -10,9 +10,26 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "UCAO Marketplace",
+  title: {
+    default: "UCAO Marketplace",
+    template: "%s | UCAO Marketplace",
+  },
   description:
     "Marketplace étudiante indépendante pour stands, produits, services et projets de la communauté UCAO-UUT.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ucaomarketplace.vercel.app"),
+  openGraph: {
+    title: "UCAO Marketplace",
+    description:
+      "Marketplace étudiante indépendante pour stands, produits, services et projets de la communauté UCAO-UUT.",
+    type: "website",
+    locale: "fr_FR",
+    siteName: "UCAO Marketplace",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "UCAO Marketplace",
+    description: "La marketplace des étudiants UCAO-UUT à Lomé.",
+  },
 };
 
 export default function RootLayout({

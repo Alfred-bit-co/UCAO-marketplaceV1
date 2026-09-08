@@ -28,6 +28,7 @@ const navItems = [
   { href: "/", label: "Accueil" },
   { href: "/products", label: "Produits" },
   { href: "/stands", label: "Stands" },
+  { href: "/clubs", label: "Clubs" },
 ];
 
 export function Brand({ footer = false }: { footer?: boolean }) {

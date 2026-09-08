@@ -1,57 +1,73 @@
 "use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, PackageOpen, Search } from "lucide-react";
-import { useMemo, useState } from "react";
-import { PRODUCT_CATEGORIES, TIER_PRIORITY } from "@/lib/types";
-import type { Product } from "@/lib/types";
+import { useCallback, useTransition } from "react";
+import { PRODUCTS_PER_PAGE } from "@/lib/constants";
+import { PRODUCT_CATEGORIES } from "@/lib/types";
+import type { PaginatedResult, Product } from "@/lib/types";
 import { ProductCard } from "./product-card";
+import { ProductGridSkeleton } from "./skeletons";
 
 export function ProductsBrowser({
-  initialProducts,
+  initialData,
   initialCategory,
+  initialSearch,
 }: {
-  initialProducts: Product[];
+  initialData: PaginatedResult<Product>;
   initialCategory?: string;
+  initialSearch?: string;
 }) {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState(initialCategory || "tous");
-  const [page, setPage] = useState(1);
-  const perPage = 6;
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return initialProducts
-      .filter((product) => {
-        const haystack = `${product.name} ${product.seller?.name || ""} ${product.category}`.toLowerCase();
-        return (!query || haystack.includes(query)) && (category === "tous" || product.category === category);
-      })
-      .sort((a, b) => TIER_PRIORITY[a.seller_tier ?? "STANDARD"] - TIER_PRIORITY[b.seller_tier ?? "STANDARD"]);
-  }, [category, initialProducts, search]);
-  const pages = Math.max(Math.ceil(filtered.length / perPage), 1);
-  const items = filtered.slice((page - 1) * perPage, page * perPage);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const page = initialData.page;
+  const pages = initialData.pages;
+  const category = initialCategory || "tous";
+  const search = initialSearch || "";
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!value || value === "tous") params.delete(key);
+        else params.set(key, value);
+      });
+      startTransition(() => {
+        router.push(`/products?${params.toString()}`);
+      });
+    },
+    [router, searchParams],
+  );
+
+  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const nextSearch = String(form.get("search") || "").trim();
+    updateParams({ search: nextSearch || null, page: "1" });
+  }
+
   return (
     <section className="container-ucao">
-      <div className="my-8 flex flex-wrap gap-3.5">
+      <form className="my-8 flex flex-wrap gap-3.5" onSubmit={handleSearchSubmit}>
         <label className="min-w-[280px] flex-1">
           <span className="sr-only">Rechercher un produit</span>
           <input
             className="input-field"
+            name="search"
             type="search"
+            defaultValue={search}
             placeholder="Rechercher un produit, un vendeur ou une catégorie"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
           />
         </label>
         <label>
           <span className="sr-only">Catégorie</span>
           <select
             className="select-field min-w-[190px]"
-            value={category}
-            onChange={(event) => {
-              setCategory(event.target.value);
-              setPage(1);
-            }}
+            name="category"
+            defaultValue={category}
+            onChange={(event) => updateParams({ category: event.target.value, page: "1" })}
           >
             {PRODUCT_CATEGORIES.map((item) => (
               <option key={item.value} value={item.value}>
@@ -60,20 +76,17 @@ export function ProductsBrowser({
             ))}
           </select>
         </label>
-        <button className="btn btn-primary" type="button">
+        <button className="btn btn-primary" type="submit">
           <Search size={16} /> Rechercher
         </button>
-      </div>
+      </form>
 
       <div className="mb-6 flex flex-wrap gap-3">
         {PRODUCT_CATEGORIES.map((item) => (
           <button
             key={item.value}
             type="button"
-            onClick={() => {
-              setCategory(item.value);
-              setPage(1);
-            }}
+            onClick={() => updateParams({ category: item.value, page: "1" })}
             className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
               category === item.value
                 ? "border-ucao-red bg-ucao-red text-white"
@@ -85,27 +98,50 @@ export function ProductsBrowser({
         ))}
       </div>
 
-      <div className="grid gap-6 pb-[84px] md:grid-cols-2 lg:grid-cols-3">
-        {items.length ? (
-          items.map((product) => <ProductCard key={product.id} product={product} showDescription />)
-        ) : (
-          <div className="notice md:col-span-2 lg:col-span-3 flex items-center gap-4 p-6">
-            <span className="grid size-14 shrink-0 place-items-center rounded-full bg-ucao-success-soft text-ucao-success">
-              <PackageOpen size={26} />
-            </span>
-            <div>
-              <p className="font-bold">Aucun produit ne correspond à votre recherche.</p>
-              <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">Essayez avec d&apos;autres mots-clés ou explorez nos catégories.</p>
+      <p className="mb-4 text-sm text-ucao-muted dark:text-[#a8b8cc]">
+        {initialData.total} produit{initialData.total > 1 ? "s" : ""} — {PRODUCTS_PER_PAGE} par page
+      </p>
+
+      {isPending ? (
+        <ProductGridSkeleton />
+      ) : (
+        <div className="grid gap-6 pb-[42px] md:grid-cols-2 lg:grid-cols-3">
+          {initialData.items.length ? (
+            initialData.items.map((product) => <ProductCard key={product.id} product={product} showDescription />)
+          ) : (
+            <div className="notice md:col-span-2 lg:col-span-3 flex items-center gap-4 p-6">
+              <span className="grid size-14 shrink-0 place-items-center rounded-full bg-ucao-success-soft text-ucao-success">
+                <PackageOpen size={26} />
+              </span>
+              <div>
+                <p className="font-bold">Aucun produit ne correspond à votre recherche.</p>
+                <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">
+                  Essayez avec d&apos;autres mots-clés ou explorez nos catégories.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center justify-center gap-3 pb-[84px]">
-        <button className="btn btn-ghost" type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(value - 1, 1))}>
+        <button
+          className="btn btn-ghost"
+          type="button"
+          disabled={page <= 1 || isPending}
+          onClick={() => updateParams({ page: String(page - 1) })}
+        >
           <ChevronLeft size={18} /> Précédent
         </button>
-        <span className="font-black">Page {page} / {pages}</span>
-        <button className="btn btn-ghost" type="button" disabled={page >= pages} onClick={() => setPage((value) => Math.min(value + 1, pages))}>
+        <span className="font-black">
+          Page {page} / {pages}
+        </span>
+        <button
+          className="btn btn-ghost"
+          type="button"
+          disabled={page >= pages || isPending}
+          onClick={() => updateParams({ page: String(page + 1) })}
+        >
           Suivant <ChevronRight size={18} />
         </button>
       </div>

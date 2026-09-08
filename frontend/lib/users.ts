@@ -28,6 +28,10 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     phone: data.phone,
     subscription_tier: data.subscription_tier,
     subscription_expires_at: data.subscription_expires_at,
+    verification_status: data.verification_status,
+    student_id_url: data.student_id_url,
+    verification_note: data.verification_note,
+    created_at: data.created_at,
   };
 }
 

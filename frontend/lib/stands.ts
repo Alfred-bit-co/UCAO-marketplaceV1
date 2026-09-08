@@ -1,6 +1,7 @@
 import { DEMO_STANDS } from "./constants";
 import { createClient, isSupabaseConfigured } from "./supabase";
 import type { PaginatedResult, Product, Stand, SubscriptionTier, UserRole } from "./types";
+import { escapeIlike } from "./utils";
 
 type StandRow = {
   id: string;
@@ -45,7 +46,10 @@ function mapStand(row: StandRow): Stand {
   };
 }
 
-export async function getStands(page = 1, perPage = 10): Promise<PaginatedResult<Stand>> {
+export async function getStands(pageOrOptions: number | { page?: number; perPage?: number; search?: string; category?: string } = 1, legacyPerPage = 12): Promise<PaginatedResult<Stand>> {
+  const options = typeof pageOrOptions === "number" ? { page: pageOrOptions, perPage: legacyPerPage } : pageOrOptions;
+  const page = options.page ?? 1;
+  const perPage = options.perPage ?? 12;
   if (!isSupabaseConfigured()) {
     const start = (page - 1) * perPage;
     const items = DEMO_STANDS.slice(start, start + perPage);
@@ -57,12 +61,16 @@ export async function getStands(page = 1, perPage = 10): Promise<PaginatedResult
 
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("stands")
     .select(STAND_SELECT, { count: "exact" })
     .eq("status", "approved")
-    .order("created_at", { ascending: false })
-    .range(from, to);
+  if (options.search?.trim()) {
+    const term = escapeIlike(options.search.trim());
+    query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+  }
+  if (options.category && options.category !== "tous") query = query.eq("products.category", options.category);
+  const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, to);
 
   if (error || !data) {
     console.error("SUPABASE ERROR (getStands):", error);

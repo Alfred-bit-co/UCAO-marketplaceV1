@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, Crown, Loader2, Save, Send, ShieldAlert, S
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
+import { PageSkeleton } from "@/components/skeletons";
 import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscriptions";
 import { cn } from "@/lib/utils";
 import { getCurrentProfile, updateProfile } from "@/lib/users";
@@ -93,14 +94,7 @@ export default function DevenirVendeurPage() {
   }
 
   if (state === "loading") {
-    return (
-      <PageShell>
-        <main className="container-ucao py-[84px] text-center">
-          <Loader2 className="mx-auto mb-3 animate-spin text-ucao-red" size={28} />
-          <p>Chargement de votre profil...</p>
-        </main>
-      </PageShell>
-    );
+    return <PageShell><PageSkeleton /></PageShell>;
   }
 
   if (state === "error") {

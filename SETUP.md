@@ -327,7 +327,87 @@ for all using (
 -- service_role ; aucun navigateur n'a besoin d'y accéder directement.
 ```
 
-Crée aussi un bucket Supabase Storage, par exemple `marketplace-media`, pour les images produits et bannières.
+Crée aussi un bucket Supabase Storage public `marketplace-media` pour les images produits, bannières et cartes d'étudiant.
+
+### Mise à jour : vérification étudiante, commandes et statistiques admin
+
+Si la base existe déjà, exécute ce bloc :
+
+```sql
+create type public.verification_status as enum ('pending', 'approved', 'rejected');
+
+alter table public.profiles
+  add column if not exists verification_status public.verification_status not null default 'pending',
+  add column if not exists student_id_url text,
+  add column if not exists verification_note text;
+
+update public.profiles set verification_status = 'approved' where verification_status = 'pending';
+
+create table if not exists public.order_items (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  product_id uuid references public.products(id) on delete set null,
+  quantity integer not null check (quantity > 0),
+  unit_price integer not null check (unit_price >= 0)
+);
+
+alter table public.order_items enable row level security;
+
+drop policy if exists "Users read own order items" on public.order_items;
+create policy "Users read own order items" on public.order_items
+for select using (
+  exists (select 1 from public.orders where orders.id = order_items.order_id and orders.user_id = auth.uid())
+);
+
+create or replace view public.vendor_signups_monthly as
+select
+  to_char(sp.created_at, 'YYYY-MM') as month,
+  count(*)::integer as new_vendors
+from public.subscription_payments sp
+join public.profiles p on p.id = sp.user_id
+where sp.status = 'paid'
+group by 1
+order by 1;
+
+create or replace function public.submit_student_id(p_url text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Non authentifie';
+  end if;
+  update public.profiles
+  set student_id_url = p_url, verification_status = 'pending', verification_note = null
+  where id = auth.uid();
+end;
+$$;
+
+create or replace function public.admin_set_verification(
+  p_user_id uuid,
+  p_status public.verification_status,
+  p_note text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN') then
+    raise exception 'Acces refuse';
+  end if;
+  update public.profiles
+  set verification_status = p_status, verification_note = p_note
+  where id = p_user_id;
+end;
+$$;
+
+revoke update on public.profiles from anon, authenticated;
+grant update (full_name, phone, student_id_url) on public.profiles to authenticated;
+```
 
 ### Mise à jour d'une base existante
 

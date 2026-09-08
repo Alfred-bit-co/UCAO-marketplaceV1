@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "arcjet": {
+      "source": "arcjet/skills",
+      "sourceType": "github",
+      "skillPath": "arcjet/SKILL.md",
+      "computedHash": "daa77864a70465cc6888f237f4865b8d6a95224e0643c1be33bf62cbb809309c"
+    }
+  }
+}

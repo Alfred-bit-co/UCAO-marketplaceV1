@@ -1,14 +1,37 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { RoleBadge } from "@/components/role-badge";
+import { SITE_URL } from "@/lib/constants";
 import { getStandById } from "@/lib/stands";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { IMAGE_ASSETS } from "@/lib/constants";
 
-export default async function StandDetailPage({ params }: { params: Promise<{ id: string }> }) {
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const stand = await getStandById(id);
+  if (!stand) return { title: "Stand introuvable — UCAO Marketplace" };
+
+  const description = stand.description.slice(0, 160);
+  return {
+    title: `${stand.name} — UCAO Marketplace`,
+    description,
+    openGraph: {
+      title: stand.name,
+      description,
+      type: "website",
+      url: `${SITE_URL}/stands/${id}`,
+      images: stand.banner_url ? [{ url: stand.banner_url, alt: stand.name }] : undefined,
+    },
+  };
+}
+
+export default async function StandDetailPage({ params }: Props) {
   const { id } = await params;
   const stand = await getStandById(id);
   if (!stand) notFound();

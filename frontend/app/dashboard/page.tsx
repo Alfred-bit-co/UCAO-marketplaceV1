@@ -13,8 +13,10 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ImageUpload } from "@/components/image-upload";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
+import { DashboardSkeleton } from "@/components/skeletons";
 import { createProduct, deleteProduct, getMyProducts, updateProduct } from "@/lib/products";
 import { createStand, getMyStands } from "@/lib/stands";
 import { daysUntilExpiry, getMySubscriptionStatus, SUBSCRIPTION_PLANS } from "@/lib/subscriptions";
@@ -36,6 +38,8 @@ export default function DashboardPage() {
 
   const [standError, setStandError] = useState<string | null>(null);
   const [standSubmitting, setStandSubmitting] = useState(false);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [standBanner, setStandBanner] = useState<string[]>([]);
 
   async function refreshAll(userId: string) {
     const [nextStatus, nextProducts, nextStands] = await Promise.all([
@@ -66,11 +70,12 @@ export default function DashboardPage() {
     setProductSubmitting(true);
 
     const form = new FormData(event.currentTarget);
-    const imageUrlsRaw = String(form.get("image_urls") || "");
-    const image_urls = imageUrlsRaw
-      .split(",")
-      .map((url) => url.trim())
-      .filter(Boolean);
+    const image_urls = productImages.length
+      ? productImages
+      : String(form.get("image_urls") || "")
+          .split(",")
+          .map((url) => url.trim())
+          .filter(Boolean);
 
     const payload = {
       name: String(form.get("name") || ""),
@@ -90,6 +95,7 @@ export default function DashboardPage() {
       return;
     }
     setEditingProduct(null);
+    setProductImages([]);
     (event.target as HTMLFormElement).reset();
     await refreshAll(profile.id);
   }
@@ -118,7 +124,7 @@ export default function DashboardPage() {
     const { error } = await createStand(profile.id, {
       name: String(form.get("name") || ""),
       description: String(form.get("description") || ""),
-      banner_url: String(form.get("banner_url") || "") || undefined,
+      banner_url: standBanner[0] || String(form.get("banner_url") || "") || undefined,
     });
 
     setStandSubmitting(false);
@@ -127,13 +133,14 @@ export default function DashboardPage() {
       return;
     }
     (event.target as HTMLFormElement).reset();
+    setStandBanner([]);
     await refreshAll(profile.id);
   }
 
   if (loading) {
     return (
       <PageShell>
-        <main className="container-ucao py-[84px] text-center">Chargement...</main>
+        <DashboardSkeleton />
       </PageShell>
     );
   }
@@ -278,6 +285,7 @@ export default function DashboardPage() {
                   className="btn btn-ghost"
                   onClick={() => {
                     setEditingProduct(null);
+                    setProductImages([]);
                     setProductError(null);
                   }}
                 >
@@ -319,15 +327,26 @@ export default function DashboardPage() {
                 defaultValue={editingProduct?.price ?? ""}
                 required
               />
-              <label className="sr-only" htmlFor="product-images">Images</label>
-              <input
-                id="product-images"
-                className="input-field min-h-10 py-2"
-                name="image_urls"
-                type="text"
-                placeholder="URL(s) image Supabase Storage, séparées par une virgule"
-                defaultValue={editingProduct?.images?.map((img) => img.url).join(", ") ?? ""}
+              <ImageUpload
+                folder="products"
+                multiple
+                maxFiles={5}
+                label="Photos du produit"
+                value={productImages.length ? productImages : editingProduct?.images?.map((img) => img.url) ?? []}
+                onChange={setProductImages}
               />
+              <details className="hidden" aria-hidden="true">
+                <summary className="cursor-pointer font-bold text-ucao-muted dark:text-[#a8b8cc]">Ou coller des URL manuellement</summary>
+                <label className="sr-only" htmlFor="product-images">Images</label>
+                <input
+                  id="product-images"
+                  className="input-field mt-2 min-h-10 py-2"
+                  name="image_urls"
+                  type="text"
+                  placeholder="URL(s) séparées par une virgule"
+                  defaultValue={editingProduct?.images?.map((img) => img.url).join(", ") ?? ""}
+                />
+              </details>
               <label className="sr-only" htmlFor="product-description">Description complète</label>
               <textarea
                 id="product-description"
@@ -364,8 +383,18 @@ export default function DashboardPage() {
             <div className="grid gap-2.5">
               <label className="sr-only" htmlFor="stand-name">Nom du stand</label>
               <input id="stand-name" className="input-field min-h-10 py-2" name="name" placeholder="Nom du stand" required />
-              <label className="sr-only" htmlFor="stand-banner">URL bannière</label>
-              <input id="stand-banner" className="input-field min-h-10 py-2" name="banner_url" type="url" placeholder="URL bannière Supabase Storage" />
+              <ImageUpload
+                folder="stands"
+                label="Bannière du stand"
+                value={standBanner}
+                onChange={setStandBanner}
+                compact
+              />
+              <details className="text-sm">
+                <summary className="cursor-pointer font-bold text-ucao-muted dark:text-[#a8b8cc]">Ou coller une URL manuellement</summary>
+                <label className="sr-only" htmlFor="stand-banner">URL bannière</label>
+                <input id="stand-banner" className="input-field mt-2 min-h-10 py-2" name="banner_url" type="url" placeholder="URL bannière" />
+              </details>
               <label className="sr-only" htmlFor="stand-description">Description du stand</label>
               <textarea id="stand-description" className="textarea-field min-h-[90px] py-2" name="description" placeholder="Description du stand" required />
               {standError && (
@@ -408,6 +437,7 @@ export default function DashboardPage() {
                         className="btn btn-ghost"
                         onClick={() => {
                           setEditingProduct(product);
+                          setProductImages(product.images?.map((img) => img.url) ?? []);
                           setProductError(null);
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}

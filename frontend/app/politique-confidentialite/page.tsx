@@ -8,6 +8,10 @@ export const metadata: Metadata = {
 
 const sections = [
   {
+    title: "Carte d'etudiant",
+    items: ["La photo sert uniquement a verifier l'appartenance a la communaute universitaire.", "Elle est accessible uniquement a l'utilisateur et a l'equipe UCAO Marketplace, jamais publiquement.", "Elle est utilisee uniquement a des fins de verification."],
+  },
+  {
     title: "Données collectées",
     items: ["Nom", "Email", "Téléphone", "Historique de commandes"],
   },

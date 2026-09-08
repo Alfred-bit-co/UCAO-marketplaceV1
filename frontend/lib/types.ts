@@ -3,6 +3,8 @@
 // ============================================
 export type UserRole = "ACHETEUR" | "VENDEUR" | "ADMIN";
 
+export type VerificationStatus = "pending" | "approved" | "rejected";
+
 // ============================================
 // PALIER D'ABONNEMENT — uniquement pertinent pour un VENDEUR
 // ============================================
@@ -50,6 +52,16 @@ export type Stand = {
   created_at?: string;
 };
 
+export type Club = {
+  id: string;
+  name: string;
+  banner_url: string;
+  external_url: string;
+  short_description?: string | null;
+  created_at?: string;
+  created_by?: string | null;
+};
+
 export type ProductCategory =
   | "nourriture"
   | "vetements"
@@ -93,8 +105,12 @@ export type Profile = {
   phone?: string | null;
   subscription_tier?: SubscriptionTier | null;
   subscription_expires_at?: string | null;
+  verification_status?: VerificationStatus;
+  student_id_url?: string | null;
+  verification_note?: string | null;
   stands_count?: number;
   products_count?: number;
+  created_at?: string;
 };
 
 // ============================================

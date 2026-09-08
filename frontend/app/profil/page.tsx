@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
+import { ProfileSkeleton } from "@/components/skeletons";
 import type { Profile } from "@/lib/types";
 import { getCurrentProfile, updateCurrentProfile } from "@/lib/users";
 
@@ -52,7 +53,7 @@ export default function ProfilPage() {
     setMessage("Profil mis à jour.");
   }
 
-  if (loading) return <PageShell><main className="container-ucao py-[84px] text-center">Chargement...</main></PageShell>;
+  if (loading) return <PageShell><ProfileSkeleton /></PageShell>;
   if (!profile) return <PageShell><main className="container-ucao py-[84px] text-center"><p className="text-xl font-bold">Connectez-vous pour gérer votre profil.</p></main></PageShell>;
 
   const phoneIsValid = PHONE_PATTERN.test(profile.phone ?? "");
@@ -69,7 +70,7 @@ export default function ProfilPage() {
             <h2 className="text-xl font-black">{profile.full_name}</h2>
             <p className="mt-1 flex items-center gap-2 text-sm text-ucao-muted dark:text-[#a8b8cc]"><Mail size={15} /> {profile.email}</p>
             <span className="tag mt-4"><ShieldCheck size={15} /> {profile.role}</span>
-            <button className="btn btn-primary mt-5 w-full" form="profile-form" type="submit" disabled={saving}>
+            <button className="btn btn-primary mt-3 w-full" form="profile-form" type="submit" disabled={saving}>
               <Check size={16} />{saving ? "Enregistrement..." : "Enregistrer les changements"}
             </button>
             {message && <Link className="text-center text-sm font-bold text-ucao-red hover:underline" href="/">Retour à la page d&apos;accueil</Link>}

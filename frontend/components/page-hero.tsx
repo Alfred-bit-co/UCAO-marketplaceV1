@@ -6,7 +6,7 @@ export function PageHero({
   title,
   children,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   eyebrow: string;
   title: string;
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export function PageHero({
     >
       <div className="container-ucao">
         <p className="eyebrow text-white/85">
-          <Icon size={16} />
+          {Icon && <Icon size={16} />}
           {eyebrow}
         </p>
 

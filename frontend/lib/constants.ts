@@ -1,6 +1,8 @@
 import type { Product, Stand } from "./types";
 
 export const CURRENCY = "FCFA";
+export const PRODUCTS_PER_PAGE = 12;
+export const STORAGE_BUCKET = "marketplace-media";
 
 export const IMAGE_ASSETS = {
   heroCampus: "/images/hero-campus.jpg",
@@ -8,8 +10,6 @@ export const IMAGE_ASSETS = {
   heroStudents: "/images/hero-etudiants-campus.jpg",
   universityBuilding: "/images/universite-batiment.jpg",
   pageHeroCampus: "/images/page-hero-campus.jpg",
-  // Ces visuels existent réellement dans public/images. Les anciens noms
-  // pointaient vers des fichiers absents et produisaient des images cassées.
   productSupplies: "/images/hero-etudiants-campus.jpg",
   productCvDesign: "/images/hero-campus.jpg",
   productTshirt: "/images/hero-universite-batiment.jpg",
@@ -28,64 +28,60 @@ export const DEMO_PRODUCTS: Product[] = [
     name: "Pack fournitures étudiant",
     category: "livres",
     price: 8500,
-    description:
-      "Un kit complet pour la rentrée : cahiers, stylos, classeur, fiches et accessoires essentiels.",
+    description: "Cahiers, stylos et surligneurs pour la rentrée.",
     image_url: IMAGE_ASSETS.productSupplies,
-    seller: { name: "Librairie Campus", role: "VENDEUR", phone: "+228 92 98 29 26", subscription_tier: "VIP" },
     seller_tier: "VIP",
+    seller: { name: "Marie K.", role: "VENDEUR", phone: "+22890123456", subscription_tier: "VIP" },
   },
   {
     id: 2,
-    name: "Service de design CV",
+    name: "CV design professionnel",
     category: "services",
     price: 5000,
-    description:
-      "Création d'un CV professionnel et moderne, adapté aux stages, jobs étudiants et candidatures académiques.",
+    description: "Mise en page soignée pour stages et candidatures.",
     image_url: IMAGE_ASSETS.productCvDesign,
-    seller: { name: "Studio Étudiant Pro", role: "VENDEUR", phone: "+228 72 23 90 76", subscription_tier: "PREMIUM" },
     seller_tier: "PREMIUM",
+    seller: { name: "Jean A.", role: "VENDEUR", phone: "+22890765432", subscription_tier: "PREMIUM" },
   },
   {
     id: 3,
-    name: "T-shirt UCAO UUT",
+    name: "T-shirt UCAO édition limitée",
     category: "vetements",
-    price: 7000,
-    description:
-      "T-shirt confortable aux couleurs de l'université, disponible en plusieurs tailles.",
+    price: 12000,
+    description: "Modèle exclusif campus, tailles S à XL.",
     image_url: IMAGE_ASSETS.productTshirt,
-    seller: { name: "Club Entrepreneuriat", role: "VENDEUR", phone: "+228 90 00 00 03", subscription_tier: "STANDARD" },
     seller_tier: "STANDARD",
+    seller: { name: "Paul D.", role: "VENDEUR", phone: "+22891234567", subscription_tier: "STANDARD" },
   },
   {
     id: 4,
-    name: "Pack déjeuner campus",
+    name: "Déjeuner étudiant",
     category: "nourriture",
-    price: 2500,
-    description: "Repas rapide, boisson et dessert pour les pauses entre deux cours.",
+    price: 1500,
+    description: "Plat du jour livré sur le campus.",
     image_url: IMAGE_ASSETS.productLunch,
-    seller: { name: "UCAO Food", role: "VENDEUR", phone: "+228 90 00 00 04", subscription_tier: "VIP" },
-    seller_tier: "VIP",
+    seller_tier: "PREMIUM",
+    seller: { name: "Fatou B.", role: "VENDEUR", phone: "+22892345678", subscription_tier: "PREMIUM" },
   },
   {
     id: 5,
     name: "Réparation ordinateur",
     category: "numerique",
-    price: 10000,
-    description:
-      "Diagnostic, nettoyage logiciel et petites réparations pour ordinateurs étudiants.",
+    price: 8000,
+    description: "Diagnostic et réparation rapide.",
     image_url: IMAGE_ASSETS.productComputerRepair,
-    seller: { name: "Club Informatique", role: "VENDEUR", phone: "+228 90 00 00 05", subscription_tier: "PREMIUM" },
-    seller_tier: "PREMIUM",
+    seller_tier: "VIP",
+    seller: { name: "Kofi M.", role: "VENDEUR", phone: "+22893456789", subscription_tier: "VIP" },
   },
   {
     id: 6,
-    name: "Livre économie générale",
+    name: "Manuel d'économie",
     category: "livres",
     price: 6000,
-    description: "Livre en bon état pour les cours d'économie générale et de gestion.",
+    description: "Ouvrage de référence pour le semestre.",
     image_url: IMAGE_ASSETS.productEconomyBook,
-    seller: { name: "Occasion Étudiante", role: "VENDEUR", phone: "+228 90 00 00 06", subscription_tier: "STANDARD" },
     seller_tier: "STANDARD",
+    seller: { name: "Awa S.", role: "VENDEUR", phone: "+22894567890", subscription_tier: "STANDARD" },
   },
 ];
 
@@ -93,52 +89,40 @@ export const DEMO_STANDS: Stand[] = [
   {
     id: 1,
     name: "Librairie Campus",
+    description: "Livres, fournitures et ressources pédagogiques.",
     banner_url: IMAGE_ASSETS.standBookshop,
-    description:
-      "Fournitures, livres, impressions et kits de rentrée pour les étudiants UCAO UUT.",
-    seller: { name: "Association des étudiants", role: "VENDEUR", phone: "+228 92 98 29 26", subscription_tier: "VIP" },
     seller_tier: "VIP",
+    seller: { name: "Marie K.", role: "VENDEUR", phone: "+22890123456", subscription_tier: "VIP" },
     status: "approved",
-    products: [],
   },
   {
     id: 2,
-    name: "UCAO Food",
+    name: "Cantine Express",
+    description: "Repas rapides et snacks pour étudiants.",
     banner_url: IMAGE_ASSETS.standFood,
-    description: "Collations, repas rapides et boissons pour les pauses entre les cours.",
-    seller: { name: "Coopérative étudiante", role: "VENDEUR", phone: "+228 72 23 90 76", subscription_tier: "PREMIUM" },
     seller_tier: "PREMIUM",
+    seller: { name: "Fatou B.", role: "VENDEUR", phone: "+22892345678", subscription_tier: "PREMIUM" },
     status: "approved",
-    products: [],
   },
   {
     id: 3,
-    name: "Studio Digital",
+    name: "Tech Campus",
+    description: "Services numériques et réparations.",
     banner_url: IMAGE_ASSETS.standDigital,
-    description: "Création graphique, mini-sites, CV et supports de présentation.",
-    seller: { name: "Club informatique", role: "VENDEUR", phone: "+228 90 00 00 08", subscription_tier: "VIP" },
     seller_tier: "VIP",
-    status: "approved",
-    products: [],
-  },
-];
-
-export const DEMO_ADMIN_STANDS: Stand[] = [
-  {
-    id: 1,
-    name: "Librairie Campus",
-    description: "Fournitures et livres",
-    seller: { name: "Association des étudiants", role: "VENDEUR", subscription_tier: "VIP" },
-    seller_tier: "VIP",
+    seller: { name: "Kofi M.", role: "VENDEUR", phone: "+22893456789", subscription_tier: "VIP" },
     status: "approved",
   },
 ];
 
 export const HERO_IMAGES = [
-  { src: IMAGE_ASSETS.heroCampus, alt: "Étudiants sur le campus universitaire" },
-  { src: IMAGE_ASSETS.heroBuilding, alt: "Bâtiment universitaire UCAO-UUT" },
-  { src: IMAGE_ASSETS.heroStudents, alt: "Groupe d'étudiants en discussion" },
+  { src: IMAGE_ASSETS.heroCampus, alt: "Campus UCAO UUT" },
+  { src: IMAGE_ASSETS.heroBuilding, alt: "Bâtiment universitaire UCAO" },
+  { src: IMAGE_ASSETS.heroStudents, alt: "Étudiants sur le campus" },
 ];
 
 export const PAYMENT_API_URL =
-  process.env.NEXT_PUBLIC_PAYMENT_API_URL ?? "http://127.0.0.1:5000/api";
+  process.env.NEXT_PUBLIC_PAYMENT_API_URL || "http://127.0.0.1:5000/api";
+
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://ucaomarketplace.vercel.app";

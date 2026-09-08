@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
-import { DEMO_PRODUCTS } from "./constants";
+import { PRODUCTS_PER_PAGE, DEMO_PRODUCTS } from "./constants";
+import { escapeIlike } from "./utils";
 import type { PaginatedResult, Product, ProductCategory, ProductImage, SubscriptionTier } from "./types";
 import { TIER_PRIORITY } from "./types";
 
@@ -92,7 +93,7 @@ export async function getProducts(options?: {
   category?: string;
 }): Promise<PaginatedResult<Product>> {
   const page = options?.page ?? 1;
-  const perPage = options?.perPage ?? 5;
+  const perPage = options?.perPage ?? PRODUCTS_PER_PAGE;
 
   if (!isSupabaseConfigured()) {
     return filterDemoProducts(page, perPage, options?.search, options?.category);
@@ -114,9 +115,8 @@ export async function getProducts(options?: {
     query = query.eq("category", options.category);
   }
   if (options?.search?.trim()) {
-    query = query.or(
-      `name.ilike.%${options.search.trim()}%,description.ilike.%${options.search.trim()}%`,
-    );
+    const term = escapeIlike(options.search.trim());
+    query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
   const from = (page - 1) * perPage;
