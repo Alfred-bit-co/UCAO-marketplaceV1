@@ -9,7 +9,7 @@ export default function NotFound() {
         <section className="max-w-md">
           <SearchX className="mx-auto mb-5 text-ucao-red" size={48} aria-hidden="true" />
           <p className="eyebrow">Page introuvable</p>
-          <h1 className="text-3xl font-bold">La page demandée est introuvable.</h1>
+          <h1 className="text-3xl font-medium">La page demandée est introuvable.</h1>
           <p className="mt-3 text-ucao-muted dark:text-[#a8b8cc]">
             Vérifiez l&apos;adresse ou revenez à l&apos;accueil pour continuer votre navigation.
           </p>

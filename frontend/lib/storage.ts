@@ -48,7 +48,7 @@ export async function uploadImage(
 
   if (uploadError) {
     console.error("STORAGE ERROR (uploadImage):", uploadError);
-    return { url: null, error: "Impossible d'envoyer l'image. Vérifiez le bucket Supabase Storage." };
+    return { url: null, error: storageErrorMessage(uploadError.message, STORAGE_BUCKET) };
   }
 
   const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
@@ -85,7 +85,7 @@ export async function uploadStudentIdCard(file: File): Promise<{ path: string | 
   });
   if (error) {
     console.error("STORAGE ERROR (uploadStudentIdCard):", error);
-    return { path: null, error: "Impossible d'envoyer la carte etudiante." };
+    return { path: null, error: storageErrorMessage(error.message, "student-ids") };
   }
   return { path, error: null };
 }

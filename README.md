@@ -39,7 +39,7 @@ Ouvrir : http://127.0.0.1:3000
 1. Copier `frontend/.env.local.example` vers `frontend/.env.local`
 2. Copier `backend/.env.example` vers `backend/.env`
 3. Exécuter le SQL de `SETUP.md` dans Supabase
-4. Créer le bucket Storage `marketplace-media`
+4. Exécuter la migration `supabase/migrations/20260908_security_and_storage.sql` dans Supabase
 
 Variables frontend principales :
 

@@ -77,7 +77,7 @@ export function Testimonials() {
       <p className="eyebrow">
         <MessageSquareQuote size={16} /> Ils nous font confiance
       </p>
-      <h2 className="mb-6 text-2xl font-bold">Ce que disent les étudiants</h2>
+      <h2 className="mb-6 text-2xl font-medium">Ce que disent les étudiants</h2>
 
       {reviews.length > 0 && (
         <div className="mb-10 grid gap-5 md:grid-cols-3">
@@ -86,11 +86,11 @@ export function Testimonials() {
               <Stars rating={review.rating} />
               <p className="my-3 text-ucao-muted dark:text-[#a8b8cc]">&laquo;{review.comment}&raquo;</p>
               <div className="flex items-center gap-2">
-                <span className="grid size-9 place-items-center rounded-full bg-ucao-navy text-sm font-bold text-white">
+                <span className="grid size-9 place-items-center rounded-full bg-ucao-navy text-sm font-medium text-white">
                   {initials(review.author?.name ?? "?")}
                 </span>
                 <div>
-                  <p className="font-bold">{review.author?.name ?? "Étudiant UCAO"}</p>
+                  <p className="font-medium">{review.author?.name ?? "Étudiant UCAO"}</p>
                   <p className="text-xs text-ucao-muted dark:text-[#a8b8cc]">
                     {review.author?.role === "VENDEUR" ? "Vendeur sur UCAO Marketplace" : "Étudiant UCAO"}
                   </p>
@@ -103,7 +103,7 @@ export function Testimonials() {
 
       {userId && (
         <form className="panel mx-auto max-w-xl p-6" onSubmit={handleSubmit}>
-          <h3 className="mb-3 text-lg font-bold">{myReview ? "Mon avis" : "Laisser un avis"}</h3>
+          <h3 className="mb-3 text-lg font-medium">{myReview ? "Mon avis" : "Laisser un avis"}</h3>
           {myReview ? (
             <>
               <Stars rating={myReview.rating} />

@@ -59,7 +59,7 @@ export function ImageUpload({
 
   return (
     <div className="grid gap-2">
-      <span className="font-bold">{label}</span>
+      <span className="font-medium">{label}</span>
       <div
         className={cn(
           "group relative cursor-pointer rounded-ucao border-2 border-dashed border-ucao-line bg-ucao-soft/60 transition-colors hover:border-ucao-red hover:bg-ucao-red-soft/30 dark:border-[#2a3a52] dark:bg-[#132238]/60 dark:hover:border-[#ff9aa0]",
@@ -88,7 +88,7 @@ export function ImageUpload({
           ) : (
             <>
               <Upload className="text-ucao-red" size={28} />
-              <span className="font-bold text-ucao-ink dark:text-white">
+              <span className="font-medium text-ucao-ink dark:text-white">
                 Glissez une image ou cliquez pour parcourir
               </span>
               <span>{hint}</span>

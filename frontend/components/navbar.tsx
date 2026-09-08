@@ -36,7 +36,7 @@ export function Brand({ footer = false }: { footer?: boolean }) {
     <Link
       href="/"
       className={cn(
-        "inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap text-[20px] font-extrabold tracking-tight",
+        "inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap text-[20px] font-semibold tracking-tight",
         footer && "text-white",
       )}
     >
@@ -159,7 +159,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
           <div
             id="main-navigation"
             className={cn(
-              "absolute left-0 right-0 top-[72px] z-20 flex-col items-stretch gap-1 border-t border-black/5 bg-white px-4 py-4 text-[15px] font-semibold shadow-[0_18px_28px_rgba(30,42,110,0.12)] dark:border-white/5 dark:bg-[#0b1c31] xl:static xl:top-auto xl:flex xl:flex-1 xl:flex-row xl:items-center xl:justify-center xl:gap-1 xl:border-0 xl:bg-transparent xl:p-0 xl:shadow-none",
+              "absolute left-0 right-0 top-[72px] z-20 flex-col items-stretch gap-1 border-t border-black/5 bg-white px-4 py-4 text-[15px] font-medium shadow-[0_18px_28px_rgba(30,42,110,0.12)] dark:border-white/5 dark:bg-[#0b1c31] xl:static xl:top-auto xl:flex xl:flex-1 xl:flex-row xl:items-center xl:justify-center xl:gap-1 xl:border-0 xl:bg-transparent xl:p-0 xl:shadow-none",
               open ? "flex" : "hidden xl:flex",
             )}
           >
@@ -171,7 +171,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
                 className={cn(
                   "inline-flex min-h-11 w-full items-center rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red xl:w-auto dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
                   isActive(item.href) &&
-                    "bg-ucao-soft font-extrabold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
+                    "bg-ucao-soft font-semibold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
                 )}
               >
                 {item.label}
@@ -184,7 +184,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
                 aria-current={isActive(href) ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 w-full items-center whitespace-nowrap rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red xl:w-auto dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
-                  isActive(href) && "bg-ucao-soft font-extrabold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
+                  isActive(href) && "bg-ucao-soft font-semibold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
                 )}
               >
                 {label}
@@ -235,7 +235,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
           {!role && (
             <Link
               href="/login"
-              className="inline-flex min-h-11 items-center rounded-2xl px-4 font-bold text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]"
+              className="inline-flex min-h-11 items-center rounded-2xl px-4 font-medium text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]"
             >
               Connexion
             </Link>

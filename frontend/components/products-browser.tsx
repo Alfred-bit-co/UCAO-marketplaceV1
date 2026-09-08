@@ -87,7 +87,7 @@ export function ProductsBrowser({
             key={item.value}
             type="button"
             onClick={() => updateParams({ category: item.value, page: "1" })}
-            className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+            className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
               category === item.value
                 ? "border-ucao-red bg-ucao-red text-white"
                 : "border-ucao-line text-ucao-navy hover:border-ucao-red hover:text-ucao-red dark:border-[#1c3050] dark:text-white"
@@ -114,7 +114,7 @@ export function ProductsBrowser({
                 <PackageOpen size={26} />
               </span>
               <div>
-                <p className="font-bold">Aucun produit ne correspond à votre recherche.</p>
+                <p className="font-medium">Aucun produit ne correspond à votre recherche.</p>
                 <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">
                   Essayez avec d&apos;autres mots-clés ou explorez nos catégories.
                 </p>
@@ -133,7 +133,7 @@ export function ProductsBrowser({
         >
           <ChevronLeft size={18} /> Précédent
         </button>
-        <span className="font-black">
+        <span className="font-bold">
           Page {page} / {pages}
         </span>
         <button

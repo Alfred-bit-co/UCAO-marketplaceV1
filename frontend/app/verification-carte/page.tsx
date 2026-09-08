@@ -38,7 +38,7 @@ export default function VerificationCartePage() {
   }
 
   if (loading) return <PageShell><PageSkeleton /></PageShell>;
-  if (!profile) return <PageShell><main className="container-ucao py-[84px] text-center"><p className="mb-4 text-xl font-bold">Connectez-vous pour verifier votre compte.</p><Link className="btn btn-primary" href="/login">Se connecter</Link></main></PageShell>;
+  if (!profile) return <PageShell><main className="container-ucao py-[84px] text-center"><p className="mb-4 text-xl font-medium">Connectez-vous pour verifier votre compte.</p><Link className="btn btn-primary" href="/login">Se connecter</Link></main></PageShell>;
 
   const status = profile.verification_status ?? "pending";
   const hasSubmitted = Boolean(profile.student_id_url);
@@ -48,14 +48,14 @@ export default function VerificationCartePage() {
         <PageHero icon={IdCard} eyebrow="Verification" title="Carte d'etudiant UCAO">Envoyez une photo de votre carte d'etudiant de l'annee en cours pour activer votre compte.</PageHero>
         <section className="container-ucao max-w-3xl pb-[84px] pt-[42px]">
           <article className="panel mb-6 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow mb-1">Statut du compte</p><h2 className="text-2xl font-bold">{verificationLabel(status)}</h2></div><span className="tag">{status === "approved" ? <ShieldCheck size={15} /> : <ShieldAlert size={15} />} {verificationLabel(status)}</span></div>
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow mb-1">Statut du compte</p><h2 className="text-2xl font-medium">{verificationLabel(status)}</h2></div><span className="tag">{status === "approved" ? <ShieldCheck size={15} /> : <ShieldAlert size={15} />} {verificationLabel(status)}</span></div>
             {status === "approved" && <p className="mt-4 text-ucao-muted">Votre compte est valide.</p>}
             {status === "pending" && hasSubmitted && <p className="mt-4 text-ucao-muted">Votre carte est en cours de verification par l'equipe UCAO Marketplace.</p>}
-            {status === "rejected" && <div className="notice notice-error mt-4"><p className="font-bold">Verification refusee</p><p>{profile.verification_note || "La photo n'etait pas lisible ou ne correspondait pas a une carte UCAO valide."}</p><p className="mt-2 text-sm">Vous pouvez renvoyer une nouvelle photo.</p></div>}
+            {status === "rejected" && <div className="notice notice-error mt-4"><p className="font-medium">Verification refusee</p><p>{profile.verification_note || "La photo n'etait pas lisible ou ne correspondait pas a une carte UCAO valide."}</p><p className="mt-2 text-sm">Vous pouvez renvoyer une nouvelle photo.</p></div>}
           </article>
           {status !== "approved" && (!hasSubmitted || status === "rejected") && <form className="panel grid gap-5 p-6" onSubmit={handleSubmit}>
-            <div><h2 className="text-xl font-bold">Envoyer votre carte</h2><p className="mt-1 text-sm text-ucao-muted">Photo nette, recto visible. JPG, PNG ou WebP, 5 Mo maximum.</p></div>
-            <label className="grid gap-2 font-bold">Photo de la carte d'etudiant<input className="input-field py-2" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] ?? null; setStudentCard(file); setPreview(file ? URL.createObjectURL(file) : null); }} /><span className="text-sm font-normal text-ucao-muted">Cette image est envoyee dans un stockage prive.</span></label>
+            <div><h2 className="text-xl font-medium">Envoyer votre carte</h2><p className="mt-1 text-sm text-ucao-muted">Photo nette, recto visible. JPG, PNG ou WebP, 5 Mo maximum.</p></div>
+            <label className="grid gap-2 font-medium">Photo de la carte d'etudiant<input className="input-field py-2" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] ?? null; setStudentCard(file); setPreview(file ? URL.createObjectURL(file) : null); }} /><span className="text-sm font-normal text-ucao-muted">Cette image est envoyee dans un stockage prive.</span></label>
             {preview && <img src={preview} alt="Apercu de la carte d'etudiant" className="max-h-64 rounded-ucao border border-ucao-line object-contain" />}
             {error && <p className="notice notice-error">{error}</p>}{message && <p className="notice">{message}</p>}
             <button className="btn btn-primary w-fit" type="submit" disabled={submitting || !studentCard}><Upload size={18} />{submitting ? "Envoi..." : status === "rejected" ? "Renvoyer ma carte" : "Envoyer pour validation"}</button>

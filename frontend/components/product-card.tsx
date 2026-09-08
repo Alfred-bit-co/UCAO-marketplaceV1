@@ -25,7 +25,7 @@ export function ProductCard({ product, showDescription = false }: { product: Pro
       </div>
       <div className="p-5">
         <RoleBadge tier={product.seller_tier} />
-        <h3 className="mt-3.5 mb-2 text-[21px] font-bold">{product.name}</h3>
+        <h3 className="mt-3.5 mb-2 text-[21px] font-medium">{product.name}</h3>
         {showDescription && <p className="text-ucao-muted dark:text-[#a8b8cc]">{product.description}</p>}
         <p className="price">{formatPrice(product.price)}</p>
         <div className="mb-4 flex flex-wrap gap-3 text-sm text-ucao-muted dark:text-[#a8b8cc]">

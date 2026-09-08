@@ -53,12 +53,12 @@ export function PlatformStats({
   return (
     <section className="container-ucao py-[64px]">
       <div className="relative overflow-hidden rounded-ucao bg-[linear-gradient(120deg,#1E2A6E,#2C3A7A_60%,#7A1E2D)] p-8 text-white shadow-ucao">
-        <h2 className="mb-6 text-center text-2xl font-bold">UCAO Marketplace en chiffres</h2>
+        <h2 className="mb-6 text-center text-2xl font-medium">UCAO Marketplace en chiffres</h2>
         <div className="grid gap-6 sm:grid-cols-4">
           {stats.map(({ Icon, value, label }) => (
             <div key={label} className="text-center">
               <Icon className="mx-auto mb-2" size={28} />
-              <p className="text-3xl font-black">{value}</p>
+              <p className="text-3xl font-bold">{value}</p>
               <p className="text-sm text-white/80">{label}</p>
             </div>
           ))}

@@ -176,11 +176,8 @@ alter table public.subscription_payments enable row level security;
 alter table public.orders enable row level security;
 alter table public.platform_reviews enable row level security;
 
-create policy "Users read own profile or admins read profiles" on public.profiles
-for select using (
-  auth.uid() = id
-  or exists (select 1 from public.profiles where id = auth.uid() and role = 'ADMIN')
-);
+create policy "Users read own profile" on public.profiles
+for select using (auth.uid() = id);
 create policy "Users update own profile" on public.profiles for update using (auth.uid() = id);
 
 -- Empêche un client authentifié de s'accorder un rôle ou un palier.

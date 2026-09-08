@@ -49,7 +49,7 @@ export function ProductGallery({
             >
               <ChevronRight size={20} />
             </button>
-            <span className="absolute bottom-3 right-3 rounded-full bg-black/55 px-3 py-1 text-xs font-bold text-white">
+            <span className="absolute bottom-3 right-3 rounded-full bg-black/55 px-3 py-1 text-xs font-medium text-white">
               {index + 1} / {gallery.length}
             </span>
           </>

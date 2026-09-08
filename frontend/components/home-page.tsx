@@ -104,10 +104,10 @@ export function HomePage({
 
         <div className="container-ucao relative z-10 grid gap-9 py-20 text-white lg:grid-cols-[1.05fr_.75fr] lg:items-center">
           <div>
-            <p className="mb-4 inline-flex items-center gap-2 rounded-ucao bg-ucao-success/90 px-3 py-2 text-sm font-black uppercase">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-ucao bg-ucao-success/90 px-3 py-2 text-sm font-bold uppercase">
               <BadgeCheck size={17} strokeWidth={ICON_STROKE} /> Campus vérifié
             </p>
-            <h1 className="max-w-[760px] text-[clamp(44px,7vw,82px)] font-extrabold leading-[.95]">
+            <h1 className="max-w-[760px] text-[clamp(44px,7vw,82px)] font-semibold leading-[.95]">
               Achète. Vends. Avance.
             </h1>
             <p className="my-6 max-w-[620px] text-lg font-medium text-white/88">
@@ -154,7 +154,7 @@ export function HomePage({
             <span className={`mb-5 grid size-[54px] place-items-center rounded-ucao text-white ${tone === "green" ? "bg-ucao-success" : "bg-ucao-navy"}`}>
               <Icon size={28} strokeWidth={ICON_STROKE} />
             </span>
-            <h2 className="mb-2 text-2xl font-bold">{title}</h2>
+            <h2 className="mb-2 text-2xl font-medium">{title}</h2>
             <p className="text-ucao-muted dark:text-[#a8b8cc]">{text}</p>
           </article>
         ))}
@@ -165,7 +165,7 @@ export function HomePage({
           <p className="eyebrow">
             <UsersRound size={16} strokeWidth={ICON_STROKE} /> Simple et campus
           </p>
-          <h2 className="mb-4 text-[clamp(30px,4vw,48px)] font-bold leading-tight">
+          <h2 className="mb-4 text-[clamp(30px,4vw,48px)] font-medium leading-tight">
             Tout ce qu&apos;il faut pour vendre entre étudiants.
           </h2>
           <p className="max-w-xl text-ucao-muted dark:text-[#a8b8cc]">
@@ -188,7 +188,7 @@ export function HomePage({
             <p className="eyebrow">
               <GraduationCap size={16} strokeWidth={ICON_STROKE} /> Notre université
             </p>
-            <h2 className="mb-4 text-[clamp(30px,4vw,48px)] font-bold leading-tight">
+            <h2 className="mb-4 text-[clamp(30px,4vw,48px)] font-medium leading-tight">
               Une plateforme née dans la communauté UCAO-UUT.
             </h2>
             <p className="max-w-xl text-ucao-muted dark:text-[#a8b8cc]">
@@ -216,7 +216,7 @@ export function HomePage({
             <p className="eyebrow">
               <ShoppingBag size={16} strokeWidth={ICON_STROKE} /> Marketplace
             </p>
-            <h2 className="text-[clamp(30px,4vw,48px)] font-bold leading-tight">Produits en vedette</h2>
+            <h2 className="text-[clamp(30px,4vw,48px)] font-medium leading-tight">Produits en vedette</h2>
           </div>
           <Link className="btn btn-ghost" href="/products">
             Voir tout <ArrowRight size={18} strokeWidth={ICON_STROKE} />

@@ -46,14 +46,14 @@ export default function FaqPage() {
           <div className="space-y-4">
             {FAQ_ITEMS.map((item) => (
               <details key={item.question} className="panel p-5">
-                <summary className="cursor-pointer font-bold">{item.question}</summary>
+                <summary className="cursor-pointer font-medium">{item.question}</summary>
                 <p className="mt-3 text-ucao-muted dark:text-[#a8b8cc]">{item.answer}</p>
               </details>
             ))}
           </div>
           <p className="mt-8 text-center text-sm text-ucao-muted dark:text-[#a8b8cc]">
             Vous ne trouvez pas de réponse ?{" "}
-            <a className="font-bold text-ucao-red underline" href="mailto:ucaomarketplace2026@gmail.com">
+            <a className="font-medium text-ucao-red underline" href="mailto:ucaomarketplace2026@gmail.com">
               Contactez-nous
             </a>
             .

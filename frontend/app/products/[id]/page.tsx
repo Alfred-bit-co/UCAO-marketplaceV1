@@ -49,11 +49,11 @@ export default async function ProductDetailPage({ params }: Props) {
         <ProductGallery images={product.images} productName={product.name} />
         <section>
           <RoleBadge tier={product.seller_tier} />
-          <h1 className="my-4 text-[clamp(34px,5vw,52px)] font-bold leading-tight">{product.name}</h1>
+          <h1 className="my-4 text-[clamp(34px,5vw,52px)] font-medium leading-tight">{product.name}</h1>
           <p className="price">{formatPrice(product.price)}</p>
           <p className="text-ucao-muted dark:text-[#a8b8cc]">{product.description}</p>
           <div className="my-5 rounded-ucao bg-ucao-soft p-[18px] dark:bg-[#132238]">
-            <h2 className="text-xl font-bold">Vendeur</h2>
+            <h2 className="text-xl font-medium">Vendeur</h2>
             <p>
               <strong>{product.seller?.name || "Vendeur UCAO"}</strong>
             </p>

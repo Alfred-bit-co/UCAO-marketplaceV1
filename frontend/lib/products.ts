@@ -2,7 +2,7 @@ import { createClient, isSupabaseConfigured } from "./supabase";
 import { getPublicProfiles, toSeller, type PublicProfile } from "./public-profiles";
 import { PRODUCTS_PER_PAGE, DEMO_PRODUCTS } from "./constants";
 import { escapeIlike } from "./utils";
-import type { PaginatedResult, Product, ProductCategory, ProductImage, SubscriptionTier } from "./types";
+import type { PaginatedResult, Product, ProductCategory, ProductImage } from "./types";
 import { TIER_PRIORITY } from "./types";
 
 type ProductImageRow = {

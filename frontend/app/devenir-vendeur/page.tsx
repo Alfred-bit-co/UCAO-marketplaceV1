@@ -102,7 +102,7 @@ export default function DevenirVendeurPage() {
       <PageShell>
         <main className="container-ucao py-[84px] text-center">
           <AlertTriangle className="mx-auto mb-3 text-ucao-red" size={28} />
-          <p className="mb-4 text-xl font-bold">Impossible de charger votre profil.</p>
+          <p className="mb-4 text-xl font-medium">Impossible de charger votre profil.</p>
           <p className="mb-6 text-ucao-muted dark:text-[#a8b8cc]">Vérifiez votre connexion internet et réessayez.</p>
           <button className="btn btn-primary" type="button" onClick={loadProfile}>Réessayer</button>
         </main>
@@ -162,10 +162,10 @@ export default function DevenirVendeurPage() {
             const style = TIER_STYLES[plan.tier];
             return (
               <article key={plan.tier} className={cn("panel relative flex flex-col gap-3 p-6", plan.recommended && "border-2 border-ucao-red")}>
-                {plan.recommended && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-ucao-red px-3 py-1 text-xs font-black text-white">Recommandé</span>}
+                {plan.recommended && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-ucao-red px-3 py-1 text-xs font-bold text-white">Recommandé</span>}
                 <span className={cn("grid size-12 place-items-center rounded-full", style.iconBg)}><style.Icon size={22} /></span>
-                <h2 className="text-2xl font-bold">{plan.tier}</h2>
-                <p className="text-3xl font-black">{plan.price.toLocaleString("fr-FR")} FCFA<span className="text-sm font-normal"> / mois</span></p>
+                <h2 className="text-2xl font-medium">{plan.tier}</h2>
+                <p className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")} FCFA<span className="text-sm font-normal"> / mois</span></p>
                 <ul className="flex-1 space-y-2 border-t border-ucao-line pt-3 text-sm dark:border-[#2a3a52]">
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" /> {plan.productLimit} produits maximum</li>
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" />{plan.standLimit === 0 ? "Aucun stand" : plan.standLimit + " stand(s) maximum"}</li>
@@ -183,7 +183,7 @@ export default function DevenirVendeurPage() {
             <input type="checkbox" className="mt-1" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
             <span>
               J&apos;ai lu et j&apos;accepte les{" "}
-              <a className="font-bold text-ucao-red underline" href="/conditions-generales" target="_blank" rel="noopener noreferrer">Conditions Générales d&apos;Utilisation</a>
+              <a className="font-medium text-ucao-red underline" href="/conditions-generales" target="_blank" rel="noopener noreferrer">Conditions Générales d&apos;Utilisation</a>
               , notamment la clause sur les échanges au sein du campus et l&apos;absence de renouvellement automatique.
             </span>
           </label>

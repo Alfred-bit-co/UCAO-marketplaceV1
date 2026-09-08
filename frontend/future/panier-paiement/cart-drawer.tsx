@@ -50,8 +50,8 @@ export function CartDrawer() {
       >
         <header className="flex items-center justify-between border-b border-ucao-line px-5 py-4 dark:border-[#263d5c]">
           <div>
-            <p className="text-xs font-black uppercase text-ucao-red">Panier</p>
-            <h2 className="text-2xl font-bold">{count} article(s)</h2>
+            <p className="text-xs font-bold uppercase text-ucao-red">Panier</p>
+            <h2 className="text-2xl font-medium">{count} article(s)</h2>
           </div>
           <button type="button" className="grid size-10 place-items-center rounded-ucao bg-ucao-navy-soft text-ucao-navy dark:bg-[#142b4a] dark:text-white" onClick={closeCart} aria-label="Fermer le panier">
             <X size={20} />
@@ -81,15 +81,15 @@ export function CartDrawer() {
                   )}
                 </div>
                 <div>
-                  <h3 className="font-bold leading-snug">{item.name}</h3>
+                  <h3 className="font-medium leading-snug">{item.name}</h3>
                   <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">{item.sellerName}</p>
-                  <p className="font-black text-ucao-success">{formatPrice(item.price)}</p>
+                  <p className="font-bold text-ucao-success">{formatPrice(item.price)}</p>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <div className="inline-flex items-center rounded-ucao bg-white dark:bg-[#0b1c31]">
                       <button type="button" className="grid size-8 place-items-center" onClick={() => updateQuantity(item.productId, item.quantity - 1)} aria-label="Diminuer la quantité">
                         <Minus size={15} />
                       </button>
-                      <span className="min-w-8 text-center font-bold">{item.quantity}</span>
+                      <span className="min-w-8 text-center font-medium">{item.quantity}</span>
                       <button type="button" className="grid size-8 place-items-center" onClick={() => updateQuantity(item.productId, item.quantity + 1)} aria-label="Augmenter la quantité">
                         <Plus size={15} />
                       </button>
@@ -105,8 +105,8 @@ export function CartDrawer() {
 
           {receipt && (
             <section className="mt-5 rounded-ucao border border-ucao-line bg-white p-5 dark:border-[#263d5c] dark:bg-[#10233b]" id="checkout-receipt">
-              <p className="text-xs font-black uppercase text-ucao-red">Reçu de paiement</p>
-              <h2 className="mb-2 text-2xl font-bold">Commande {receipt.orderId.slice(0, 8)}</h2>
+              <p className="text-xs font-bold uppercase text-ucao-red">Reçu de paiement</p>
+              <h2 className="mb-2 text-2xl font-medium">Commande {receipt.orderId.slice(0, 8)}</h2>
               <p className="mb-4 text-sm text-ucao-muted dark:text-[#a8b8cc]">Nom et prénom de l&apos;acheteur : {receipt.buyerName}</p>
               <div className="space-y-3">
                 {receipt.items.map((item) => (
@@ -119,7 +119,7 @@ export function CartDrawer() {
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-lg font-black">Total : {formatPrice(receipt.total)}</p>
+              <p className="mt-4 text-lg font-bold">Total : {formatPrice(receipt.total)}</p>
               <p className="notice mt-4">
                 Le vendeur ne livrera le produit qu&apos;à réception de ce reçu.
               </p>
@@ -133,7 +133,7 @@ export function CartDrawer() {
         </div>
 
         <footer className="border-t border-ucao-line px-5 py-4 dark:border-[#263d5c]">
-          <div className="mb-4 flex items-center justify-between text-lg font-black">
+          <div className="mb-4 flex items-center justify-between text-lg font-bold">
             <span>Total</span>
             <span>{formatPrice(total)}</span>
           </div>

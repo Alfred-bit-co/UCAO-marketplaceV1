@@ -7,6 +7,7 @@ from time import monotonic
 
 _EVENTS = defaultdict(deque)
 _LOCK = Lock()
+MAX_RATE_LIMIT_KEYS = 10_000
 
 
 @dataclass(frozen=True)
@@ -16,13 +17,16 @@ class RateLimitResult:
 
 
 def client_ip(request):
-    forwarded = (request.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
-    return forwarded or request.remote_addr or "unknown"
+    # ProxyFix rewrites remote_addr only when TRUSTED_PROXY_HOPS is explicitly set.
+    # Reading X-Forwarded-For here would let clients forge their own rate-limit key.
+    return request.remote_addr or "unknown"
 
 
 def check_rate_limit(key, limit, window_seconds):
     now = monotonic()
     with _LOCK:
+        if key not in _EVENTS and len(_EVENTS) >= MAX_RATE_LIMIT_KEYS:
+            _EVENTS.pop(next(iter(_EVENTS)), None)
         bucket = _EVENTS[key]
         while bucket and now - bucket[0] > window_seconds:
             bucket.popleft()

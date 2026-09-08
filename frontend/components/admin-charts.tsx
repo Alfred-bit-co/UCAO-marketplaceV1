@@ -50,7 +50,7 @@ function ChartTooltip({
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-ucao border border-ucao-line bg-white px-3 py-2 text-sm shadow-ucao dark:border-[#2a3a52] dark:bg-[#0b1c31]">
-      {label && <p className="mb-1 font-bold">{label}</p>}
+      {label && <p className="mb-1 font-medium">{label}</p>}
       {payload.map((entry) => (
         <p key={entry.name} style={{ color: entry.color }}>
           {entry.name} : <strong>{entry.value}</strong>
@@ -79,8 +79,8 @@ function StatCard({
   };
   return (
     <article className={cn("panel border-l-4 p-5 transition hover:-translate-y-0.5 hover:shadow-ucao", accents[accent])}>
-      <p className="text-sm font-bold uppercase tracking-wide text-ucao-muted dark:text-[#a8b8cc]">{label}</p>
-      <p className="mt-2 text-4xl font-black">{value.toLocaleString("fr-FR")}</p>
+      <p className="text-sm font-medium uppercase tracking-wide text-ucao-muted dark:text-[#a8b8cc]">{label}</p>
+      <p className="mt-2 text-4xl font-bold">{value.toLocaleString("fr-FR")}</p>
       {hint && <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">{hint}</p>}
     </article>
   );
@@ -130,7 +130,7 @@ export function AdminCharts({
       <div className="grid gap-4 lg:grid-cols-2">
         <article className="panel p-5">
           <p className="eyebrow mb-1">Activité</p>
-          <h2 className="mb-4 text-xl font-bold">Inscriptions par mois</h2>
+          <h2 className="mb-4 text-xl font-medium">Inscriptions par mois</h2>
           <div className="h-[280px]">
             {allSignups.length ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -163,7 +163,7 @@ export function AdminCharts({
 
         <article className="panel p-5">
           <p className="eyebrow mb-1">Monétisation</p>
-          <h2 className="mb-4 text-xl font-bold">Nouveaux vendeurs par mois</h2>
+          <h2 className="mb-4 text-xl font-medium">Nouveaux vendeurs par mois</h2>
           <div className="h-[280px]">
             {vendorData.length ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -185,14 +185,14 @@ export function AdminCharts({
 
       <article className="panel p-5">
         <p className="eyebrow mb-1">Catalogue</p>
-        <h2 className="mb-4 text-xl font-bold">Produits publiés par mois</h2>
+        <h2 className="mb-4 text-xl font-medium">Produits publiés par mois</h2>
         <div className="h-[280px]">{productData.length ? <ResponsiveContainer width="100%" height="100%"><BarChart data={productData}><CartesianGrid strokeDasharray="3 3" stroke="#e7edf3" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis allowDecimals={false} tick={{ fontSize: 12 }} /><Tooltip content={<ChartTooltip />} /><Bar dataKey="produits" name="Produits" fill={CHART_COLORS.green} radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer> : <p className="text-ucao-muted">Aucune donnée de publication.</p>}</div>
       </article>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <article className="panel p-5">
           <p className="eyebrow mb-1">Communauté</p>
-          <h2 className="mb-4 text-xl font-bold">Répartition par rôle</h2>
+          <h2 className="mb-4 text-xl font-medium">Répartition par rôle</h2>
           <div className="h-[280px]">
             {roleData.some((item) => item.value > 0) ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -221,7 +221,7 @@ export function AdminCharts({
 
         <article className="panel p-5">
           <p className="eyebrow mb-1">Abonnements</p>
-          <h2 className="mb-4 text-xl font-bold">Paliers vendeurs</h2>
+          <h2 className="mb-4 text-xl font-medium">Paliers vendeurs</h2>
           <div className="h-[280px]">
             {tierData.some((item) => item.value > 0) ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -244,19 +244,19 @@ export function AdminCharts({
 
       <article className="panel p-5">
         <p className="eyebrow mb-1">Confiance</p>
-        <h2 className="text-xl font-bold">Modération & avis</h2>
+        <h2 className="text-xl font-medium">Modération & avis</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <div className="rounded-ucao bg-ucao-soft p-4 dark:bg-[#132238]">
             <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">Avis total</p>
-            <p className="text-3xl font-black">{stats.totalReviews}</p>
+            <p className="text-3xl font-bold">{stats.totalReviews}</p>
           </div>
           <div className="rounded-ucao bg-ucao-success-soft p-4 dark:bg-[#123628]">
             <p className="text-sm text-ucao-success">Avis validés</p>
-            <p className="text-3xl font-black text-ucao-success">{stats.approvedReviews}</p>
+            <p className="text-3xl font-bold text-ucao-success">{stats.approvedReviews}</p>
           </div>
           <div className="rounded-ucao bg-ucao-red-soft p-4 dark:bg-[#3a1a1c]">
             <p className="text-sm text-ucao-red">Stands en attente</p>
-            <p className="text-3xl font-black text-ucao-red">{stats.pendingStands}</p>
+            <p className="text-3xl font-bold text-ucao-red">{stats.pendingStands}</p>
           </div>
         </div>
       </article>

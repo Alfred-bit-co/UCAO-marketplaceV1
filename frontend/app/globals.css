@@ -59,7 +59,7 @@
   }
 
   .btn {
-    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-ucao border-0 px-5 font-extrabold transition-all duration-200 hover:-translate-y-0.5 disabled:hover:translate-y-0;
+    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-ucao border-0 px-5 font-semibold transition-all duration-200 hover:-translate-y-0.5 disabled:hover:translate-y-0;
   }
 
   .btn-primary {
@@ -75,7 +75,7 @@
   }
 
   .eyebrow {
-    @apply mb-2.5 inline-flex items-center gap-2 text-[13px] font-black uppercase text-ucao-red;
+    @apply mb-2.5 inline-flex items-center gap-2 text-[13px] font-bold uppercase text-ucao-red;
   }
 
   .panel {
@@ -95,15 +95,15 @@
   }
 
   .tag {
-    @apply inline-flex min-h-7 items-center gap-1.5 rounded-ucao bg-ucao-red-soft px-2.5 text-xs font-black text-ucao-red dark:bg-[#3a171d] dark:text-[#ff9aa0];
+    @apply inline-flex min-h-7 items-center gap-1.5 rounded-ucao bg-ucao-red-soft px-2.5 text-xs font-bold text-ucao-red dark:bg-[#3a171d] dark:text-[#ff9aa0];
   }
 
   .price {
-    @apply my-2 text-2xl font-black text-ucao-success dark:text-[#6fd0aa];
+    @apply my-2 text-2xl font-bold text-ucao-success dark:text-[#6fd0aa];
   }
 
   .notice {
-    @apply my-3 rounded-ucao bg-ucao-success-soft px-3.5 py-3 font-bold text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
+    @apply my-3 rounded-ucao bg-ucao-success-soft px-3.5 py-3 font-medium text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
   }
 
   .notice-error {
@@ -111,7 +111,7 @@
   }
 
   .role-badge {
-    @apply inline-flex min-h-[30px] items-center gap-1.5 rounded-ucao bg-ucao-success-soft px-2.5 text-xs font-black text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
+    @apply inline-flex min-h-[30px] items-center gap-1.5 rounded-ucao bg-ucao-success-soft px-2.5 text-xs font-bold text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
   }
 
   .role-badge-premium {

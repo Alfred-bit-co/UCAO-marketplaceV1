@@ -9,6 +9,13 @@ load_dotenv(BASE_DIR / ".env")
 load_dotenv(BASE_DIR / "backend" / ".env", override=True)
 
 
+def _non_negative_int(value: str | None, default: int = 0) -> int:
+    try:
+        return max(int(value or default), 0)
+    except ValueError:
+        return default
+
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY") or os.urandom(32)
     CORS_ORIGINS = list(dict.fromkeys([
@@ -24,3 +31,4 @@ class Config:
     FEDAPAY_PUBLIC_KEY = os.getenv("FEDAPAY_PUBLIC_KEY", "")
     FEDAPAY_WEBHOOK_SECRET = os.getenv("FEDAPAY_WEBHOOK_SECRET", "")
     FEDAPAY_API_BASE_URL = os.getenv("FEDAPAY_API_BASE_URL", "https://api.fedapay.com/v1")
+    TRUSTED_PROXY_HOPS = _non_negative_int(os.getenv("TRUSTED_PROXY_HOPS"))

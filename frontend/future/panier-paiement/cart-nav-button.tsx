@@ -15,7 +15,7 @@ export function CartNavButton() {
     >
       <ShoppingCart size={20} />
       {count > 0 && (
-        <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-ucao-red px-1 text-xs font-black text-white">
+        <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-ucao-red px-1 text-xs font-bold text-white">
           {count}
         </span>
       )}

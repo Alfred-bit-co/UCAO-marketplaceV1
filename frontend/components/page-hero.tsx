@@ -27,7 +27,7 @@ export function PageHero({
           {eyebrow}
         </p>
 
-        <h1 className="mb-3 text-[clamp(36px,5vw,58px)] font-bold leading-tight">
+        <h1 className="mb-3 text-[clamp(36px,5vw,58px)] font-medium leading-tight">
           {title}
         </h1>
 

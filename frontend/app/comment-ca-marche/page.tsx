@@ -75,10 +75,10 @@ export default function CommentCaMarchePage() {
       <main className="bg-ucao-soft dark:bg-[#071426]">
         <section className="bg-[linear-gradient(110deg,rgba(30,42,110,.96),rgba(30,42,110,.82)_52%,rgba(122,30,45,.68)),url('/images/hero-etudiants-campus.jpg')] bg-cover bg-center py-20 text-white">
           <div className="container-ucao">
-            <p className="mb-4 inline-flex items-center gap-2 rounded-ucao bg-ucao-success px-3 py-2 text-sm font-black uppercase">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-ucao bg-ucao-success px-3 py-2 text-sm font-bold uppercase">
               <ShieldCheck size={17} strokeWidth={ICON_STROKE} /> Guide étudiant
             </p>
-            <h1 className="max-w-3xl text-[clamp(38px,6vw,68px)] font-extrabold leading-tight">
+            <h1 className="max-w-3xl text-[clamp(38px,6vw,68px)] font-semibold leading-tight">
               Comment ça marche ?
             </h1>
             <p className="mt-5 max-w-2xl text-lg font-medium text-white/88">
@@ -97,7 +97,7 @@ export default function CommentCaMarchePage() {
             <p className="eyebrow">
               <BadgeCheck size={16} strokeWidth={ICON_STROKE} /> Sécurité
             </p>
-            <h2 className="mb-6 text-[clamp(28px,4vw,44px)] font-bold leading-tight">
+            <h2 className="mb-6 text-[clamp(28px,4vw,44px)] font-medium leading-tight">
               Des échanges plus fiables sur le campus.
             </h2>
             <div className="grid gap-5 md:grid-cols-2">
@@ -106,7 +106,7 @@ export default function CommentCaMarchePage() {
                   <span className="grid size-12 place-items-center rounded-ucao bg-ucao-success text-white">
                     <Icon size={25} strokeWidth={ICON_STROKE} />
                   </span>
-                  <h3 className="mt-4 text-xl font-bold">{title}</h3>
+                  <h3 className="mt-4 text-xl font-medium">{title}</h3>
                   <p className="mt-2 text-white/78">{text}</p>
                 </article>
               ))}
@@ -137,7 +137,7 @@ function StepGroup({
 }) {
   return (
     <section className="panel p-6 md:p-7">
-      <h2 className="text-3xl font-bold">{title}</h2>
+      <h2 className="text-3xl font-medium">{title}</h2>
       <p className="mt-3 text-ucao-muted dark:text-[#a8b8cc]">{intro}</p>
       <div className="mt-7 grid gap-4">
         {steps.map(({ Icon, title: stepTitle, text }, index) => (
@@ -146,8 +146,8 @@ function StepGroup({
               <Icon size={24} strokeWidth={ICON_STROKE} />
             </span>
             <div>
-              <span className="text-xs font-black uppercase text-ucao-red">Étape {index + 1}</span>
-              <h3 className="text-xl font-bold">{stepTitle}</h3>
+              <span className="text-xs font-bold uppercase text-ucao-red">Étape {index + 1}</span>
+              <h3 className="text-xl font-medium">{stepTitle}</h3>
               <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">{text}</p>
             </div>
           </article>

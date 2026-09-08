@@ -51,13 +51,13 @@ export default async function StandDetailPage({ params }: Props) {
             </div>
             <section>
               <RoleBadge tier={stand.seller_tier} />
-              <h1 className="my-4 text-[clamp(34px,5vw,52px)] font-bold leading-tight">{stand.name}</h1>
+              <h1 className="my-4 text-[clamp(34px,5vw,52px)] font-medium leading-tight">{stand.name}</h1>
               <section className="my-5 rounded-ucao bg-ucao-soft p-[18px] dark:bg-[#132238]">
-                <h2 className="mb-2 text-xl font-bold">Description du stand</h2>
+                <h2 className="mb-2 text-xl font-medium">Description du stand</h2>
                 <p className="text-ucao-muted dark:text-[#a8b8cc]">{stand.description}</p>
               </section>
               <div className="my-5 rounded-ucao bg-ucao-soft p-[18px] dark:bg-[#132238]">
-                <h2 className="text-xl font-bold">Responsable</h2>
+                <h2 className="text-xl font-medium">Responsable</h2>
                 <p>
                   <strong>{stand.seller?.name || "Vendeur UCAO"}</strong>
                 </p>

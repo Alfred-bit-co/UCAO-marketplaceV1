@@ -15,7 +15,7 @@ export function CategoryStrip() {
   return (
     <nav className="border-b border-ucao-line bg-white py-4 dark:border-[#1c3050] dark:bg-[#0b1c31]" aria-label="Catégories rapides">
       <div className="container-ucao flex flex-col items-center gap-3">
-        <h2 className="text-center text-sm font-black uppercase tracking-wide text-ucao-navy dark:text-white">
+        <h2 className="text-center text-sm font-bold uppercase tracking-wide text-ucao-navy dark:text-white">
           Accès rapide aux catégories produits
         </h2>
         <div className="flex flex-wrap justify-center gap-3">
@@ -23,7 +23,7 @@ export function CategoryStrip() {
           <Link
             key={value}
             href={`/products?category=${value}`}
-            className="flex items-center gap-2 rounded-full border border-ucao-line px-4 py-2 text-sm font-bold text-ucao-navy transition-colors hover:border-ucao-red hover:text-ucao-red dark:border-[#1c3050] dark:text-white dark:hover:border-[#ff9aa0] dark:hover:text-[#ff9aa0]"
+            className="flex items-center gap-2 rounded-full border border-ucao-line px-4 py-2 text-sm font-medium text-ucao-navy transition-colors hover:border-ucao-red hover:text-ucao-red dark:border-[#1c3050] dark:text-white dark:hover:border-[#ff9aa0] dark:hover:text-[#ff9aa0]"
           >
             <Icon size={16} />
             {label}

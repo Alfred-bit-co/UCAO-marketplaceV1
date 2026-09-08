@@ -17,14 +17,14 @@ export default function ConditionsGeneralesPage() {
         </PageHero>
         <section className="container-ucao max-w-3xl space-y-8 py-[54px] pb-[84px]">
           <div className="panel p-6">
-            <h2 className="mb-3 text-xl font-bold">1. Objet</h2>
+            <h2 className="mb-3 text-xl font-medium">1. Objet</h2>
             <p className="text-ucao-muted dark:text-[#a8b8cc]">
               UCAO Marketplace met en relation les étudiants acheteurs et vendeurs de la communauté UCAO-UUT. La plateforme sert de vitrine et de mise en relation ; elle ne participe à aucun moment à la transaction entre l&apos;acheteur et le vendeur.
             </p>
           </div>
 
           <div className="panel p-6">
-            <h2 className="mb-3 text-xl font-bold">2. Abonnement vendeur</h2>
+            <h2 className="mb-3 text-xl font-medium">2. Abonnement vendeur</h2>
             <p className="mb-4 text-ucao-muted dark:text-[#a8b8cc]">
               Publier des produits ou ouvrir un stand nécessite un abonnement mensuel payant, quel que soit le palier choisi :
             </p>
@@ -66,21 +66,21 @@ export default function ConditionsGeneralesPage() {
           </div>
 
           <div className="panel p-6">
-            <h2 className="mb-3 text-xl font-bold">3. Conséquences de la non-reconduction</h2>
+            <h2 className="mb-3 text-xl font-medium">3. Conséquences de la non-reconduction</h2>
             <p className="text-ucao-muted dark:text-[#a8b8cc]">
               À l&apos;expiration de l&apos;abonnement sans renouvellement, les produits et le stand du vendeur sont masqués publiquement et aucune nouvelle publication n&apos;est possible, jusqu&apos;au renouvellement. Aucune donnée n&apos;est supprimée.
             </p>
           </div>
 
           <div className="panel border-2 border-ucao-red p-6">
-            <h2 className="mb-3 text-xl font-bold text-ucao-red">4. Lieu des échanges et responsabilité</h2>
+            <h2 className="mb-3 text-xl font-medium text-ucao-red">4. Lieu des échanges et responsabilité</h2>
             <p className="text-ucao-muted dark:text-[#a8b8cc]">
               Les échanges (remise du produit, paiement en espèces) doivent avoir lieu <strong>au sein du campus de l&apos;UCAO-UUT</strong>. La plateforme ne prend en charge aucun litige résultant d&apos;un échange effectué en dehors du campus ou à distance. L&apos;acheteur est invité à vérifier la marchandise avant tout paiement en espèces. UCAO Marketplace n&apos;est pas responsable des conséquences d&apos;une transaction effectuée en violation de cette règle.
             </p>
           </div>
 
           <div className="panel p-6">
-            <h2 className="mb-3 text-xl font-bold">5. Modération</h2>
+            <h2 className="mb-3 text-xl font-medium">5. Modération</h2>
             <p className="text-ucao-muted dark:text-[#a8b8cc]">
               Chaque stand est soumis à validation par l&apos;équipe UCAO Marketplace avant d&apos;être visible publiquement. Un compte peut être suspendu en cas de non-respect de ces conditions.
             </p>
@@ -88,7 +88,7 @@ export default function ConditionsGeneralesPage() {
 
           <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">
             Pour toute question, contactez-nous à{" "}
-            <a className="font-bold text-ucao-red underline" href="mailto:ucaomarketplace2026@gmail.com">
+            <a className="font-medium text-ucao-red underline" href="mailto:ucaomarketplace2026@gmail.com">
               ucaomarketplace2026@gmail.com
             </a>
             .

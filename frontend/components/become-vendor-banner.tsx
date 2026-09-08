@@ -10,7 +10,7 @@ export function BecomeVendorBanner() {
             <Store size={26} />
           </span>
           <div>
-            <p className="text-xl font-bold">Prêt à rejoindre le marketplace ?</p>
+            <p className="text-xl font-medium">Prêt à rejoindre le marketplace ?</p>
             <p className="text-white/80">
               Crée ton stand, ajoute tes produits et commence à vendre à toute la communauté étudiante.
             </p>

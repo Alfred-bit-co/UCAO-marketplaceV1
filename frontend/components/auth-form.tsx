@@ -20,7 +20,7 @@ async function checkAuthRateLimit(action: "login" | "register"): Promise<{ allow
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action }),
     });
-    if (response.status === 429) {
+    if (!response.ok) {
       const data = await response.json().catch(() => null);
       return { allowed: false, message: data?.error || "Trop de tentatives. Réessayez dans quelques minutes." };
     }
@@ -178,7 +178,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           <ArrowLeft size={20} />
         </Link>
         <Brand />
-        <h1 className="mt-7 text-3xl font-bold">{mode === "login" ? "Connexion" : "Créer un compte étudiant"}</h1>
+        <h1 className="mt-7 text-3xl font-medium">{mode === "login" ? "Connexion" : "Créer un compte étudiant"}</h1>
         <p className="mb-5 text-ucao-muted dark:text-[#a8b8cc]">
           {mode === "login"
             ? "Accédez à votre espace après validation de votre carte d'étudiant."
@@ -248,7 +248,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           )}
         </label>
         {mode === "login" && (
-          <Link className="mt-2 block text-right text-sm font-bold text-ucao-red hover:underline" href="/mot-de-passe-oublie">
+          <Link className="mt-2 block text-right text-sm font-medium text-ucao-red hover:underline" href="/mot-de-passe-oublie">
             Mot de passe oublié ?
           </Link>
         )}
@@ -257,11 +257,11 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
             <input type="checkbox" className="mt-1" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
             <span>
               J&apos;accepte les{" "}
-              <a className="font-bold text-ucao-red underline" href="/conditions-generales" target="_blank" rel="noopener noreferrer">
+              <a className="font-medium text-ucao-red underline" href="/conditions-generales" target="_blank" rel="noopener noreferrer">
                 Conditions Générales d&apos;Utilisation
               </a>{" "}
               et la{" "}
-              <a className="font-bold text-ucao-red underline" href="/politique-confidentialite" target="_blank" rel="noopener noreferrer">
+              <a className="font-medium text-ucao-red underline" href="/politique-confidentialite" target="_blank" rel="noopener noreferrer">
                 Politique de confidentialité
               </a>
               .
@@ -278,7 +278,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
           {mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
-        <Link className="mt-5 block text-center font-bold text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/devenir-vendeur" : "/login"}>
+        <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/devenir-vendeur" : "/login"}>
           {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
         </Link>
       </form>
