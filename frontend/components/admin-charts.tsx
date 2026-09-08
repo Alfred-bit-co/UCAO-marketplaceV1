@@ -201,7 +201,7 @@ export function AdminCharts({
                     data={roleData}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius={60}
+                    innerRadius={73}
                     outerRadius={95}
                     paddingAngle={3}
                   >
@@ -226,7 +226,7 @@ export function AdminCharts({
             {tierData.some((item) => item.value > 0) ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={tierData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={3}>
+                  <Pie data={tierData} dataKey="value" nameKey="name" innerRadius={73} outerRadius={95} paddingAngle={3}>
                     {tierData.map((entry) => (
                       <Cell key={entry.name} fill={TIER_COLORS[entry.name] ?? CHART_COLORS.red} />
                     ))}
