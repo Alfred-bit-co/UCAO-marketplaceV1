@@ -1,5 +1,5 @@
 "use client";
-import { Headset, Package, ShieldCheck, Users } from "lucide-react";
+import { Headset, Package, ShieldCheck, Users } from "@/lib/icons";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
 

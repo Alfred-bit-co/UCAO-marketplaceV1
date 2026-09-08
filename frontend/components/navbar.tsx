@@ -16,7 +16,7 @@ import {
   Store,
   Sun,
   X,
-} from "lucide-react";
+} from "@/lib/icons";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import type { UserRole } from "@/lib/types";

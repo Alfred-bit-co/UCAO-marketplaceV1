@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { IconComponent } from "@/lib/icons";
 
 export function PageHero({
   icon: Icon,
@@ -6,7 +6,7 @@ export function PageHero({
   title,
   children,
 }: {
-  icon?: LucideIcon;
+  icon?: IconComponent;
   eyebrow: string;
   title: string;
   children: React.ReactNode;

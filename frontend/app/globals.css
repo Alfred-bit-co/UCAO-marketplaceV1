@@ -35,10 +35,6 @@
     @apply bg-ucao-surface text-ucao-ink font-sans leading-relaxed antialiased;
   }
 
-  .lucide {
-    stroke-width: 2.2;
-  }
-
   :focus-visible {
     outline: 3px solid #2e7d5b;
     outline-offset: 3px;

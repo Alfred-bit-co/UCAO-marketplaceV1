@@ -1,4 +1,4 @@
-import { Gem, Medal, User } from "lucide-react";
+import { Gem, Medal, User } from "@/lib/icons";
 import type { SubscriptionTier } from "@/lib/types";
 import { cn } from "@/lib/utils";
 

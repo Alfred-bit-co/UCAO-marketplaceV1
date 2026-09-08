@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, MessageCircle } from "lucide-react";
+import { Instagram, MessageCircle } from "@/lib/icons";
 import { Brand } from "./navbar";
 
 export function Footer({ full = false }: { full?: boolean }) {

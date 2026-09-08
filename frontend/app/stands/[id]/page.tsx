@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "@/lib/icons";
 import { PageShell } from "@/components/page-shell";
 import { RoleBadge } from "@/components/role-badge";
 import { SITE_URL } from "@/lib/constants";

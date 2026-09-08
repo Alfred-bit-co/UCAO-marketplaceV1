@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { BookOpen, Cpu, ShoppingBasket, Shirt, Wrench } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { BookOpen, Cpu, ShoppingBasket, Shirt, Wrench } from "@/lib/icons";
+import type { IconComponent } from "@/lib/icons";
 import type { ProductCategory } from "@/lib/types";
 
-const CATEGORY_ICONS: { value: ProductCategory; label: string; Icon: LucideIcon }[] = [
+const CATEGORY_ICONS: { value: ProductCategory; label: string; Icon: IconComponent }[] = [
   { value: "nourriture", label: "Nourriture", Icon: ShoppingBasket },
   { value: "vetements", label: "Vêtements", Icon: Shirt },
   { value: "numerique", label: "Numérique", Icon: Cpu },

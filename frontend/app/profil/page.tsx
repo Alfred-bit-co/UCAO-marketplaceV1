@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import { Check, Mail, Phone, ShieldCheck, UserRound } from "@/lib/icons";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";

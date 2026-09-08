@@ -1,4 +1,4 @@
-import { HelpCircle } from "lucide-react";
+import { HelpCircle } from "@/lib/icons";
 import type { Metadata } from "next";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";

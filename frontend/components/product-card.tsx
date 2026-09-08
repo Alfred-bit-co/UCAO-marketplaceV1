@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, MessageCircle } from "lucide-react";
+import { Eye, MessageCircle } from "@/lib/icons";
 import type { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";

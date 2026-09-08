@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
 import { useState } from "react";
 import { Brand } from "./navbar";
 import { ThemeProvider } from "./theme-provider";

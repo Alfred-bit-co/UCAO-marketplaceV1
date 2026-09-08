@@ -1,5 +1,5 @@
 "use client";
-import { MessageSquareQuote, Send, Star, Trash2 } from "lucide-react";
+import { MessageSquareQuote, Send, Star, Trash2 } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { deleteReview, getApprovedReviews, getMyReview, submitReview } from "@/lib/reviews";
 import type { PlatformReview } from "@/lib/reviews";

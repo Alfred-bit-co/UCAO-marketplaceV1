@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "@/lib/icons";
 import type { Product } from "@/lib/types";
 import { useCart } from "./cart-provider";
 import { cn } from "@/lib/utils";

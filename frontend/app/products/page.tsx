@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "@/lib/icons";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { ProductsBrowser } from "@/components/products-browser";

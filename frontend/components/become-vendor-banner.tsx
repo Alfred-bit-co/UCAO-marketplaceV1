@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Store } from "lucide-react";
+import { ArrowRight, Store } from "@/lib/icons";
 
 export function BecomeVendorBanner() {
   return (

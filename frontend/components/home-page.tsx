@@ -14,8 +14,8 @@ import {
   ShoppingBag,
   Store,
   UsersRound,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+} from "@/lib/icons";
+import type { IconComponent } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { HERO_IMAGES } from "@/lib/constants";
 import type { Product } from "@/lib/types";
@@ -45,7 +45,7 @@ export function HomePage({
 
   const setNext = (step: number) => setIndex((value) => (value + step + HERO_IMAGES.length) % HERO_IMAGES.length);
 
-  const promises: { Icon: LucideIcon; title: string; text: string; tone: "green" | "navy" }[] = [
+  const promises: { Icon: IconComponent; title: string; text: string; tone: "green" | "navy" }[] = [
     {
       Icon: ShieldCheck,
       title: "Vendeurs vérifiés",
@@ -60,7 +60,7 @@ export function HomePage({
     },
   ];
 
-  const steps: { Icon: LucideIcon; label: string }[] = [
+  const steps: { Icon: IconComponent; label: string }[] = [
     { Icon: ShoppingBag, label: "Acheter utile" },
     { Icon: Store, label: "Vendre vite" },
     { Icon: HandCoins, label: "Payer Mobile Money" },

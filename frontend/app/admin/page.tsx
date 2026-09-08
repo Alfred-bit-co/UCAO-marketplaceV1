@@ -11,7 +11,7 @@ import {
   Trash2,
   UsersRound,
   X,
-} from "lucide-react";
+} from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { AdminCharts } from "@/components/admin-charts";
 import { PageShell } from "@/components/page-shell";

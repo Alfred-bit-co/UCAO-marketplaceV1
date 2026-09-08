@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp } from "lucide-react";
+import { ArrowUp } from "@/lib/icons";
 import { useEffect, useState } from "react";
 
 export function ScrollToTopButton() {

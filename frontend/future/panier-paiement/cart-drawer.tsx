@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Minus, Plus, Printer, ShoppingCart, Trash2, X } from "lucide-react";
+import { Minus, Plus, Printer, ShoppingCart, Trash2, X } from "@/lib/icons";
 import { useState } from "react";
 import { buildReceipt, useCart } from "./cart-provider";
 import { checkoutCart } from "@/lib/orders";

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";

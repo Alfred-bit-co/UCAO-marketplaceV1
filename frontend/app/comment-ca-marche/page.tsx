@@ -8,8 +8,8 @@ import {
   Search,
   ShieldCheck,
   Store,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+} from "@/lib/icons";
+import type { IconComponent } from "@/lib/icons";
 import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
 
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 const ICON_STROKE = 2.2;
 
-const buyerSteps: { Icon: LucideIcon; title: string; text: string }[] = [
+const buyerSteps: { Icon: IconComponent; title: string; text: string }[] = [
   {
     Icon: Search,
     title: "Parcours les offres",
@@ -38,7 +38,7 @@ const buyerSteps: { Icon: LucideIcon; title: string; text: string }[] = [
   },
 ];
 
-const sellerSteps: { Icon: LucideIcon; title: string; text: string }[] = [
+const sellerSteps: { Icon: IconComponent; title: string; text: string }[] = [
   {
     Icon: Store,
     title: "Crée ton stand",
@@ -56,7 +56,7 @@ const sellerSteps: { Icon: LucideIcon; title: string; text: string }[] = [
   },
 ];
 
-const securityItems: { Icon: LucideIcon; title: string; text: string }[] = [
+const securityItems: { Icon: IconComponent; title: string; text: string }[] = [
   {
     Icon: BadgeCheck,
     title: "Vendeurs identifiés",
@@ -133,7 +133,7 @@ function StepGroup({
 }: {
   title: string;
   intro: string;
-  steps: { Icon: LucideIcon; title: string; text: string }[];
+  steps: { Icon: IconComponent; title: string; text: string }[];
 }) {
   return (
     <section className="panel p-6 md:p-7">

@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
+import { ImagePlus, Loader2, Trash2, Upload } from "@/lib/icons";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { uploadImage, uploadMultipleImages } from "@/lib/storage";

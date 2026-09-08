@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Store } from "lucide-react";
+import { Store } from "@/lib/icons";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { StandsBrowser } from "@/components/stands-browser";

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, PackageOpen, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, PackageOpen, Search } from "@/lib/icons";
 import { useCallback, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PRODUCTS_PER_PAGE } from "@/lib/constants";

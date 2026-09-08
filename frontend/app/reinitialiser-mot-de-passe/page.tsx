@@ -1,5 +1,5 @@
 "use client";
-import { KeyRound } from "lucide-react";
+import { KeyRound } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHero } from "@/components/page-hero";

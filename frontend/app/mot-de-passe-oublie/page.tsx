@@ -1,5 +1,5 @@
 "use client";
-import { KeyRound, Mail } from "lucide-react";
+import { KeyRound, Mail } from "@/lib/icons";
 import { useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";

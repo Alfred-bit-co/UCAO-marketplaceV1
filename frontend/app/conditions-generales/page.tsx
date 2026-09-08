@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { FileText } from "lucide-react";
+import { FileText } from "@/lib/icons";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 

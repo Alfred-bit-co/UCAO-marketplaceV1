@@ -18,7 +18,7 @@ import {
   Trash2,
   UserCheck,
   X,
-} from "lucide-react";
+} from "@/lib/icons";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ImageUpload } from "@/components/image-upload";

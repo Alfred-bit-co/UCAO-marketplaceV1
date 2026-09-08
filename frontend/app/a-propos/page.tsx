@@ -1,4 +1,4 @@
-import { GraduationCap } from "lucide-react";
+import { GraduationCap } from "@/lib/icons";
 import type { Metadata } from "next";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";

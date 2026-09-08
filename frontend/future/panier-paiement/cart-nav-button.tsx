@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "@/lib/icons";
 import { useCart } from "./cart-provider";
 
 export function CartNavButton() {
