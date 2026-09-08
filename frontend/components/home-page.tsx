@@ -126,10 +126,10 @@ export function HomePage({
             </div>
           </div>
 
-          <div className="hidden rounded-ucao border border-white/20 bg-white/12 p-5 shadow-ucao backdrop-blur-md lg:block">
+          <div className="hidden rounded-ucao border border-white/25 bg-white/[0.055] p-5 shadow-[0_24px_80px_rgba(7,20,38,0.22)] backdrop-blur-xl lg:block">
             <div className="grid gap-4">
               {steps.map(({ Icon, label }) => (
-                <div key={label} className="flex items-center gap-3 rounded-ucao bg-white/14 p-4">
+                <div key={label} className="flex items-center gap-3 rounded-ucao bg-white/[0.08] p-4 ring-1 ring-inset ring-white/10 backdrop-blur-md transition-colors hover:bg-white/[0.13]">
                   <span className="grid size-11 place-items-center rounded-ucao bg-ucao-success text-white">
                     <Icon size={22} strokeWidth={ICON_STROKE} />
                   </span>
@@ -137,7 +137,7 @@ export function HomePage({
                 </div>
               ))}
             </div>
-            <div className="mt-5 rounded-ucao bg-white p-5 text-ucao-navy">
+            <div className="mt-5 rounded-ucao border border-white/35 bg-white/[0.64] p-5 text-ucao-navy shadow-[0_12px_30px_rgba(7,20,38,0.1)] backdrop-blur-xl">
               <span className="role-badge">Vendeur vérifié</span>
               <strong className="mt-3 block text-2xl">Stand actif en quelques minutes</strong>
               <p className="mt-2 text-sm text-ucao-muted">Publie tes produits, reçois les commandes et garde le contact avec les acheteurs.</p>

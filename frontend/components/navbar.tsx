@@ -52,7 +52,7 @@ export function Brand({ footer = false }: { footer?: boolean }) {
 
 export function Topbar() {
   return (
-    <div className="hidden min-h-[38px] items-center justify-between gap-4 bg-[linear-gradient(90deg,#1E2A6E,#2C3A7A_45%,#4C2F4F_72%,#7A1E2D)] px-[max(16px,calc((100vw-1740px)/2))] py-1.5 text-[13px] font-medium text-white/95 lg:flex">
+    <div className="hidden min-h-[38px] items-center justify-between gap-4 bg-[linear-gradient(90deg,#1E2A6E,#2C3A7A_45%,#4C2F4F_72%,#7A1E2D)] px-[max(16px,calc((100vw-1740px)/2))] py-1.5 text-[13px] font-medium text-white/95 xl:flex">
       <div className="flex items-center gap-2.5" aria-label="Réseaux UCAO UUT">
         <span>Suivez UCAO UUT</span>
         <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="https://ucao-uut.tg" target="_blank" rel="noopener noreferrer" aria-label="Site UCAO UUT">
@@ -132,6 +132,9 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     return links;
   }, [role]);
 
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
+
   return (
     <header className="relative z-20">
       {showTopbar && <Topbar />}
@@ -164,9 +167,10 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 w-full items-center rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red xl:w-auto dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
-                  (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) &&
+                  isActive(item.href) &&
                     "bg-ucao-soft font-extrabold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
                 )}
               >
@@ -177,9 +181,10 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
               <Link
                 key={href}
                 href={href}
+                aria-current={isActive(href) ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 w-full items-center whitespace-nowrap rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red xl:w-auto dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
-                  pathname.startsWith(href) && "bg-ucao-soft font-extrabold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
+                  isActive(href) && "bg-ucao-soft font-extrabold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
                 )}
               >
                 {label}
