@@ -124,16 +124,21 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       return;
     }
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/verification`,
         data: {
           full_name: String(form.get("name")),
           phone,
         },
       },
     });
+    if (!signUpError && signUpData.session) {
+      window.location.href = "/verification";
+      return;
+    }
     setError(Boolean(signUpError));
     setRegisteredEmail(signUpError ? "" : email);
     setMessage(

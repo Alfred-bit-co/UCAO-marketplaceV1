@@ -1,17 +1,21 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parents[2]
+# Load both environments so run.py works from the repository root or backend/.
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / "backend" / ".env", override=True)
 
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY") or os.urandom(32)
-    CORS_ORIGINS = [
-        origin.strip()
-        for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
-        if origin.strip()
-    ]
+    CORS_ORIGINS = list(dict.fromkeys([
+        *[origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()],
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]))
     MAX_CONTENT_LENGTH = 1 * 1024 * 1024
     SUPABASE_URL = os.getenv("SUPABASE_URL", "")
     SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")

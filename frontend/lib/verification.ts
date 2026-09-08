@@ -10,12 +10,7 @@ export async function submitStudentIdCard(file: File): Promise<{ error: string |
   const uploaded = await uploadStudentIdCard(file);
   if (uploaded.error || !uploaded.path) return { error: uploaded.error ?? "Impossible d'envoyer la carte." };
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Connectez-vous pour envoyer votre carte." };
-  const { error } = await supabase
-    .from("profiles")
-    .update({ student_id_url: uploaded.path, verification_status: "pending" })
-    .eq("id", user.id);
+  const { error } = await supabase.rpc("submit_student_id", { p_url: uploaded.path });
   if (error) {
     console.error("SUPABASE ERROR (submitStudentIdCard):", error);
     return { error: error.message };
@@ -51,10 +46,11 @@ export async function setVerificationStatus(
   const supabase = createClient();
   if (!supabase) return false;
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({ verification_status: status, verification_reviewed_at: new Date().toISOString(), verification_note: note ?? null })
-    .eq("id", userId);
+  const { error } = await supabase.rpc("admin_set_verification", {
+    p_user_id: userId,
+    p_status: status,
+    p_note: note ?? null,
+  });
 
   if (error) {
     console.error("SUPABASE ERROR (setVerificationStatus):", error);

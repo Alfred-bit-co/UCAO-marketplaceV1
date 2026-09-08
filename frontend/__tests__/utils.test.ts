@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeIlike, formatPrice, getPostLoginRedirect, getProductLimit, getStandLimit, verificationLabel } from "@/lib/utils";
+import { escapeIlike, formatPrice, getPostLoginRedirect, getProductLimit, getStandLimit, isValidPhoneNumber, verificationLabel } from "@/lib/utils";
 
 describe("escapeIlike", () => {
   it("escapes wildcard characters", () => {
@@ -49,5 +49,13 @@ describe("subscription limits", () => {
     expect(getStandLimit("STANDARD")).toBe(0);
     expect(getStandLimit("PREMIUM")).toBe(1);
     expect(getStandLimit("VIP")).toBe(5);
+  });
+});
+
+describe("phone format", () => {
+  it("accepts + followed by digits only", () => {
+    expect(isValidPhoneNumber("+22892982926")).toBe(true);
+    expect(isValidPhoneNumber("22892982926")).toBe(false);
+    expect(isValidPhoneNumber("+228 92982926")).toBe(false);
   });
 });

@@ -9,9 +9,9 @@ export default function NotFound() {
         <section className="max-w-md">
           <SearchX className="mx-auto mb-5 text-ucao-red" size={48} aria-hidden="true" />
           <p className="eyebrow">Page introuvable</p>
-          <h1 className="text-3xl font-bold">Cette offre n&apos;est plus disponible.</h1>
+          <h1 className="text-3xl font-bold">La page demandée est introuvable.</h1>
           <p className="mt-3 text-ucao-muted dark:text-[#a8b8cc]">
-            Elle a peut-être été supprimée, expirée ou l&apos;adresse est incorrecte.
+            Vérifiez l&apos;adresse ou revenez à l&apos;accueil pour continuer votre navigation.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link className="btn btn-primary" href="/products">Voir les produits</Link>

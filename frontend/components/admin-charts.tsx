@@ -115,7 +115,7 @@ export function AdminCharts({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="hidden">
         <StatCard label="Utilisateurs" value={stats.totalUsers} hint="Comptes enregistrés" accent="navy" />
         <StatCard label="Vendeurs actifs" value={stats.totalVendors} hint="Abonnements en cours" accent="red" />
         <StatCard label="Produits publiés" value={stats.totalProducts} accent="green" />

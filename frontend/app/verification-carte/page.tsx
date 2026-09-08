@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
 import { IdCard, ShieldAlert, ShieldCheck, Upload } from "lucide-react";

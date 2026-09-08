@@ -1,5 +1,7 @@
 # UCAO Marketplace
 
+Le modèle de vente est 100 % WhatsApp : aucun panier, checkout ou paiement de produit n'est activé sur la plateforme. Le micro-service Flask ne traite que les abonnements vendeurs.
+
 Marketplace étudiante UCAO-UUT — Next.js 15 + Supabase + micro-service Flask (FedaPay).
 
 ## Fonctionnalités
@@ -46,7 +48,8 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_PAYMENT_API_URL=
 NEXT_PUBLIC_SITE_URL=
-ARCJET_KEY=          # optionnel
+NEXT_PUBLIC_TURNSTILE_SITE_KEY= # optionnel, anti-bot Cloudflare Turnstile
+TURNSTILE_SECRET_KEY=           # secret serveur Turnstile, optionnel en développement
 ```
 
 ## Tests

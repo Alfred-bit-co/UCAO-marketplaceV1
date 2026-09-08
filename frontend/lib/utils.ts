@@ -22,6 +22,10 @@ export function getProductLimit(tier: string): number {
   return 0;
 }
 
+export function isValidPhoneNumber(value: string): boolean {
+  return /^\+\d{8,15}$/.test(value);
+}
+
 /** Échappe les caractères spéciaux des requêtes ilike Supabase/Postgres. */
 export function escapeIlike(value: string): string {
   return value.replace(/[%_\\]/g, (char) => `\\${char}`);
