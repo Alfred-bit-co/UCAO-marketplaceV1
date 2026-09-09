@@ -304,16 +304,26 @@ def subscriptions_webhook():
             }
         )
 
-    requests.post(
-        f"{current_app.config['SUPABASE_URL']}/rest/v1/rpc/"
-        "activate_or_renew_subscription",
-        headers=_supabase_headers(),
-        json={
-            "p_user_id": user_id,
-            "p_tier": tier,
-        },
-        timeout=15,
-    )
+    try:
+        activation_response = requests.post(
+            f"{current_app.config['SUPABASE_URL']}/rest/v1/rpc/"
+            "activate_or_renew_subscription",
+            headers=_supabase_headers(),
+            json={
+                "p_user_id": user_id,
+                "p_tier": tier,
+            },
+            timeout=15,
+        )
+    except requests.RequestException:
+        current_app.logger.exception("Impossible d'activer l'abonnement paye.")
+        return jsonify({"error": "Activation de l'abonnement indisponible."}), 502
+
+    if activation_response.status_code >= 400:
+        current_app.logger.error(
+            "Erreur activation abonnement: %s", activation_response.text
+        )
+        return jsonify({"error": "Activation de l'abonnement impossible."}), 502
 
     if merchant_reference:
         requests.patch(

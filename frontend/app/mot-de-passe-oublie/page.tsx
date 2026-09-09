@@ -1,5 +1,5 @@
 "use client";
-import { KeyRound, Mail } from "@/lib/icons";
+import { CheckCircle2, KeyRound, Mail } from "@/lib/icons";
 import { useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
@@ -40,8 +40,9 @@ export default function MotDePasseOubliePage() {
         </PageHero>
         <section className="container-ucao max-w-md py-[54px] pb-[84px]">
           {status === "sent" ? (
-            <p className="notice">
-              Si un compte existe avec cet email, un lien de réinitialisation vient d&apos;être envoyé. Vérifiez votre boîte de réception (et vos spams).
+            <p className="notice flex items-start gap-2" role="status">
+              <CheckCircle2 className="mt-0.5 shrink-0" size={19} />
+              <span>Si un compte existe avec cet email, un lien de réinitialisation vient d&apos;être envoyé. Vérifiez votre boîte de réception (et vos spams).</span>
             </p>
           ) : (
             <form className="panel grid gap-4 p-6" onSubmit={handleSubmit}>
@@ -58,7 +59,7 @@ export default function MotDePasseOubliePage() {
                   required
                 />
               </div>
-              {message && <p className="notice notice-error">{message}</p>}
+              {message && <p className="notice notice-error" role="alert">{message}</p>}
               <button className="btn btn-primary" type="submit" disabled={status === "sending"}>
                 {status === "sending" ? "Envoi..." : "Recevoir le lien"}
               </button>

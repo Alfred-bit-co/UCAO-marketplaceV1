@@ -60,11 +60,13 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [resending, setResending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") || "").trim();
+    const name = String(form.get("name") || "").trim();
     const phone = String(form.get("phone") || "").trim();
     const password = String(form.get("password") || "");
 
@@ -75,6 +77,11 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     }
 
     if (mode === "register") {
+      if (name.length < 2) {
+        setError(true);
+        setMessage("Veuillez saisir votre nom complet.");
+        return;
+      }
       if (!PASSWORD_PATTERN.test(password)) {
         setError(true);
         setMessage("Le mot de passe doit contenir au moins 8 caractères, un chiffre et un caractère spécial.");
@@ -106,46 +113,53 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       return;
     }
 
-    if (mode === "login") {
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-      if (loginError) {
-        setError(true);
-        setMessage(loginError.message);
+    setSubmitting(true);
+    try {
+      if (mode === "login") {
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) {
+          setError(true);
+          setMessage(loginError.message);
+          return;
+        }
+        const profile = await fetchProfileAfterLogin(supabase);
+        const destination = profile ? getPostLoginRedirect(profile) : "/profil";
+        setError(false);
+        setMessage("Connexion réussie. Redirection...");
+        window.setTimeout(() => {
+          window.location.href = destination;
+        }, 500);
         return;
       }
 
-      const profile = await fetchProfileAfterLogin(supabase);
-      const destination = profile ? getPostLoginRedirect(profile) : "/profil";
-      setError(false);
-      setMessage("Connexion réussie. Redirection...");
-      window.setTimeout(() => {
-        window.location.href = destination;
-      }, 500);
-      return;
-    }
-
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/verification`,
-        data: {
-          full_name: String(form.get("name")),
-          phone,
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/verification`,
+          data: {
+            full_name: name,
+            phone,
+          },
         },
-      },
-    });
-    if (!signUpError && signUpData.session) {
-      window.location.href = "/verification";
-      return;
+      });
+      if (!signUpError && signUpData.session) {
+        window.location.href = "/verification";
+        return;
+      }
+      setError(Boolean(signUpError));
+      setRegisteredEmail(signUpError ? "" : email);
+      setMessage(
+        signUpError
+          ? signUpError.message
+          : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
+      );
+    } catch {
+      setError(true);
+      setMessage("Une erreur inattendue est survenue. Vérifiez votre connexion puis réessayez.");
+    } finally {
+      setSubmitting(false);
     }
-    setError(Boolean(signUpError));
-    setRegisteredEmail(signUpError ? "" : email);
-    setMessage(
-      signUpError
-        ? signUpError.message
-        : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
-    );
   }
 
   async function resendConfirmationEmail() {
@@ -168,7 +182,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
 
   const formContent = (
     <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
-      <form className="panel w-[min(520px,100%)] p-8" onSubmit={submit}>
+      <form className="panel w-[min(520px,100%)] p-8" onSubmit={submit} noValidate>
         <Link
           className="mb-5 inline-flex size-10 items-center justify-center rounded-ucao text-ucao-ink transition-colors hover:bg-ucao-soft dark:text-white dark:hover:bg-white/10"
           href="/"
@@ -274,11 +288,11 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
             {resending ? "Renvoi en cours..." : "Renvoyer l'email de confirmation"}
           </button>
         )}
-        <button className="btn btn-primary mt-5 w-full" type="submit">
+        <button className="btn btn-primary mt-5 w-full" type="submit" disabled={submitting}>
           {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
-          {mode === "login" ? "Se connecter" : "Créer mon compte"}
+          {submitting ? "Veuillez patienter..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
-        <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/devenir-vendeur" : "/login"}>
+        <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/register" : "/login"}>
           {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
         </Link>
       </form>

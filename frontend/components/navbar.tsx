@@ -9,7 +9,6 @@ import {
   LogOut,
   Mail,
   MapPin,
-  Menu,
   Moon,
   Phone,
   MessageCircle,
@@ -139,28 +138,28 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     <header className="relative z-20">
       {showTopbar && <Topbar />}
       <nav
-        className="sticky top-0 flex min-h-[72px] items-center border-b border-black/5 bg-white/95 px-4 shadow-[0_4px_20px_rgba(30,42,110,0.06)] backdrop-blur-sm dark:border-white/5 dark:bg-[#0b1c31]/95 sm:px-6 xl:min-h-[82px] xl:px-6"
+        className="sticky top-0 flex min-h-[72px] items-center border-b border-black/5 bg-white/95 px-4 shadow-[0_4px_20px_rgba(30,42,110,0.06)] backdrop-blur-sm dark:border-white/5 dark:bg-[#0b1c31]/95 sm:px-6 lg:min-h-[82px] lg:px-6"
         aria-label="Navigation principale"
       >
-        <div className="mx-auto flex w-full max-w-[1740px] items-center justify-between gap-4 xl:gap-8">
+        <div className="mx-auto flex w-full max-w-[1740px] items-center justify-between gap-4 lg:gap-5">
           <Brand />
 
           <button
             type="button"
-            className="z-30 grid size-10 place-items-center rounded-xl text-ucao-ink transition-colors hover:bg-ucao-soft dark:text-white dark:hover:bg-white/10 xl:hidden"
+            className="z-30 grid size-10 place-items-center rounded-xl text-ucao-ink transition-colors hover:bg-ucao-soft dark:text-white dark:hover:bg-white/10 lg:hidden"
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={open}
             aria-controls="main-navigation"
             onClick={() => setOpen((value) => !value)}
           >
-            {open ? <X /> : <Menu />}
+            {open ? <X /> : <span className="grid gap-1" aria-hidden="true"><span className="block h-0.5 w-5 rounded-full bg-current" /><span className="block h-0.5 w-5 rounded-full bg-current" /><span className="block h-0.5 w-5 rounded-full bg-current" /></span>}
           </button>
 
           <div
             id="main-navigation"
             className={cn(
-              "absolute left-0 right-0 top-[72px] z-20 flex-col items-stretch gap-1 border-t border-black/5 bg-white px-4 py-4 text-[15px] font-medium shadow-[0_18px_28px_rgba(30,42,110,0.12)] dark:border-white/5 dark:bg-[#0b1c31] xl:static xl:top-auto xl:flex xl:flex-1 xl:flex-row xl:items-center xl:justify-center xl:gap-1 xl:border-0 xl:bg-transparent xl:p-0 xl:shadow-none",
-              open ? "flex" : "hidden xl:flex",
+              "absolute left-0 right-0 top-[72px] z-20 flex-col items-stretch gap-1 border-t border-black/5 bg-white px-4 py-4 text-[15px] font-medium shadow-[0_18px_28px_rgba(30,42,110,0.12)] dark:border-white/5 dark:bg-[#0b1c31] lg:static lg:top-auto lg:flex lg:flex-1 lg:flex-row lg:items-center lg:justify-center lg:gap-0 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
+              open ? "flex" : "hidden lg:flex",
             )}
           >
             {navItems.map((item) => (
@@ -169,7 +168,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-11 w-full items-center rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red xl:w-auto dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
+                  "inline-flex min-h-11 w-full items-center rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red lg:w-auto lg:px-3 dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
                   isActive(item.href) &&
                     "bg-ucao-soft font-semibold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
                 )}
@@ -183,7 +182,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
                 href={href}
                 aria-current={isActive(href) ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-11 w-full items-center whitespace-nowrap rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red xl:w-auto dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
+                  "inline-flex min-h-11 w-full items-center whitespace-nowrap rounded-2xl px-4 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red lg:w-auto lg:px-3 dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]",
                   isActive(href) && "bg-ucao-soft font-semibold text-ucao-red shadow-[inset_0_0_0_1px_rgba(30,42,110,0.05)] dark:bg-white/5 dark:text-[#ff9aa0]",
                 )}
               >
@@ -191,12 +190,12 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
               </Link>
             ))}
 
-            <div className="my-2 h-px w-full bg-black/5 dark:bg-white/5 xl:hidden" />
+            <div className="my-2 h-px w-full bg-black/5 dark:bg-white/5 lg:hidden" />
 
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex w-full items-center gap-2 rounded-2xl px-4 py-2.5 text-left text-[#263a55] transition-colors hover:bg-ucao-soft dark:text-[#cdd7e5] dark:hover:bg-white/5 xl:hidden"
+              className="flex w-full items-center gap-2 rounded-2xl px-4 py-2.5 text-left text-[#263a55] transition-colors hover:bg-ucao-soft dark:text-[#cdd7e5] dark:hover:bg-white/5 lg:hidden"
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
               {theme === "dark" ? "Mode clair" : "Mode sombre"}
@@ -205,7 +204,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
             {!role && (
               <Link
                 href="/login"
-                className="w-full rounded-2xl px-4 py-2.5 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red xl:hidden dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]"
+                className="w-full rounded-2xl px-4 py-2.5 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red lg:hidden dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]"
               >
                 Connexion
               </Link>
@@ -213,7 +212,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
             {role && (
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-2xl px-4 py-2.5 text-left text-ucao-red transition-colors hover:bg-ucao-soft xl:hidden dark:hover:bg-white/5"
+                className="flex w-full items-center gap-2 rounded-2xl px-4 py-2.5 text-left text-ucao-red transition-colors hover:bg-ucao-soft lg:hidden dark:hover:bg-white/5"
                 onClick={handleSignOut}
               >
                 <LogOut size={16} /> Déconnexion
@@ -221,7 +220,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
             )}
           </div>
 
-          <div className="hidden shrink-0 items-center gap-1.5 xl:flex">
+          <div className="hidden shrink-0 items-center gap-1 lg:flex">
             <button
               type="button"
               onClick={toggleTheme}
@@ -252,7 +251,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
             </button>
           )}
 
-            <Link className="btn btn-primary ml-1 min-h-14 whitespace-nowrap rounded-2xl px-6 shadow-[0_8px_20px_rgba(122,30,45,0.25)]" href="/devenir-vendeur">
+            <Link className="btn btn-primary ml-1 min-h-11 whitespace-nowrap rounded-2xl px-4 shadow-[0_8px_20px_rgba(122,30,45,0.25)]" href="/devenir-vendeur">
               <CirclePlus size={18} /> Devenir vendeur
             </Link>
           </div>
@@ -264,7 +263,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
 
 export function StandNavbarCta() {
   return (
-    <Link className="btn btn-primary hidden xl:inline-flex" href="/devenir-vendeur">
+    <Link className="btn btn-primary hidden lg:inline-flex" href="/devenir-vendeur">
       <Store size={18} /> Devenir vendeur
     </Link>
   );

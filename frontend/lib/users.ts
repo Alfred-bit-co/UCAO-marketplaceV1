@@ -27,6 +27,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     role: data.role,
     phone: data.phone,
     subscription_tier: data.subscription_tier,
+    subscription_activated_at: data.subscription_activated_at,
     subscription_expires_at: data.subscription_expires_at,
     verification_status: data.verification_status,
     student_id_url: data.student_id_url,

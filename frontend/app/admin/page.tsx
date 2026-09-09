@@ -63,6 +63,8 @@ export default function AdminPage() {
   const [reviewStats, setReviewStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [search, setSearch] = useState("");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [accountPendingDeletion, setAccountPendingDeletion] = useState<Profile | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   async function refreshAll() {
     const [statsData, signupsData, productData, userData, rolesData, tiersData, standsData, usersData, verificationData, reviewsResult, reviewStatsData, clubsData] = await Promise.all([
@@ -86,7 +88,8 @@ export default function AdminPage() {
   async function viewCard(path: string) { const popup = window.open("about:blank", "_blank"); const result = await getStudentIdSignedUrl(path); if (result.url) { if (popup) popup.location.href = result.url; else window.open(result.url, "_blank", "noopener,noreferrer"); } else { popup?.close(); setActionMessage(result.error || "Impossible d'ouvrir la carte."); } }
   async function decideReview(id: string, status: "approved" | "rejected") { if (!await updateReviewStatus(id, status)) { setActionMessage("Impossible de mettre à jour cet avis."); return; } setReviews((items) => items.map((item) => item.id === id ? { ...item, status } : item)); setReviewStats(await getReviewStats()); }
   async function removeReview(id: string) { if (!window.confirm("Supprimer définitivement cet avis ?")) return; if (!await deleteReviewForAdmin(id)) { setActionMessage("Impossible de supprimer cet avis."); return; } setReviews((items) => items.filter((item) => item.id !== id)); setReviewStats(await getReviewStats()); }
-  async function removeUser(id: string, name: string) { if (!window.confirm(`Supprimer définitivement le compte de ${name} ?`)) return; setActionMessage(null); const result = await deleteUserAccount(id); if (!result.ok) { setActionMessage(result.message || "Impossible de supprimer ce compte."); return; } setUsers((items) => items.filter((item) => item.id !== id)); setStats((current) => current ? { ...current, totalUsers: Math.max(current.totalUsers - 1, 0) } : current); }
+  function removeUser(id: string, _name?: string) { void _name; const user = users.find((item) => item.id === id); if (user) { setActionMessage(null); setAccountPendingDeletion(user); } }
+  async function confirmUserDeletion() { if (!accountPendingDeletion) return; setActionMessage(null); setDeletingUserId(accountPendingDeletion.id); const result = await deleteUserAccount(accountPendingDeletion.id); setDeletingUserId(null); if (!result.ok) { setActionMessage(result.message || "Impossible de supprimer ce compte."); return; } const deletedName = accountPendingDeletion.full_name; setUsers((items) => items.filter((item) => item.id !== accountPendingDeletion.id)); setStats((current) => current ? { ...current, totalUsers: Math.max(current.totalUsers - 1, 0) } : current); setAccountPendingDeletion(null); setActionMessage(`Le compte de ${deletedName} a été supprimé.`); }
   async function addClub(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); const result = await createClub({ name: String(form.get("name") || ""), banner_url: String(form.get("banner_url") || ""), external_url: String(form.get("external_url") || ""), short_description: String(form.get("short_description") || "") }); if (!result.ok) { setActionMessage(result.error || "Impossible de créer le club."); return; } event.currentTarget.reset(); setClubs(await getClubs()); }
   async function removeClub(id: string) { if (!window.confirm("Supprimer ce club ?")) return; if (!await deleteClub(id)) { setActionMessage("Impossible de supprimer ce club."); return; } setClubs((items) => items.filter((item) => item.id !== id)); }
 
@@ -108,7 +111,19 @@ export default function AdminPage() {
         {stats && <><Kpi label="Utilisateurs" value={stats.totalUsers} hint="Comptes enregistrés" tone="navy" /><Kpi label="Vendeurs actifs" value={stats.totalVendors} hint="Abonnements actifs" tone="red" /><Kpi label="Produits publiés" value={stats.totalProducts} hint="Dans le catalogue" tone="green" /><Kpi label="À traiter" value={stats.pendingVerifications + stats.pendingStands} hint={`${stats.pendingVerifications} vérification(s) · ${stats.pendingStands} stand(s)`} tone="gold" /></>}
       </section>
 
-      {actionMessage && <section className="container-ucao mt-5"><p className="notice notice-error">{actionMessage}</p></section>}
+      {actionMessage && <section className="container-ucao mt-5"><p className={`notice ${actionMessage.startsWith("Le compte") ? "" : "notice-error"}`} role="status">{actionMessage}</p></section>}
+
+      {accountPendingDeletion && <div className="fixed inset-0 z-50 grid place-items-center bg-[#071426]/65 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+        <div className="panel w-full max-w-md p-6 shadow-2xl">
+          <p className="eyebrow text-ucao-red">Action irréversible</p>
+          <h2 id="delete-account-title" className="mt-1 text-2xl font-bold">Supprimer ce compte ?</h2>
+          <p className="mt-3 text-sm text-ucao-muted">Le compte de <strong>{accountPendingDeletion.full_name}</strong> et ses données associées seront définitivement supprimés.</p>
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <button className="btn btn-ghost" type="button" onClick={() => setAccountPendingDeletion(null)} disabled={Boolean(deletingUserId)}>Annuler</button>
+            <button className="btn bg-ucao-red text-white hover:bg-ucao-red/90" type="button" onClick={confirmUserDeletion} disabled={Boolean(deletingUserId)}>{deletingUserId ? "Suppression..." : "Supprimer définitivement"}</button>
+          </div>
+        </div>
+      </div>}
 
       <section className="container-ucao mt-8">{stats && <AdminCharts stats={stats} signups={signups} productPublishes={productPublishes} userSignups={userSignups} roles={roles} tiers={tiers} />}</section>
 

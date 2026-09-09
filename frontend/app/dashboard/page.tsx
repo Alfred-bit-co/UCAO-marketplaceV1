@@ -26,7 +26,7 @@ import { PageShell } from "@/components/page-shell";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { createProduct, deleteProduct, getMyProducts, updateProduct } from "@/lib/products";
 import { createStand, getMyStands } from "@/lib/stands";
-import { daysUntilExpiry, getMySubscriptionStatus, SUBSCRIPTION_PLANS } from "@/lib/subscriptions";
+import { daysUntilExpiry, formatSubscriptionDate, getMySubscriptionStatus, SUBSCRIPTION_PLANS } from "@/lib/subscriptions";
 import type { SubscriptionStatus } from "@/lib/subscriptions";
 import { PRODUCT_CATEGORIES } from "@/lib/types";
 import type { Product, ProductCategory, Profile, Stand } from "@/lib/types";
@@ -58,6 +58,7 @@ export default function DashboardPage() {
   const [standSubmitting, setStandSubmitting] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [standBanner, setStandBanner] = useState<string[]>([]);
+  const [, setCurrentTime] = useState(Date.now());
 
   async function refreshAll(userId: string) {
     const [nextStatus, nextProducts, nextStands] = await Promise.all([getMySubscriptionStatus(), getMyProducts(userId), getMyStands(userId)]);
@@ -73,6 +74,11 @@ export default function DashboardPage() {
       if (currentProfile) await refreshAll(currentProfile.id);
       setLoading(false);
     })();
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
+    return () => window.clearInterval(interval);
   }, []);
 
   async function handleProductSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -159,7 +165,10 @@ export default function DashboardPage() {
                   <div><div className="mb-2 flex justify-between text-xs font-medium text-ucao-muted dark:text-[#a8b8cc]"><span>Produits publiés</span><span>{status?.productCount ?? 0}/{status?.productLimit ?? 0}</span></div><ProgressBar value={status?.productCount ?? 0} limit={status?.productLimit ?? 0} /></div>
                   <div><div className="mb-2 flex justify-between text-xs font-medium text-ucao-muted dark:text-[#a8b8cc]"><span>Stands ouverts</span><span>{status?.standCount ?? 0}/{status?.standLimit ?? 0}</span></div><ProgressBar value={status?.standCount ?? 0} limit={status?.standLimit ?? 0} tone="green" /></div>
                 </div>
-                {status?.expiresAt && <p className="mt-5 flex items-center gap-2 text-sm text-ucao-muted dark:text-[#a8b8cc]"><Clock3 size={15} /> Expire le {new Date(status.expiresAt).toLocaleDateString("fr-FR")}</p>}
+                <div className="mt-5 grid gap-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">
+                  {status?.activatedAt && <p className="flex items-center gap-2"><Clock3 size={15} /> Activé le {formatSubscriptionDate(status.activatedAt)}</p>}
+                  {status?.expiresAt && <p className="flex items-center gap-2"><Clock3 size={15} /> Expire le {formatSubscriptionDate(status.expiresAt)}{daysLeft !== null ? status.isBlocked ? " (expiré)" : ` — expire dans ${daysLeft} jour${daysLeft > 1 ? "s" : ""}` : ""}</p>}
+                </div>
               </article>
               <article className="rounded-ucao bg-ucao-success p-6 text-white shadow-2xl shadow-[#071426]/20">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-white/70">Action rapide</p><h2 className="mt-2 text-2xl font-bold">Développez votre vitrine</h2></div><BarChart3 size={24} className="text-white/70" /></div>

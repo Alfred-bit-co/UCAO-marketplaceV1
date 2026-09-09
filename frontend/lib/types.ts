@@ -104,6 +104,7 @@ export type Profile = {
   role: UserRole;
   phone?: string | null;
   subscription_tier?: SubscriptionTier | null;
+  subscription_activated_at?: string | null;
   subscription_expires_at?: string | null;
   verification_status?: VerificationStatus;
   student_id_url?: string | null;

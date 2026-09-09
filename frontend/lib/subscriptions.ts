@@ -7,6 +7,7 @@ export { SUBSCRIPTION_PLANS };
 
 export type SubscriptionStatus = {
   tier: SubscriptionTier | null;
+  activatedAt: string | null;
   expiresAt: string | null;
   isBlocked: boolean;
   productCount: number;
@@ -31,16 +32,17 @@ export async function getMySubscriptionStatus(): Promise<SubscriptionStatus | nu
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role, subscription_tier, subscription_expires_at")
+    .select("role, subscription_tier, subscription_activated_at, subscription_expires_at")
     .eq("id", user.id)
     .single();
 
   if (profileError || !profile) return null;
 
   const tier = profile.subscription_tier as SubscriptionTier | null;
+  const activatedAt = profile.subscription_activated_at as string | null;
   const expiresAt = profile.subscription_expires_at as string | null;
   const isBlocked =
-    profile.role === "VENDEUR" && (!expiresAt || new Date(expiresAt).getTime() < Date.now());
+    profile.role === "VENDEUR" && (!expiresAt || new Date(expiresAt).getTime() <= Date.now());
 
   const plan = planFor(tier);
 
@@ -51,6 +53,7 @@ export async function getMySubscriptionStatus(): Promise<SubscriptionStatus | nu
 
   return {
     tier,
+    activatedAt,
     expiresAt,
     isBlocked,
     productCount: productCount ?? 0,
@@ -119,5 +122,18 @@ export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promi
 export function daysUntilExpiry(expiresAt: string | null): number | null {
   if (!expiresAt) return null;
   const diffMs = new Date(expiresAt).getTime() - Date.now();
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+/** All subscription dates are persisted as timestamptz and displayed in the marketplace's timezone. */
+export function formatSubscriptionDate(date: string | null): string | null {
+  if (!date) return null;
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Africa/Lome",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(parsed);
 }

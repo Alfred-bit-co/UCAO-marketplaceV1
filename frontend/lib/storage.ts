@@ -1,8 +1,18 @@
 import { STORAGE_BUCKET } from "./constants";
 import { createClient } from "./supabase";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
+export function validateImageFile(file: File): string | null {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return "Format accepté : JPG, PNG ou WebP.";
+  }
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return "L'image ne doit pas dépasser 5 Mo.";
+  }
+  return null;
+}
 
 function extensionFor(file: File): "jpg" | "png" | "webp" {
   if (file.type === "image/png") return "png";
@@ -28,12 +38,8 @@ export async function uploadImage(
   const supabase = createClient();
   if (!supabase) return { url: null, error: "Supabase non configuré." };
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { url: null, error: "Format accepté : JPG, PNG ou WebP." };
-  }
-  if (file.size > MAX_SIZE_BYTES) {
-    return { url: null, error: "L'image ne doit pas dépasser 5 Mo." };
-  }
+  const validationError = validateImageFile(file);
+  if (validationError) return { url: null, error: validationError };
 
   const {
     data: { user },
@@ -59,6 +65,9 @@ export async function uploadMultipleImages(
   files: File[],
   folder: string,
 ): Promise<{ urls: string[]; error: string | null }> {
+  const invalidFile = files.map(validateImageFile).find(Boolean);
+  if (invalidFile) return { urls: [], error: invalidFile };
+
   const urls: string[] = [];
   for (const file of files) {
     const result = await uploadImage(file, folder);
@@ -72,8 +81,8 @@ export async function uploadMultipleImages(
 export async function uploadStudentIdCard(file: File): Promise<{ path: string | null; error: string | null }> {
   const supabase = createClient();
   if (!supabase) return { path: null, error: "Supabase non configure." };
-  if (!ALLOWED_TYPES.includes(file.type)) return { path: null, error: "Format accepte : JPG, PNG ou WebP." };
-  if (file.size > MAX_SIZE_BYTES) return { path: null, error: "L'image ne doit pas depasser 5 Mo." };
+  const validationError = validateImageFile(file);
+  if (validationError) return { path: null, error: validationError };
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { path: null, error: "Connectez-vous pour envoyer votre carte." };
