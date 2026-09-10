@@ -30,7 +30,7 @@ export default async function ProductsPage({
   return (
     <PageShell>
       <main>
-        <PageHero icon={ShoppingBag} eyebrow="Produits" title="Les offres du campus">
+        <PageHero icon={ShoppingBag} eyebrow="Produits" title="Les offres du campus" backgroundImage="/images/hero-produits.jpg">
           Recherchez, filtrez et contactez les vendeurs UCAO UUT.
         </PageHero>
         <Suspense fallback={<ProductGridSkeleton />}>

@@ -196,7 +196,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         <p className="mb-5 text-ucao-muted dark:text-[#a8b8cc]">
           {mode === "login"
             ? "Accédez à votre espace après validation de votre carte d'étudiant."
-            : "Réservé aux étudiants UCAO-UUT. Une photo de carte d'étudiant sera demandée après confirmation de l'email."}
+            : "Réservé aux étudiants UCAO-UUT. La photo de votre carte d'étudiant est obligatoire après la confirmation de l'email pour activer le compte."}
         </p>
         {mode === "register" && (
           <>

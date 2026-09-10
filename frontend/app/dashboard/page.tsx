@@ -85,7 +85,8 @@ export default function DashboardPage() {
     event.preventDefault();
     if (!profile) return;
     setProductError(null); setProductSubmitting(true);
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const payload = {
       name: String(form.get("name") || ""),
       category: form.get("category") as ProductCategory,
@@ -96,7 +97,7 @@ export default function DashboardPage() {
     const result = editingProduct ? await updateProduct(profile.id, String(editingProduct.id), payload) : await createProduct(profile.id, payload);
     setProductSubmitting(false);
     if (result.error) { setProductError(result.error); return; }
-    setEditingProduct(null); setProductImages([]); event.currentTarget.reset(); await refreshAll(profile.id);
+    setEditingProduct(null); setProductImages([]); formElement.reset(); await refreshAll(profile.id);
   }
 
   async function handleDeleteProduct(productId: string) {
@@ -111,11 +112,12 @@ export default function DashboardPage() {
     event.preventDefault();
     if (!profile) return;
     setStandError(null); setStandSubmitting(true);
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const result = await createStand(profile.id, { name: String(form.get("name") || ""), description: String(form.get("description") || ""), banner_url: standBanner[0] || String(form.get("banner_url") || "") || undefined });
     setStandSubmitting(false);
     if (result.error) { setStandError(result.error); return; }
-    event.currentTarget.reset(); setStandBanner([]); await refreshAll(profile.id);
+    formElement.reset(); setStandBanner([]); await refreshAll(profile.id);
   }
 
   function editProduct(product: Product) {

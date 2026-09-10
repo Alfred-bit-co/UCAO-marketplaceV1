@@ -9,10 +9,15 @@ export type PublicProfile = {
   subscription_tier: SubscriptionTier | null;
 };
 
+// Existing Supabase projects may not yet have the security migration that
+// creates this view. Avoid retrying a known-missing view for every product,
+// stand or review rendered during the same page session.
+let publicProfilesViewUnavailable = false;
+
 /** Returns only the seller information intentionally exposed in the catalogue. */
 export async function getPublicProfiles(userIds: readonly string[]): Promise<Map<string, PublicProfile>> {
   const ids = [...new Set(userIds.filter(Boolean))];
-  if (!ids.length || !isSupabaseConfigured()) return new Map();
+  if (!ids.length || !isSupabaseConfigured() || publicProfilesViewUnavailable) return new Map();
 
   const supabase = createClient();
   if (!supabase) return new Map();
@@ -23,7 +28,10 @@ export async function getPublicProfiles(userIds: readonly string[]): Promise<Map
     .in("id", ids);
 
   if (error || !data) {
-    console.error("SUPABASE ERROR (getPublicProfiles):", error);
+    // The catalogue remains usable without seller metadata. In particular, do
+    // not log with console.error here: Next.js displays those expected setup
+    // failures as a full-screen development error overlay.
+    publicProfilesViewUnavailable = true;
     return new Map();
   }
 

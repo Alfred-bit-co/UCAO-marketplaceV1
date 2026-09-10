@@ -22,7 +22,7 @@ export default async function StandsPage({
   return (
     <PageShell>
       <main>
-        <PageHero icon={Store} eyebrow="Stands" title="Les vitrines étudiantes">
+        <PageHero icon={Store} eyebrow="Stands" title="Les vitrines étudiantes" backgroundImage="/images/hero-stands.jpg">
           Chaque stand met en avant un projet, une activité ou un service du campus.
         </PageHero>
         <StandsBrowser initialData={stands} initialCategory={params.category} initialSearch={params.search} />

@@ -1,11 +1,14 @@
 import { STORAGE_BUCKET } from "./constants";
 import { createClient } from "./supabase";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
+const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 export function validateImageFile(file: File): string | null {
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  // Some mobile galleries omit the MIME type when a picture is selected.
+  if (!ALLOWED_TYPES.includes(file.type) && !ALLOWED_EXTENSIONS.includes(extension)) {
     return "Format accepté : JPG, PNG ou WebP.";
   }
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
@@ -14,9 +17,14 @@ export function validateImageFile(file: File): string | null {
   return null;
 }
 
-function extensionFor(file: File): "jpg" | "png" | "webp" {
+function extensionFor(file: File): "jpg" | "png" | "webp" | "avif" {
   if (file.type === "image/png") return "png";
   if (file.type === "image/webp") return "webp";
+  if (file.type === "image/avif") return "avif";
+  if (!file.type) {
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    if (extension === "png" || extension === "webp" || extension === "avif") return extension;
+  }
   return "jpg";
 }
 

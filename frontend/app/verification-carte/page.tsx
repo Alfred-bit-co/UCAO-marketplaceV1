@@ -12,6 +12,7 @@ import { submitStudentIdCard } from "@/lib/verification";
 import { getCurrentProfile } from "@/lib/users";
 import type { Profile } from "@/lib/types";
 import { verificationLabel } from "@/lib/utils";
+import { validateImageFile } from "@/lib/storage";
 
 export default function VerificationCartePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -26,9 +27,28 @@ export default function VerificationCartePage() {
     getCurrentProfile().then((current) => { setProfile(current); setLoading(false); });
   }, []);
 
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  function selectStudentCard(file: File | null) {
+    if (!file) return;
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setStudentCard(null);
+      setPreview(null);
+      setError(validationError);
+      return;
+    }
+    setError(null);
+    setStudentCard(file);
+    setPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return URL.createObjectURL(file);
+    });
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!studentCard) { setError("Ajoutez une photo de votre carte d'etudiant."); return; }
+    if (!studentCard) { setError("La photo de votre carte d'étudiant est obligatoire."); return; }
     setSubmitting(true); setError(null); setMessage(null);
     const result = await submitStudentIdCard(studentCard);
     setSubmitting(false);
@@ -54,8 +74,8 @@ export default function VerificationCartePage() {
             {status === "rejected" && <div className="notice notice-error mt-4"><p className="font-medium">Verification refusee</p><p>{profile.verification_note || "La photo n'etait pas lisible ou ne correspondait pas a une carte UCAO valide."}</p><p className="mt-2 text-sm">Vous pouvez renvoyer une nouvelle photo.</p></div>}
           </article>
           {status !== "approved" && (!hasSubmitted || status === "rejected") && <form className="panel grid gap-5 p-6" onSubmit={handleSubmit}>
-            <div><h2 className="text-xl font-medium">Envoyer votre carte</h2><p className="mt-1 text-sm text-ucao-muted">Photo nette, recto visible. JPG, PNG ou WebP, 5 Mo maximum.</p></div>
-            <label className="grid gap-2 font-medium">Photo de la carte d'etudiant<input className="input-field py-2" type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] ?? null; setStudentCard(file); setPreview(file ? URL.createObjectURL(file) : null); }} /><span className="text-sm font-normal text-ucao-muted">Cette image est envoyee dans un stockage prive.</span></label>
+            <div><h2 className="text-xl font-medium">Envoyer votre carte <span className="text-ucao-red">*</span></h2><p className="mt-1 text-sm text-ucao-muted">Obligatoire pour activer le compte. Photo nette, recto visible. JPG, PNG, WebP ou AVIF, 5 Mo maximum.</p></div>
+            <label className="grid gap-2 font-medium">Photo de la carte d'etudiant <span className="sr-only">(obligatoire)</span><input className="input-field py-2" type="file" accept="image/*" required onClick={(event) => { event.currentTarget.value = ""; }} onChange={(event) => selectStudentCard(event.target.files?.[0] ?? null)} /><span className="text-sm font-normal text-ucao-muted">Ouvrez votre galerie ou votre gestionnaire de fichiers. Cette image est envoyée dans un stockage privé.</span></label>
             {preview && <img src={preview} alt="Apercu de la carte d'etudiant" className="max-h-64 rounded-ucao border border-ucao-line object-contain" />}
             {error && <p className="notice notice-error">{error}</p>}{message && <p className="notice">{message}</p>}
             <button className="btn btn-primary w-fit" type="submit" disabled={submitting || !studentCard}><Upload size={18} />{submitting ? "Envoi..." : status === "rejected" ? "Renvoyer ma carte" : "Envoyer pour validation"}</button>

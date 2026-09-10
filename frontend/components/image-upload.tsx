@@ -100,10 +100,11 @@ export function ImageUpload({
           id={inputId}
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp"
+          accept="image/*"
           multiple={multiple}
           className="sr-only"
           disabled={uploading}
+          onClick={(event) => { event.currentTarget.value = ""; }}
           onChange={(event) => handleFiles(event.target.files)}
         />
         <div className="flex flex-col items-center gap-2 text-center text-sm text-ucao-muted dark:text-[#a8b8cc]">
