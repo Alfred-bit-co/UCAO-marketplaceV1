@@ -32,6 +32,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     verification_status: data.verification_status,
     student_id_url: data.student_id_url,
     verification_note: data.verification_note,
+    cgu_accepted_at: data.cgu_accepted_at,
     created_at: data.created_at,
   };
 }

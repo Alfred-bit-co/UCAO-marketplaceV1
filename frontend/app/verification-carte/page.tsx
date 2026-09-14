@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { IdCard, ShieldAlert, ShieldCheck, Upload } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
@@ -13,8 +14,10 @@ import { getCurrentProfile } from "@/lib/users";
 import type { Profile } from "@/lib/types";
 import { verificationLabel } from "@/lib/utils";
 import { validateImageFile } from "@/lib/storage";
+import { createClient } from "@/lib/supabase";
 
 export default function VerificationCartePage() {
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [studentCard, setStudentCard] = useState<File | null>(null);
@@ -22,6 +25,7 @@ export default function VerificationCartePage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [acceptingTerms, setAcceptingTerms] = useState(false);
 
   useEffect(() => {
     getCurrentProfile().then((current) => { setProfile(current); setLoading(false); });
@@ -57,14 +61,35 @@ export default function VerificationCartePage() {
     setMessage("Carte envoyee. Un administrateur validera votre compte sous 24 a 48 h.");
   }
 
+  async function acceptGoogleTerms() {
+    const supabase = createClient();
+    if (!profile || !supabase) {
+      setError("Supabase n'est pas configuré.");
+      return;
+    }
+    setAcceptingTerms(true);
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ cgu_accepted_at: new Date().toISOString() })
+      .eq("id", profile.id);
+    setAcceptingTerms(false);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setProfile({ ...profile, cgu_accepted_at: new Date().toISOString() });
+  }
+
   if (loading) return <PageShell><PageSkeleton /></PageShell>;
   if (!profile) return <PageShell><main className="container-ucao py-[84px] text-center"><p className="mb-4 text-xl font-medium">Connectez-vous pour verifier votre compte.</p><Link className="btn btn-primary" href="/login">Se connecter</Link></main></PageShell>;
 
   const status = profile.verification_status ?? "pending";
   const hasSubmitted = Boolean(profile.student_id_url);
+  const needsGoogleConsent = searchParams.get("oauth") === "google" && !profile.cgu_accepted_at;
   return (
     <PageShell>
       <main>
+        {needsGoogleConsent && <div className="fixed inset-0 z-50 grid place-items-center bg-[#071426]/65 p-4" role="dialog" aria-modal="true" aria-labelledby="google-consent-title"><article className="panel w-full max-w-lg p-6 shadow-2xl"><p className="eyebrow">Première connexion Google</p><h2 id="google-consent-title" className="mt-1 text-2xl font-bold">Acceptez nos conditions</h2><p className="mt-3 text-sm text-ucao-muted">En continuant, vous acceptez les <Link className="font-medium text-ucao-red underline" href="/conditions-generales" target="_blank">Conditions Générales d&apos;Utilisation</Link> et la <Link className="font-medium text-ucao-red underline" href="/politique-confidentialite" target="_blank">Politique de confidentialité</Link>.</p><button className="btn btn-primary mt-6" type="button" onClick={acceptGoogleTerms} disabled={acceptingTerms}>{acceptingTerms ? "Enregistrement..." : "J'accepte et je continue"}</button></article></div>}
         <PageHero icon={IdCard} eyebrow="Verification" title="Carte d'etudiant UCAO">Envoyez une photo de votre carte d'etudiant de l'annee en cours pour activer votre compte.</PageHero>
         <section className="container-ucao max-w-3xl pb-[84px] pt-[42px]">
           <article className="panel mb-6 p-6">

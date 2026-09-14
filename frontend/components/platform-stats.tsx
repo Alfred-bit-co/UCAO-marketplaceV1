@@ -2,8 +2,7 @@
 import { Headset, Package, ShieldCheck, Users } from "@/lib/icons";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
-
-type ProfileUpdatePayload = { new: { id?: string } };
+import { getPlatformStats } from "@/lib/reviews";
 
 export function PlatformStats({
   initialProducts,
@@ -14,31 +13,26 @@ export function PlatformStats({
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [vendors, setVendors] = useState(initialVendors);
-  const countedVendorIds = useRef(new Set<string>());
+  const refreshTimer = useRef<number | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) return;
 
+    const refreshStats = () => {
+      if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+      refreshTimer.current = window.setTimeout(() => {
+        void getPlatformStats().then((next) => { setProducts(next.products); setVendors(next.vendors); });
+      }, 250);
+    };
     const channel = supabase
       .channel("platform-stats")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "products" }, () => {
-        setProducts((value) => value + 1);
-      })
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles", filter: "role=eq.VENDEUR" },
-        (payload: ProfileUpdatePayload) => {
-          const id = payload.new?.id;
-          if (id && !countedVendorIds.current.has(id)) {
-            countedVendorIds.current.add(id);
-            setVendors((value) => value + 1);
-          }
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, refreshStats)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, refreshStats)
       .subscribe();
 
     return () => {
+      if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
       supabase.removeChannel(channel);
     };
   }, []);

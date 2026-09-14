@@ -25,7 +25,7 @@ import { ImageUpload } from "@/components/image-upload";
 import { PageShell } from "@/components/page-shell";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { createProduct, deleteProduct, getMyProducts, updateProduct } from "@/lib/products";
-import { createStand, getMyStands } from "@/lib/stands";
+import { createStand, deleteStand, getMyStands } from "@/lib/stands";
 import { daysUntilExpiry, formatSubscriptionDate, getMySubscriptionStatus, SUBSCRIPTION_PLANS } from "@/lib/subscriptions";
 import type { SubscriptionStatus } from "@/lib/subscriptions";
 import { PRODUCT_CATEGORIES } from "@/lib/types";
@@ -120,6 +120,14 @@ export default function DashboardPage() {
     formElement.reset(); setStandBanner([]); await refreshAll(profile.id);
   }
 
+  async function handleDeleteStand(standId: string) {
+    if (!profile || !window.confirm("Supprimer définitivement ce stand ? Cette place sera de nouveau disponible.")) return;
+    setStandError(null);
+    const result = await deleteStand(profile.id, standId);
+    if (result.error) { setStandError(result.error); return; }
+    await refreshAll(profile.id);
+  }
+
   function editProduct(product: Product) {
     setEditingProduct(product); setProductImages(product.images?.map((image) => image.url) ?? []); setProductError(null);
     document.getElementById("product-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -204,7 +212,7 @@ export default function DashboardPage() {
           </form>
 
           <div className="grid gap-5"><form className="panel p-5 sm:p-6" onSubmit={handleStandSubmit}><div className="mb-5 flex items-start justify-between gap-3"><div><p className="eyebrow">Vitrine</p><h2 className="text-2xl font-bold">Ouvrir un stand</h2></div><Store className="text-ucao-success" size={25} /></div><div className="grid gap-3"><input className="input-field" name="name" placeholder="Nom du stand" required /><ImageUpload folder="stands" label="Bannière du stand" value={standBanner} onChange={setStandBanner} compact /><input className="input-field" name="banner_url" type="url" placeholder="URL de bannière (optionnel)" /><textarea className="textarea-field" name="description" placeholder="Description du stand" required />{standError && <p className="notice notice-error flex items-center gap-2"><AlertTriangle size={16} /> {standError}</p>}{atStandLimit && <p className="notice">Votre palier ne permet pas de créer un stand supplémentaire. <a className="underline" href="/devenir-vendeur">Changer de palier</a>.</p>}<button className="btn btn-primary" type="submit" disabled={standSubmitting || atStandLimit}><Store size={18} /> {standSubmitting ? "Création..." : "Créer le stand"}</button></div></form>
-            <article className="panel p-5 sm:p-6"><div className="flex items-center justify-between"><div><p className="eyebrow">Vos vitrines</p><h2 className="text-2xl font-bold">Stands actifs</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-success-soft text-ucao-success"><Store size={18} /></span></div>{stands.length ? <ul className="mt-4 space-y-3">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft px-3 py-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.status === "approved" ? "Visible dans le catalogue" : "En attente de validation"}</p></div><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${stand.status === "approved" ? "bg-ucao-success-soft text-ucao-success" : "bg-ucao-red-soft text-ucao-red"}`}>{stand.status}</span></li>)}</ul> : <p className="mt-4 rounded-ucao bg-ucao-soft p-4 text-sm font-medium text-ucao-muted dark:bg-[#132238]">Aucun stand pour le moment.</p>}</article></div>
+            <article className="panel p-5 sm:p-6"><div className="flex items-center justify-between"><div><p className="eyebrow">Vos vitrines</p><h2 className="text-2xl font-bold">Stands actifs</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-success-soft text-ucao-success"><Store size={18} /></span></div>{stands.length ? <ul className="mt-4 space-y-3">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft px-3 py-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.status === "approved" ? "Visible dans le catalogue" : "En attente de validation"}</p></div><div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${stand.status === "approved" ? "bg-ucao-success-soft text-ucao-success" : "bg-ucao-red-soft text-ucao-red"}`}>{stand.status}</span><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => handleDeleteStand(String(stand.id))} aria-label={`Supprimer le stand ${stand.name}`} title="Supprimer le stand"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="mt-4 rounded-ucao bg-ucao-soft p-4 text-sm font-medium text-ucao-muted dark:bg-[#132238]">Aucun stand pour le moment.</p>}</article></div>
         </section>
 
         {products.length > 4 && <section className="container-ucao mt-5"><article className="panel p-5"><div className="mb-4 flex items-center justify-between"><div><p className="eyebrow">Gestion</p><h2 className="text-2xl font-bold">Tous vos produits</h2></div><span className="text-sm font-medium text-ucao-muted">{products.length} article{products.length > 1 ? "s" : ""}</span></div><ul className="grid gap-2 sm:grid-cols-2">{products.slice(4).map((product) => <li key={product.id} className="flex items-center justify-between rounded-ucao border border-ucao-line p-3 dark:border-[#263d5c]"><div><p className="font-medium">{product.name}</p><p className="text-sm text-ucao-muted">{currency(product.price)}</p></div><div className="flex gap-1"><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => editProduct(product)} aria-label={`Modifier ${product.name}`}><Pencil size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => handleDeleteProduct(String(product.id))} aria-label={`Supprimer ${product.name}`}><Trash2 size={15} /></button></div></li>)}</ul></article></section>}

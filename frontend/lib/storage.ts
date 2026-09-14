@@ -29,6 +29,7 @@ function extensionFor(file: File): "jpg" | "png" | "webp" | "avif" {
 }
 
 function storageErrorMessage(message: string, bucket: string): string {
+  if (message) return `Erreur Supabase lors de l'envoi dans ${bucket} : ${message}`;
   const detail = message.toLowerCase();
   if (detail.includes("bucket not found") || detail.includes("not found")) {
     return `Le stockage « ${bucket} » n'existe pas encore. Exécutez la migration Supabase fournie dans le projet.`;
@@ -95,7 +96,7 @@ export async function uploadStudentIdCard(file: File): Promise<{ path: string | 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { path: null, error: "Connectez-vous pour envoyer votre carte." };
 
-  const path = `${user.id}/carte-${Date.now()}.${extensionFor(file)}`;
+  const path = `${user.id}/carte.${extensionFor(file)}`;
   const { error } = await supabase.storage.from("student-ids").upload(path, file, {
     upsert: true,
     contentType: file.type,

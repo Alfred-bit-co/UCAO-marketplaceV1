@@ -35,7 +35,10 @@ export default async function StandDetailPage({ params }: Props) {
   const { id } = await params;
   const stand = await getStandById(id);
   if (!stand) notFound();
-  const whatsapp = buildWhatsAppUrl(stand.seller?.phone);
+  const whatsapp = buildWhatsAppUrl(
+    stand.seller?.phone,
+    `Bonjour, je suis intéressé(e) par votre stand ${stand.name} sur UCAO Marketplace.`,
+  );
   return (
     <PageShell>
       <main className="container-ucao grid gap-8 py-[54px] md:grid-cols-2">

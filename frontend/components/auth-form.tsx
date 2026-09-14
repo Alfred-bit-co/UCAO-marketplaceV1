@@ -50,6 +50,7 @@ async function fetchProfileAfterLogin(supabase: NonNullable<ReturnType<typeof cr
     verification_status: data.verification_status,
     student_id_url: data.student_id_url,
     verification_note: data.verification_note,
+    cgu_accepted_at: data.cgu_accepted_at,
   };
 }
 
@@ -61,6 +62,26 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
   const [resending, setResending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  async function signInWithGoogle() {
+    const supabase = createClient();
+    if (!supabase) {
+      setError(true);
+      setMessage("Supabase n'est pas encore configuré. Ajoutez les clés dans frontend/.env.local.");
+      return;
+    }
+
+    setSubmitting(true);
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (oauthError) {
+      setSubmitting(false);
+      setError(true);
+      setMessage(oauthError.message);
+    }
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -291,6 +312,11 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         <button className="btn btn-primary mt-5 w-full" type="submit" disabled={submitting}>
           {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
           {submitting ? "Veuillez patienter..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
+        </button>
+        <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
+        <button className="btn btn-ghost w-full" type="button" onClick={signInWithGoogle} disabled={submitting}>
+          <span className="grid size-5 place-items-center rounded-full bg-[#4285f4] text-xs font-bold text-white">G</span>
+          Continuer avec Google
         </button>
         <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/register" : "/login"}>
           {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}

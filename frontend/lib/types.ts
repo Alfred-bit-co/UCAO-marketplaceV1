@@ -109,6 +109,7 @@ export type Profile = {
   verification_status?: VerificationStatus;
   student_id_url?: string | null;
   verification_note?: string | null;
+  cgu_accepted_at?: string | null;
   stands_count?: number;
   products_count?: number;
   created_at?: string;

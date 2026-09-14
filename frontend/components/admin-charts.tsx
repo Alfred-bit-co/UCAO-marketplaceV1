@@ -1,12 +1,11 @@
 "use client";
 
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Pie,
   PieChart,
@@ -16,84 +15,94 @@ import {
   YAxis,
 } from "recharts";
 import type { AdminStats, MonthlySignup, RoleCount, TierCount } from "@/lib/admin";
-import { cn } from "@/lib/utils";
 
-const CHART_COLORS = {
-  navy: "#1e2a6e",
-  red: "#7a1e2d",
-  green: "#2e7d5b",
-  gold: "#9a4a55",
-  soft: "#e8ebf8",
-};
+// The Google Forms-like treatment keeps every chart easy to scan at a glance.
+const PURPLE = "#1e2a6e";
+const PIE_COLORS = ["#1e2a6e", "#7a1e2d", "#2e7d5b"];
 
-const ROLE_COLORS: Record<string, string> = {
-  ACHETEUR: CHART_COLORS.navy,
-  VENDEUR: CHART_COLORS.red,
-  ADMIN: CHART_COLORS.green,
-};
+type ChartItem = { name: string; value: number; label: string };
 
-const TIER_COLORS: Record<string, string> = {
-  STANDARD: CHART_COLORS.navy,
-  PREMIUM: CHART_COLORS.red,
-  VIP: CHART_COLORS.green,
-};
+function formatPercent(value: number, total: number) {
+  if (!total) return "0 %";
+  const percent = (value / total) * 100;
+  return `${percent.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+}
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: { value: number; name: string; color?: string }[];
-  label?: string;
-}) {
+function addLabels(items: { name: string; value: number }[]): ChartItem[] {
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  return items.map((item) => ({
+    ...item,
+    label: `${item.value.toLocaleString("fr-FR")} (${formatPercent(item.value, total)})`,
+  }));
+}
+
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string }[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-ucao border border-ucao-line bg-white px-3 py-2 text-sm shadow-ucao dark:border-[#2a3a52] dark:bg-[#0b1c31]">
+    <div className="rounded-lg border border-[#dadce0] bg-white px-3 py-2 text-sm text-[#202124] shadow-md dark:border-[#34455e] dark:bg-[#10233b] dark:text-white">
       {label && <p className="mb-1 font-medium">{label}</p>}
-      {payload.map((entry) => (
-        <p key={entry.name} style={{ color: entry.color }}>
-          {entry.name} : <strong>{entry.value}</strong>
-        </p>
-      ))}
+      {payload.map((item) => <p key={item.name}>{item.name} : <strong>{item.value.toLocaleString("fr-FR")}</strong></p>)}
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  hint,
-  accent,
-}: {
-  label: string;
-  value: number;
-  hint?: string;
-  accent: "red" | "green" | "navy" | "gold";
-}) {
-  const accents = {
-    red: "border-l-ucao-red",
-    green: "border-l-ucao-success",
-    navy: "border-l-ucao-navy",
-    gold: "border-l-[#9a4a55]",
-  };
+function ChartCard({ title, count, countLabel, children }: { title: string; count: number; countLabel: string; children: React.ReactNode }) {
   return (
-    <article className={cn("panel border-l-4 p-5 transition hover:-translate-y-0.5 hover:shadow-ucao", accents[accent])}>
-      <p className="text-sm font-medium uppercase tracking-wide text-ucao-muted dark:text-[#a8b8cc]">{label}</p>
-      <p className="mt-2 text-4xl font-bold">{value.toLocaleString("fr-FR")}</p>
-      {hint && <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">{hint}</p>}
+    <article className="panel overflow-hidden p-5 sm:p-6">
+      <h2 className="text-lg font-medium text-[#202124] dark:text-white">{title}</h2>
+      <p className="mt-1 text-sm text-[#3c4043] dark:text-[#c5d0df]">{count.toLocaleString("fr-FR")} {countLabel}</p>
+      <div className="mt-5 h-[290px]">{children}</div>
     </article>
   );
 }
 
-export function AdminCharts({
-  stats,
-  signups,
-  productPublishes,
-  userSignups,
-  roles,
-  tiers,
-}: {
+function VerticalBars({ data, valueName }: { data: ChartItem[]; valueName: string }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 28, right: 8, left: -18, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="#e8eaed" />
+        <XAxis dataKey="name" tick={{ fill: "#3c4043", fontSize: 12 }} axisLine={{ stroke: "#3c4043" }} tickLine={false} />
+        <YAxis allowDecimals={false} tick={{ fill: "#5f6368", fontSize: 12 }} axisLine={false} tickLine={false} />
+        <Tooltip content={<ChartTooltip />} />
+        <Bar dataKey="value" name={valueName} fill={PURPLE} radius={[2, 2, 0, 0]} maxBarSize={58}>
+          <LabelList dataKey="label" position="top" fill="#202124" fontSize={12} />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function HorizontalBars({ data, valueName }: { data: ChartItem[]; valueName: string }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 88, left: 20, bottom: 0 }} barCategoryGap="24%">
+        <CartesianGrid horizontal={false} stroke="#e8eaed" />
+        <XAxis type="number" allowDecimals={false} tick={{ fill: "#5f6368", fontSize: 12 }} axisLine={{ stroke: "#dadce0" }} tickLine={false} />
+        <YAxis type="category" dataKey="name" width={90} tick={{ fill: "#3c4043", fontSize: 12 }} axisLine={false} tickLine={false} />
+        <Tooltip content={<ChartTooltip />} />
+        <Bar dataKey="value" name={valueName} fill={PURPLE} radius={[0, 2, 2, 0]} maxBarSize={27}>
+          <LabelList dataKey="label" position="right" fill="#202124" fontSize={12} />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function DistributionPie({ data }: { data: ChartItem[] }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie data={data} dataKey="value" nameKey="name" cx="38%" cy="50%" outerRadius={100} stroke="#fff" strokeWidth={1} labelLine={false} label={({ percent }) => percent && percent >= 0.06 ? `${(percent * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %` : ""}>
+          {data.map((item, index) => <Cell key={item.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
+        </Pie>
+        <Tooltip content={<ChartTooltip />} />
+        <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" formatter={(value) => <span className="text-sm text-[#202124] dark:text-white">{value}</span>} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function AdminCharts({ stats, signups, productPublishes, userSignups, roles, tiers }: {
   stats: AdminStats;
   signups: MonthlySignup[];
   productPublishes: MonthlySignup[];
@@ -101,165 +110,34 @@ export function AdminCharts({
   roles: RoleCount[];
   tiers: TierCount[];
 }) {
-  const roleData = roles.map((item) => ({ name: item.role, value: item.count }));
-  const tierData = tiers.map((item) => ({ name: item.tier, value: item.count }));
-  const vendorData = signups.map((item) => ({
-    month: item.month,
-    vendeurs: item.count,
-  }));
-  const productData = productPublishes.map((item) => ({ month: item.month, produits: item.count }));
-  const allSignups = userSignups.map((item) => ({
-    month: item.month,
-    inscriptions: item.count,
-  }));
+  const allSignups = addLabels(userSignups.map((item) => ({ name: item.month, value: item.count })));
+  const vendorData = addLabels(signups.map((item) => ({ name: item.month, value: item.count })));
+  const productData = addLabels(productPublishes.map((item) => ({ name: item.month, value: item.count })));
+  const roleData = addLabels(roles.map((item) => ({ name: item.role, value: item.count })));
+  const tierData = addLabels(tiers.map((item) => ({ name: item.tier, value: item.count })));
+  const hasRoles = roleData.some((item) => item.value > 0);
+  const hasTiers = tierData.some((item) => item.value > 0);
 
   return (
-    <div className="space-y-6">
-      <div className="hidden">
-        <StatCard label="Utilisateurs" value={stats.totalUsers} hint="Comptes enregistrés" accent="navy" />
-        <StatCard label="Vendeurs actifs" value={stats.totalVendors} hint="Abonnements en cours" accent="red" />
-        <StatCard label="Produits publiés" value={stats.totalProducts} accent="green" />
-        <StatCard
-          label="Vérifications en attente"
-          value={stats.pendingVerifications}
-          hint={`${stats.pendingStands} stand(s) à valider`}
-          accent="gold"
-        />
+    <div className="space-y-5">
+      <div className="grid gap-5 xl:grid-cols-2">
+        <ChartCard title="Inscriptions par mois" count={stats.totalUsers} countLabel="utilisateurs au total">{allSignups.length ? <VerticalBars data={allSignups} valueName="Inscriptions" /> : <EmptyChart message="Pas encore de données d'inscription." />}</ChartCard>
+        <ChartCard title="Nouveaux vendeurs par mois" count={stats.totalVendors} countLabel="vendeurs au total">{vendorData.length ? <VerticalBars data={vendorData} valueName="Vendeurs" /> : <EmptyChart message="Aucune souscription payée enregistrée." />}</ChartCard>
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <article className="panel p-5">
-          <p className="eyebrow mb-1">Activité</p>
-          <h2 className="mb-4 text-xl font-medium">Inscriptions par mois</h2>
-          <div className="h-[280px]">
-            {allSignups.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={allSignups}>
-                  <defs>
-                    <linearGradient id="signupGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_COLORS.navy} stopOpacity={0.35} />
-                      <stop offset="95%" stopColor={CHART_COLORS.navy} stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e7edf3" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="inscriptions"
-                    name="Inscriptions"
-                    stroke={CHART_COLORS.navy}
-                    fill="url(#signupGradient)"
-                    strokeWidth={2.5}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-ucao-muted dark:text-[#a8b8cc]">Pas encore de données d&apos;inscription.</p>
-            )}
-          </div>
-        </article>
-
-        <article className="panel p-5">
-          <p className="eyebrow mb-1">Monétisation</p>
-          <h2 className="mb-4 text-xl font-medium">Nouveaux vendeurs par mois</h2>
-          <div className="h-[280px]">
-            {vendorData.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={vendorData}>
-                  <defs><linearGradient id="vendorBarGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={CHART_COLORS.red} /><stop offset="100%" stopColor={CHART_COLORS.navy} /></linearGradient></defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e7edf3" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Bar dataKey="vendeurs" name="Vendeurs" fill="url(#vendorBarGradient)" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-ucao-muted dark:text-[#a8b8cc]">Aucune souscription payée enregistrée.</p>
-            )}
-          </div>
-        </article>
+      <ChartCard title="Produits publiés par mois" count={stats.totalProducts} countLabel="produits au total">{productData.length ? <VerticalBars data={productData} valueName="Produits" /> : <EmptyChart message="Aucune donnée de publication." />}</ChartCard>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <ChartCard title="Répartition des utilisateurs par rôle" count={stats.totalUsers} countLabel="utilisateurs au total">{hasRoles ? <HorizontalBars data={roleData} valueName="Utilisateurs" /> : <EmptyChart message="Aucun utilisateur." />}</ChartCard>
+        <ChartCard title="Répartition des paliers vendeurs" count={stats.totalVendors} countLabel="vendeurs au total">{hasTiers ? <DistributionPie data={tierData} /> : <EmptyChart message="Aucun vendeur abonné." />}</ChartCard>
       </div>
-
-      <article className="panel p-5">
-        <p className="eyebrow mb-1">Catalogue</p>
-        <h2 className="mb-4 text-xl font-medium">Produits publiés par mois</h2>
-        <div className="h-[280px]">{productData.length ? <ResponsiveContainer width="100%" height="100%"><BarChart data={productData}><CartesianGrid strokeDasharray="3 3" stroke="#e7edf3" /><XAxis dataKey="month" tick={{ fontSize: 12 }} /><YAxis allowDecimals={false} tick={{ fontSize: 12 }} /><Tooltip content={<ChartTooltip />} /><Bar dataKey="produits" name="Produits" fill={CHART_COLORS.green} radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer> : <p className="text-ucao-muted">Aucune donnée de publication.</p>}</div>
-      </article>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <article className="panel p-5">
-          <p className="eyebrow mb-1">Communauté</p>
-          <h2 className="mb-4 text-xl font-medium">Répartition par rôle</h2>
-          <div className="h-[280px]">
-            {roleData.some((item) => item.value > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={roleData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={73}
-                    outerRadius={95}
-                    paddingAngle={3}
-                  >
-                    {roleData.map((entry) => (
-                      <Cell key={entry.name} fill={ROLE_COLORS[entry.name] ?? CHART_COLORS.navy} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<ChartTooltip />} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-ucao-muted dark:text-[#a8b8cc]">Aucun utilisateur.</p>
-            )}
-          </div>
-        </article>
-
-        <article className="panel p-5">
-          <p className="eyebrow mb-1">Abonnements</p>
-          <h2 className="mb-4 text-xl font-medium">Paliers vendeurs</h2>
-          <div className="h-[280px]">
-            {tierData.some((item) => item.value > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={tierData} dataKey="value" nameKey="name" innerRadius={73} outerRadius={95} paddingAngle={3}>
-                    {tierData.map((entry) => (
-                      <Cell key={entry.name} fill={TIER_COLORS[entry.name] ?? CHART_COLORS.red} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<ChartTooltip />} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-ucao-muted dark:text-[#a8b8cc]">Aucun vendeur abonné.</p>
-            )}
-          </div>
-        </article>
-      </div>
-
-      <article className="panel p-5">
-        <p className="eyebrow mb-1">Confiance</p>
-        <h2 className="text-xl font-medium">Modération & avis</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-ucao bg-ucao-soft p-4 dark:bg-[#132238]">
-            <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">Avis total</p>
-            <p className="text-3xl font-bold">{stats.totalReviews}</p>
-          </div>
-          <div className="rounded-ucao bg-ucao-success-soft p-4 dark:bg-[#123628]">
-            <p className="text-sm text-ucao-success">Avis validés</p>
-            <p className="text-3xl font-bold text-ucao-success">{stats.approvedReviews}</p>
-          </div>
-          <div className="rounded-ucao bg-ucao-red-soft p-4 dark:bg-[#3a1a1c]">
-            <p className="text-sm text-ucao-red">Stands en attente</p>
-            <p className="text-3xl font-bold text-ucao-red">{stats.pendingStands}</p>
-          </div>
-        </div>
-      </article>
+      <article className="panel p-5 sm:p-6"><h2 className="text-lg font-medium">Modération et avis</h2><div className="mt-5 grid gap-4 sm:grid-cols-3"><Metric label="Avis total" value={stats.totalReviews} /><Metric label="Avis validés" value={stats.approvedReviews} /><Metric label="Stands en attente" value={stats.pendingStands} /></div></article>
     </div>
   );
+}
+
+function EmptyChart({ message }: { message: string }) {
+  return <div className="grid h-full place-items-center rounded-lg border border-dashed border-[#dadce0] text-sm text-ucao-muted dark:border-[#34455e]">{message}</div>;
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return <div className="rounded-lg bg-[#f8f9fa] p-4 dark:bg-[#132238]"><p className="text-sm text-ucao-muted">{label}</p><p className="mt-1 text-3xl font-bold">{value.toLocaleString("fr-FR")}</p></div>;
 }

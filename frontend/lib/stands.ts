@@ -161,6 +161,19 @@ export async function updateStandStatus(standId: string, status: "approved" | "r
   return !error;
 }
 
+export async function deleteStand(userId: string, standId: string): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured()) return { error: "Supabase non configuré." };
+  const supabase = createClient();
+  if (!supabase) return { error: "Supabase non configuré." };
+
+  const { error } = await supabase.from("stands").delete().eq("id", standId).eq("user_id", userId);
+  if (error) {
+    console.error("SUPABASE ERROR (deleteStand):", error);
+    return { error: error.message || "Impossible de supprimer ce stand." };
+  }
+  return { error: null };
+}
+
 async function mapStands(rows: StandRow[]): Promise<Stand[]> {
   const profiles = await getPublicProfiles(rows.map((row) => row.user_id));
   return rows.map((row) => mapStand(row, profiles.get(row.user_id)));
