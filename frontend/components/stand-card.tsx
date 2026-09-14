@@ -12,11 +12,11 @@ export function StandCard({ stand }: { stand: Stand }) {
   return (
     <Link
       href={`/stands/${stand.id}`}
-      className="group relative flex min-h-36 w-full overflow-hidden rounded-ucao bg-ucao-navy text-white shadow-ucao transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-ucao-red"
+      className="group relative flex min-h-44 w-full overflow-hidden rounded-ucao bg-ucao-navy text-white shadow-ucao transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-ucao-red sm:min-h-48"
     >
       <Image src={stand.banner_url || IMAGE_ASSETS.standFallback} alt="" fill className="object-cover opacity-55 transition duration-300 group-hover:scale-105" sizes="100vw" />
       <span className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,20,38,.92),rgba(18,36,78,.72)_58%,rgba(122,30,45,.48))]" />
-      <span className="relative flex w-full flex-wrap items-center justify-between gap-4 p-5 sm:px-7">
+      <span className="relative flex w-full flex-wrap items-center justify-between gap-4 p-6 sm:px-8">
         <span>
           <RoleBadge tier={stand.seller_tier} />
           <span className="mt-2 block text-2xl font-bold">{stand.name}</span>
