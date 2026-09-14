@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { IdCard, ShieldAlert, ShieldCheck, Upload } from "@/lib/icons";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { PageSkeleton } from "@/components/skeletons";
@@ -16,7 +16,7 @@ import { verificationLabel } from "@/lib/utils";
 import { validateImageFile } from "@/lib/storage";
 import { createClient } from "@/lib/supabase";
 
-export default function VerificationCartePage() {
+function VerificationCarteContent() {
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,5 +109,13 @@ export default function VerificationCartePage() {
         </section>
       </main>
     </PageShell>
+  );
+}
+
+export default function VerificationCartePage() {
+  return (
+    <Suspense fallback={<PageShell><PageSkeleton /></PageShell>}>
+      <VerificationCarteContent />
+    </Suspense>
   );
 }
