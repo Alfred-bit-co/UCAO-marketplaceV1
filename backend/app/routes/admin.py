@@ -110,3 +110,28 @@ def delete_user(user_id):
         return jsonify({"error": "Impossible de supprimer ce compte."}), 502
 
     return jsonify({"deleted": True, "user_id": user_id})
+
+
+@admin_bp.put("/admin/users/<user_id>/suspension")
+def set_user_suspension(user_id):
+    limiter = check_rate_limit(f"admin:suspend:{client_ip(request)}", limit=20, window_seconds=900)
+    if not limiter.allowed:
+        return jsonify({"error": "Trop de tentatives. Réessayez plus tard."}), 429
+    admin_user = _require_admin(request)
+    if not admin_user:
+        return jsonify({"error": "Accès réservé aux administrateurs."}), 403
+    if user_id == admin_user["id"]:
+        return jsonify({"error": "Vous ne pouvez pas suspendre votre propre compte administrateur."}), 400
+    try:
+        UUID(user_id)
+    except ValueError:
+        return jsonify({"error": "Identifiant utilisateur invalide."}), 400
+    suspended = bool((request.get_json(silent=True) or {}).get("suspended"))
+    try:
+        response = requests.put(f"{current_app.config['SUPABASE_URL']}/auth/v1/admin/users/{user_id}", headers=_supabase_headers(), json={"ban_duration": "876000h" if suspended else "none"}, timeout=15)
+    except requests.RequestException:
+        current_app.logger.exception("Supabase n'a pas répondu lors de la suspension du compte.")
+        return jsonify({"error": "Service momentanément indisponible."}), 503
+    if response.status_code >= 400:
+        return jsonify({"error": "Impossible de modifier la suspension du compte."}), 502
+    return jsonify({"suspended": suspended, "user_id": user_id})

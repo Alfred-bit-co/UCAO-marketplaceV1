@@ -189,3 +189,15 @@ export async function deleteUserAccount(userId: string): Promise<{ ok: boolean; 
     return { ok: false, message: "Impossible de contacter le serveur." };
   }
 }
+
+export async function setUserSuspension(userId: string, suspended: boolean): Promise<{ ok: boolean; message?: string }> {
+  const supabase = createClient();
+  if (!supabase) return { ok: false, message: "Supabase non configuré." };
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { ok: false, message: "Vous devez être connecté." };
+  try {
+    const response = await fetch(`${PAYMENT_API_URL}/admin/users/${userId}/suspension`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ suspended }) });
+    const data = await response.json().catch(() => null);
+    return response.ok ? { ok: true } : { ok: false, message: data?.error || `Erreur (code ${response.status}).` };
+  } catch { return { ok: false, message: "Impossible de contacter le serveur." }; }
+}

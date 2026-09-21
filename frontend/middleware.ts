@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/devenir-vendeur", "/profil", "/verification"];
+const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/devenir-vendeur", "/profil", "/verification", "/verification-carte"];
 const AUTH_PAGES = ["/login", "/register", "/devenir-vendeur"];
 
 export async function middleware(request: NextRequest) {
@@ -34,7 +34,6 @@ export async function middleware(request: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
-  const isVerificationPage = pathname.startsWith("/verification");
   const isAuthPage = AUTH_PAGES.some((page) => pathname === page || pathname.startsWith(`${page}/`));
 
   if (!user && isProtected) {
@@ -47,18 +46,16 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, verification_status")
+      .select("role")
       .eq("id", user.id)
       .single();
 
     const role = profile?.role ?? "ACHETEUR";
-    const verificationStatus = profile?.verification_status ?? "pending";
     const isAdmin = role === "ADMIN";
-    const isVerified = isAdmin || verificationStatus === "approved";
 
     if (isAuthPage && pathname !== "/devenir-vendeur") {
       const destination = request.nextUrl.clone();
-      destination.pathname = isAdmin ? "/admin" : isVerified ? (role === "VENDEUR" ? "/dashboard" : "/products") : "/verification";
+      destination.pathname = isAdmin ? "/admin" : role === "VENDEUR" ? "/dashboard" : "/products";
       destination.search = "";
       return NextResponse.redirect(destination);
     }
@@ -75,17 +72,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(destination);
     }
 
-    if (!isVerified && isProtected && !isVerificationPage) {
-      const destination = request.nextUrl.clone();
-      destination.pathname = "/verification";
-      return NextResponse.redirect(destination);
-    }
-
-    if (isVerified && isVerificationPage) {
-      const destination = request.nextUrl.clone();
-      destination.pathname = role === "ADMIN" ? "/admin" : role === "VENDEUR" ? "/dashboard" : "/profil";
-      return NextResponse.redirect(destination);
-    }
   }
 
   return response;
@@ -98,6 +84,7 @@ export const config = {
     "/devenir-vendeur/:path*",
     "/profil/:path*",
     "/verification/:path*",
+    "/verification-carte/:path*",
     "/login",
     "/register",
   ],

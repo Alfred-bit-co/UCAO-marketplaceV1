@@ -222,7 +222,7 @@ export function HomePage({
             Voir tout <ArrowRight size={18} strokeWidth={ICON_STROKE} />
           </Link>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           {featuredProducts.slice(0, 3).map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

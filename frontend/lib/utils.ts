@@ -33,7 +33,6 @@ export function escapeIlike(value: string): string {
 
 export function getPostLoginRedirect(profile: Pick<Profile, "role" | "verification_status">): string {
   if (profile.role === "ADMIN") return "/admin";
-  if (profile.verification_status !== "approved") return "/verification";
   if (profile.role === "VENDEUR") return "/dashboard";
   return "/products";
 }

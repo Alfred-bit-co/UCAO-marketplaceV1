@@ -26,6 +26,8 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     email: user.email ?? data.email ?? "",
     role: data.role,
     phone: data.phone,
+    field_of_study: data.field_of_study,
+    study_level: data.study_level,
     subscription_tier: data.subscription_tier,
     subscription_activated_at: data.subscription_activated_at,
     subscription_expires_at: data.subscription_expires_at,
@@ -45,7 +47,7 @@ export async function signOut(): Promise<void> {
 
 export async function updateProfile(
   userId: string,
-  payload: { full_name?: string; phone?: string },
+  payload: { full_name?: string; phone?: string; field_of_study?: string; study_level?: string },
 ): Promise<{ error: string | null }> {
   const supabase = createClient();
   if (!supabase) return { error: "Supabase non configuré." };

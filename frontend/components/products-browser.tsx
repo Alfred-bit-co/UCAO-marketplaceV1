@@ -105,11 +105,11 @@ export function ProductsBrowser({
       {isPending ? (
         <ProductGridSkeleton />
       ) : (
-        <div className="grid gap-4 pb-[42px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-3 gap-2 pb-[42px] sm:grid-cols-4 sm:gap-3 lg:grid-cols-5 xl:grid-cols-6">
           {initialData.items.length ? (
             initialData.items.map((product) => <ProductCard key={product.id} product={product} showDescription />)
           ) : (
-            <div className="notice md:col-span-2 lg:col-span-3 flex items-center gap-4 p-6">
+            <div className="notice col-span-full flex items-center gap-4 p-6">
               <span className="grid size-14 shrink-0 place-items-center rounded-full bg-ucao-success-soft text-ucao-success">
                 <PackageOpen size={26} />
               </span>

@@ -20,8 +20,8 @@ describe("getPostLoginRedirect", () => {
     expect(getPostLoginRedirect({ role: "ADMIN", verification_status: "pending" })).toBe("/admin");
   });
 
-  it("redirects unverified users to verification page", () => {
-    expect(getPostLoginRedirect({ role: "ACHETEUR", verification_status: "pending" })).toBe("/verification");
+  it("does not gate buyers on background verification", () => {
+    expect(getPostLoginRedirect({ role: "ACHETEUR", verification_status: "pending" })).toBe("/products");
   });
 
   it("redirects verified vendor to dashboard", () => {

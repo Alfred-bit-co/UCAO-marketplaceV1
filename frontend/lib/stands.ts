@@ -166,10 +166,13 @@ export async function deleteStandForAdmin(standId: string): Promise<{ error: str
   const supabase = createClient();
   if (!supabase) return { error: "Supabase non configuré." };
 
-  const { error } = await supabase.from("stands").delete().eq("id", standId);
+  const { data, error } = await supabase.from("stands").delete().eq("id", standId).select("id");
   if (error) {
     console.error("SUPABASE ERROR (deleteStandForAdmin):", error);
     return { error: error.message || "Impossible de supprimer ce stand." };
+  }
+  if (!data?.length) {
+    return { error: "Suppression refusée : vérifiez que la migration des droits administrateur a été appliquée." };
   }
   return { error: null };
 }

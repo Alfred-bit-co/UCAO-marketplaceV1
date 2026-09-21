@@ -29,13 +29,12 @@ function extensionFor(file: File): "jpg" | "png" | "webp" | "avif" {
 }
 
 function storageErrorMessage(message: string, bucket: string): string {
-  if (message) return `Erreur Supabase lors de l'envoi dans ${bucket} : ${message}`;
   const detail = message.toLowerCase();
-  if (detail.includes("bucket not found") || detail.includes("not found")) {
-    return `Le stockage « ${bucket} » n'existe pas encore. Exécutez la migration Supabase fournie dans le projet.`;
+  if (detail.includes("bucket not found")) {
+    return `Le stockage « ${bucket} » est introuvable. Contactez l'administrateur.`;
   }
-  if (detail.includes("row-level security") || detail.includes("permission") || detail.includes("not authorized")) {
-    return "Supabase bloque cet envoi : les règles Storage n'ont pas encore été appliquées. Exécutez la migration Supabase puis réessayez.";
+  if (detail.includes("row-level security") || detail.includes("not authorized") || detail.includes("permission")) {
+    return "Envoi refusé. Reconnectez-vous puis réessayez.";
   }
   return "Impossible d'envoyer l'image pour le moment. Réessayez dans quelques instants.";
 }

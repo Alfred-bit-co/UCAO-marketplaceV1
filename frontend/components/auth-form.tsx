@@ -8,6 +8,8 @@ import { ThemeProvider } from "./theme-provider";
 import { createClient } from "@/lib/supabase";
 import { getPostLoginRedirect } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
+import { validateImageFile } from "@/lib/storage";
+import { submitStudentVerification } from "@/lib/verification";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_PATTERN = /^\+\d{8,15}$/;
@@ -74,7 +76,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     setSubmitting(true);
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?oauth=google` },
     });
     if (oauthError) {
       setSubmitting(false);
@@ -90,6 +92,9 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const name = String(form.get("name") || "").trim();
     const phone = String(form.get("phone") || "").trim();
     const password = String(form.get("password") || "");
+    const fieldOfStudy = String(form.get("field_of_study") || "").trim();
+    const studyLevel = String(form.get("study_level") || "").trim();
+    const studentCard = form.get("student_card");
 
     if (!EMAIL_PATTERN.test(email)) {
       setError(true);
@@ -111,6 +116,22 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       if (!PHONE_PATTERN.test(phone)) {
         setError(true);
         setMessage("Le numéro de téléphone doit être au format +xxxxxxxxxxx (uniquement des chiffres après le +, sans espace).");
+        return;
+      }
+      if (!fieldOfStudy || !studyLevel) {
+        setError(true);
+        setMessage("Veuillez renseigner votre filière et votre niveau d'étude.");
+        return;
+      }
+      if (!(studentCard instanceof File) || !studentCard.size) {
+        setError(true);
+        setMessage("La photo de votre carte d'étudiant est obligatoire.");
+        return;
+      }
+      const imageError = validateImageFile(studentCard);
+      if (imageError) {
+        setError(true);
+        setMessage(imageError);
         return;
       }
       if (!accepted) {
@@ -157,15 +178,23 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/verification`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: name,
             phone,
+            field_of_study: fieldOfStudy,
+            study_level: studyLevel,
           },
         },
       });
       if (!signUpError && signUpData.session) {
-        window.location.href = "/verification";
+        const verification = await submitStudentVerification(studentCard as File, { phone, fieldOfStudy, studyLevel });
+        if (verification.error) {
+          setError(true);
+          setMessage(verification.error);
+          return;
+        }
+        window.location.href = "/devenir-vendeur";
         return;
       }
       setError(Boolean(signUpError));
@@ -244,6 +273,15 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
               <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">
                 Format obligatoire : +suivi uniquement de chiffres, sans espace (ex : +22892982926).
               </span>
+            </label>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-1">Filière<input className="input-field" name="field_of_study" required placeholder="Ex. Informatique" /></label>
+              <label className="grid gap-1">Niveau d&apos;étude<input className="input-field" name="study_level" required placeholder="Ex. Licence 2" /></label>
+            </div>
+            <label className="mt-4 grid gap-1">
+              Photo de la carte d&apos;étudiant
+              <input className="input-field py-2" name="student_card" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required />
+              <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">Photo nette, recto visible. JPG, PNG, WebP ou AVIF, 5 Mo maximum.</span>
             </label>
           </>
         )}

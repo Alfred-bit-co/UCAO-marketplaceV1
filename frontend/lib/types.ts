@@ -103,6 +103,8 @@ export type Profile = {
   email: string;
   role: UserRole;
   phone?: string | null;
+  field_of_study?: string | null;
+  study_level?: string | null;
   subscription_tier?: SubscriptionTier | null;
   subscription_activated_at?: string | null;
   subscription_expires_at?: string | null;
