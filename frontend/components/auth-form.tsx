@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
 import { useState } from "react";
 import { Brand } from "./navbar";
+import { GoogleIcon } from "./google-icon";
 import { ThemeProvider } from "./theme-provider";
 import { createClient } from "@/lib/supabase";
 import { getPostLoginRedirect } from "@/lib/utils";
@@ -353,7 +354,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         </button>
         <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
         <button className="btn btn-ghost w-full" type="button" onClick={signInWithGoogle} disabled={submitting}>
-          <span className="grid size-5 place-items-center rounded-full bg-[#4285f4] text-xs font-bold text-white">G</span>
+          <GoogleIcon size={18} />
           Continuer avec Google
         </button>
         <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/register" : "/login"}>
