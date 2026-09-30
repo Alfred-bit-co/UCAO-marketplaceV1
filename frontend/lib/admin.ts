@@ -2,7 +2,6 @@ import { createClient, isSupabaseConfigured } from "./supabase";
 import { PAYMENT_API_URL } from "./constants";
 import { escapeIlike } from "./utils";
 import type { Profile, SubscriptionTier, UserRole } from "./types";
-
 export type MonthlySignup = { month: string; count: number };
 export type RoleCount = { role: UserRole; count: number };
 export type TierCount = { tier: SubscriptionTier; count: number };
@@ -15,7 +14,6 @@ export type AdminStats = {
   totalReviews: number;
   approvedReviews: number;
 };
-
 export async function getAdminStats(): Promise<AdminStats> {
   const empty: AdminStats = {
     totalUsers: 0,
@@ -29,7 +27,6 @@ export async function getAdminStats(): Promise<AdminStats> {
   if (!isSupabaseConfigured()) return empty;
   const supabase = createClient();
   if (!supabase) return empty;
-
   const [users, vendors, products, stands, verifications, reviews, approvedReviews] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "VENDEUR"),
@@ -43,7 +40,6 @@ export async function getAdminStats(): Promise<AdminStats> {
     supabase.from("platform_reviews").select("*", { count: "exact", head: true }),
     supabase.from("platform_reviews").select("*", { count: "exact", head: true }).eq("status", "approved"),
   ]);
-
   return {
     totalUsers: users.count ?? 0,
     totalVendors: vendors.count ?? 0,
@@ -54,15 +50,12 @@ export async function getAdminStats(): Promise<AdminStats> {
     approvedReviews: approvedReviews.count ?? 0,
   };
 }
-
 export async function getUsersByRole(): Promise<RoleCount[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
   if (!supabase) return [];
-
   const { data, error } = await supabase.from("profiles").select("role");
   if (error || !data) return [];
-
   const counts = data.reduce<Record<UserRole, number>>(
     (acc, row) => {
       const role = row.role as UserRole;
@@ -71,23 +64,18 @@ export async function getUsersByRole(): Promise<RoleCount[]> {
     },
     { ACHETEUR: 0, VENDEUR: 0, ADMIN: 0 },
   );
-
   return (Object.entries(counts) as [UserRole, number][]).map(([role, count]) => ({ role, count }));
 }
-
 export async function getSubscriptionTierDistribution(): Promise<TierCount[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
   if (!supabase) return [];
-
   const { data, error } = await supabase
     .from("profiles")
     .select("subscription_tier")
     .eq("role", "VENDEUR")
     .not("subscription_tier", "is", null);
-
   if (error || !data) return [];
-
   const counts = data.reduce<Record<SubscriptionTier, number>>(
     (acc, row) => {
       const tier = row.subscription_tier as SubscriptionTier;
@@ -96,37 +84,29 @@ export async function getSubscriptionTierDistribution(): Promise<TierCount[]> {
     },
     { STANDARD: 0, PREMIUM: 0, VIP: 0 },
   );
-
   return (Object.entries(counts) as [SubscriptionTier, number][]).map(([tier, count]) => ({ tier, count }));
 }
-
 export async function getMonthlyUserSignups(): Promise<MonthlySignup[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
   if (!supabase) return [];
-
   const { data, error } = await supabase
     .from("profiles")
     .select("created_at")
     .order("created_at", { ascending: true });
-
   if (error || !data) return [];
-
   const buckets = data.reduce<Record<string, number>>((acc, row) => {
     if (!row.created_at) return acc;
     const month = row.created_at.slice(0, 7);
     acc[month] = (acc[month] ?? 0) + 1;
     return acc;
   }, {});
-
   return Object.entries(buckets).map(([month, count]) => ({ month, count }));
 }
-
 export async function getVendorSignupsByMonth(): Promise<MonthlySignup[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
   if (!supabase) return [];
-
   const { data, error } = await supabase.from("vendor_signups_monthly").select("*");
   if (error || !data) {
     console.error("SUPABASE ERROR (getVendorSignupsByMonth):", error);
@@ -136,7 +116,6 @@ export async function getVendorSignupsByMonth(): Promise<MonthlySignup[]> {
     .map((row: { month: string; new_vendors: number }) => ({ month: row.month, count: Number(row.new_vendors) }))
     .sort((a, b) => a.month.localeCompare(b.month));
 }
-
 export async function getProductPublishByMonth(): Promise<MonthlySignup[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
@@ -146,12 +125,10 @@ export async function getProductPublishByMonth(): Promise<MonthlySignup[]> {
   const buckets = data.reduce<Record<string, number>>((acc, row) => { if (row.created_at) { const month = row.created_at.slice(0, 7); acc[month] = (acc[month] ?? 0) + 1; } return acc; }, {});
   return Object.entries(buckets).map(([month, count]) => ({ month, count }));
 }
-
 export async function searchProfiles(query: string): Promise<Profile[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
   if (!supabase) return [];
-
   let request = supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(50);
   if (query.trim()) {
     const term = escapeIlike(query.trim());
@@ -164,16 +141,13 @@ export async function searchProfiles(query: string): Promise<Profile[]> {
   }
   return data as Profile[];
 }
-
 export async function deleteUserAccount(userId: string): Promise<{ ok: boolean; message?: string }> {
   const supabase = createClient();
   if (!supabase) return { ok: false, message: "Supabase non configuré." };
-
   const {
     data: { session },
   } = await supabase.auth.getSession();
   if (!session) return { ok: false, message: "Vous devez être connecté." };
-
   try {
     const response = await fetch(`${PAYMENT_API_URL}/admin/users/${userId}`, {
       method: "DELETE",
@@ -189,15 +163,14 @@ export async function deleteUserAccount(userId: string): Promise<{ ok: boolean; 
     return { ok: false, message: "Impossible de contacter le serveur." };
   }
 }
-
 export async function setUserSuspension(userId: string, suspended: boolean): Promise<{ ok: boolean; message?: string }> {
   const supabase = createClient();
   if (!supabase) return { ok: false, message: "Supabase non configuré." };
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return { ok: false, message: "Vous devez être connecté." };
-  try {
-    const response = await fetch(`${PAYMENT_API_URL}/admin/users/${userId}/suspension`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ suspended }) });
-    const data = await response.json().catch(() => null);
-    return response.ok ? { ok: true } : { ok: false, message: data?.error || `Erreur (code ${response.status}).` };
-  } catch { return { ok: false, message: "Impossible de contacter le serveur." }; }
+  // Fonction SQL sécurisée (SECURITY DEFINER) : seul un ADMIN peut l'appeler avec succès.
+  const { error } = await supabase.rpc("admin_set_suspension", { target_id: userId, suspended });
+  if (error) {
+    console.error("ADMIN ERROR (setUserSuspension):", error);
+    return { ok: false, message: error.message || "Impossible de modifier la suspension du compte." };
+  }
+  return { ok: true };
 }

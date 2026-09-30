@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
       },
     },
   });
- 
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, student_id_url")
       .eq("id", user.id)
       .single();
 
@@ -72,6 +72,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(destination);
     }
 
+    // Garde-fou : un futur vendeur (ACHETEUR) doit avoir SOUMIS sa carte d'étudiant
+    // avant de choisir un palier. On vérifie la soumission, jamais l'approbation :
+    // aucune vérification ne bloque l'accès. Les vendeurs existants (renouvellement)
+    // et les admins ne sont pas concernés.
+    const isBecomingVendor = pathname === "/devenir-vendeur" || pathname.startsWith("/devenir-vendeur/");
+    if (isBecomingVendor && role === "ACHETEUR" && !profile?.student_id_url) {
+      const destination = request.nextUrl.clone();
+      destination.pathname = "/verification-carte";
+      destination.search = "";
+      return NextResponse.redirect(destination);
+    }
   }
 
   return response;

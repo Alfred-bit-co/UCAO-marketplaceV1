@@ -112,6 +112,9 @@ export type Profile = {
   student_id_url?: string | null;
   verification_note?: string | null;
   cgu_accepted_at?: string | null;
+  // false = compte suspendu par un administrateur (ne bloque ni connexion ni navigation,
+  // seulement les nouvelles publications). Absent/true = compte normal.
+  is_active?: boolean;
   stands_count?: number;
   products_count?: number;
   created_at?: string;
