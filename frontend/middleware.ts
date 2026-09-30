@@ -66,6 +66,14 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(destination);
     }
 
+    // Un administrateur n'a pas d'espace vendeur : on l'envoie directement au centre de pilotage.
+    if (pathname.startsWith("/dashboard") && isAdmin) {
+      const destination = request.nextUrl.clone();
+      destination.pathname = "/admin";
+      destination.search = "";
+      return NextResponse.redirect(destination);
+    }
+
     if (pathname.startsWith("/dashboard") && role !== "VENDEUR" && !isAdmin) {
       const destination = request.nextUrl.clone();
       destination.pathname = role === "ACHETEUR" ? "/devenir-vendeur" : "/profil";

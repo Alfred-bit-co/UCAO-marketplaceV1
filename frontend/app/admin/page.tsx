@@ -1,229 +1,202 @@
 "use client";
 import {
-  AlertTriangle,
-  ArrowUpRight,
-  BarChart3,
+  CalendarDays,
+  Check,
   CheckCircle2,
-  CirclePlus,
-  Clock3,
-  ExternalLink,
+  IdCard,
+  LayoutDashboard,
   Lock,
-  Package,
-  Pencil,
-  Plus,
-  RefreshCcw,
+  Search,
+  Shield,
   ShieldCheck,
-  Store,
   Trash2,
-  UserCheck,
+  UsersRound,
   X,
 } from "@/lib/icons";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { ImageUpload } from "@/components/image-upload";
+import { AdminCharts } from "@/components/admin-charts";
 import { PageShell } from "@/components/page-shell";
-import { DashboardSkeleton } from "@/components/skeletons";
-import { createProduct, deleteProduct, getMyProducts, updateProduct } from "@/lib/products";
-import { createStand, deleteStand, getMyStands } from "@/lib/stands";
-import { daysUntilExpiry, formatSubscriptionDate, getMySubscriptionStatus, SUBSCRIPTION_PLANS } from "@/lib/subscriptions";
-import type { SubscriptionStatus } from "@/lib/subscriptions";
-import { PRODUCT_CATEGORIES } from "@/lib/types";
-import type { Product, ProductCategory, Profile, Stand } from "@/lib/types";
+import { AdminSkeleton } from "@/components/skeletons";
+import { Stars } from "@/components/testimonials";
+import {
+  deleteUserAccount,
+  getAdminStats,
+  getMonthlyUserSignups,
+  getProductPublishByMonth,
+  getSubscriptionTierDistribution,
+  getUsersByRole,
+  getVendorSignupsByMonth,
+  searchProfiles,
+  setUserSuspension,
+} from "@/lib/admin";
+import type { AdminStats } from "@/lib/admin";
+import { createClub, deleteClub, getClubs } from "@/lib/clubs";
+import { deleteReviewForAdmin, getAllReviewsForAdmin, getReviewStats, updateReviewStatus } from "@/lib/reviews";
+import type { PlatformReview } from "@/lib/reviews";
+import { deleteStandForAdmin, getAllStandsForAdmin, updateStandStatus } from "@/lib/stands";
+import { getPendingVerifications, getStudentIdSignedUrl, setVerificationStatus } from "@/lib/verification";
+import type { Club, Profile, Stand } from "@/lib/types";
+import { roleLabel } from "@/lib/utils";
 import { getCurrentProfile } from "@/lib/users";
 function initials(name: string) {
-  return name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "V";
+  return name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "A";
 }
-function currency(value: number) {
-  return `${value.toLocaleString("fr-FR")} FCFA`;
+function Kpi({ label, value, hint, tone }: { label: string; value: number; hint: string; tone: "navy" | "red" | "green" | "gold" }) {
+  const styles = { navy: "bg-ucao-navy-soft text-ucao-navy", red: "bg-ucao-red-soft text-ucao-red", green: "bg-ucao-success-soft text-ucao-success", gold: "bg-[#f6e8eb] text-ucao-red" };
+  return <article className="panel p-5"><div className="flex items-start justify-between gap-3"><span className={`grid size-10 place-items-center rounded-ucao ${styles[tone]}`}><LayoutDashboard size={18} /></span><span className="text-xs font-bold uppercase tracking-wide text-ucao-muted">Admin</span></div><p className="mt-5 text-sm font-medium text-ucao-muted">{label}</p><p className="mt-1 text-3xl font-bold">{value.toLocaleString("fr-FR")}</p><p className="mt-1 text-xs font-medium text-ucao-muted">{hint}</p></article>;
 }
-function ProgressBar({ value, limit }: { value: number; limit: number }) {
-  const percent = limit > 0 ? Math.min(Math.round((value / limit) * 100), 100) : 0;
-  const isFull = limit > 0 && value >= limit;
-  const isNearFull = !isFull && percent >= 80;
-  const color = isFull ? "bg-ucao-red" : isNearFull ? "bg-amber-500" : "bg-ucao-success";
-  return (
-    <div
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={limit}
-      aria-valuenow={Math.min(value, limit)}
-      className="h-2 overflow-hidden rounded-full bg-[#e9edf4] dark:bg-[#1a304b]"
-    >
-      <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${percent}%` }} />
-    </div>
-  );
-}
-export default function DashboardPage() {
+export default function AdminPage() {
+  const [me, setMe] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [status, setStatus] = useState<SubscriptionStatus | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [signups, setSignups] = useState<Awaited<ReturnType<typeof getVendorSignupsByMonth>>>([]);
+  const [productPublishes, setProductPublishes] = useState<Awaited<ReturnType<typeof getProductPublishByMonth>>>([]);
+  const [userSignups, setUserSignups] = useState<Awaited<ReturnType<typeof getMonthlyUserSignups>>>([]);
+  const [roles, setRoles] = useState<Awaited<ReturnType<typeof getUsersByRole>>>([]);
+  const [tiers, setTiers] = useState<Awaited<ReturnType<typeof getSubscriptionTierDistribution>>>([]);
   const [stands, setStands] = useState<Stand[]>([]);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productError, setProductError] = useState<string | null>(null);
-  const [productSubmitting, setProductSubmitting] = useState(false);
-  const [standError, setStandError] = useState<string | null>(null);
-  const [standSubmitting, setStandSubmitting] = useState(false);
-  const [productImages, setProductImages] = useState<string[]>([]);
-  const [standBanner, setStandBanner] = useState<string[]>([]);
-  const [, setCurrentTime] = useState(Date.now());
-  async function refreshAll(userId: string) {
-    const [nextStatus, nextProducts, nextStands] = await Promise.all([getMySubscriptionStatus(), getMyProducts(userId), getMyStands(userId)]);
-    setStatus(nextStatus);
-    setProducts(nextProducts);
-    setStands(nextStands);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [verifications, setVerifications] = useState<Profile[]>([]);
+  const [reviews, setReviews] = useState<PlatformReview[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [reviewStats, setReviewStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
+  const [search, setSearch] = useState("");
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [accountPendingDeletion, setAccountPendingDeletion] = useState<Profile | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  async function refreshAll() {
+    const failed: string[] = [];
+    function pick<T>(result: PromiseSettledResult<T>, label: string, fallback: T): T {
+      if (result.status === "fulfilled") return result.value;
+      console.error(`ADMIN LOAD ERROR (${label}):`, result.reason);
+      failed.push(label);
+      return fallback;
+    }
+    const [statsR, signupsR, productsR, userSignupsR, rolesR, tiersR, standsR, usersR, verificationsR, reviewsR, reviewStatsR, clubsR] = await Promise.allSettled([
+      getAdminStats(), getVendorSignupsByMonth(), getProductPublishByMonth(), getMonthlyUserSignups(), getUsersByRole(), getSubscriptionTierDistribution(), getAllStandsForAdmin(), searchProfiles(""), getPendingVerifications(), getAllReviewsForAdmin(), getReviewStats(), getClubs(),
+    ]);
+    setStats(pick<AdminStats | null>(statsR, "statistiques", null));
+    setSignups(pick(signupsR, "inscriptions vendeurs", []));
+    setProductPublishes(pick(productsR, "publications", []));
+    setUserSignups(pick(userSignupsR, "inscriptions", []));
+    setRoles(pick(rolesR, "rôles", []));
+    setTiers(pick(tiersR, "paliers", []));
+    setStands(pick(standsR, "stands", []));
+    setUsers(pick(usersR, "utilisateurs", []));
+    setVerifications(pick(verificationsR, "vérifications", []));
+    const reviewsResult = pick(reviewsR, "avis", { reviews: [] as PlatformReview[], error: "chargement impossible" });
+    setReviews(reviewsResult.reviews);
+    setReviewStats(pick(reviewStatsR, "statistiques des avis", { total: 0, approved: 0, pending: 0, rejected: 0 }));
+    setClubs(pick(clubsR, "clubs", []));
+    if (failed.length > 0) setActionMessage(`Certaines données n'ont pas pu être chargées : ${failed.join(", ")}.`);
+    else if (reviewsResult.error) setActionMessage(`Avis : ${reviewsResult.error}`);
   }
+
   useEffect(() => {
     void (async () => {
-      const currentProfile = await getCurrentProfile();
-      setProfile(currentProfile);
-      if (currentProfile) await refreshAll(currentProfile.id);
-      setLoading(false);
+      try {
+        const profile = await getCurrentProfile();
+        setMe(profile);
+        if (profile?.role === "ADMIN") await refreshAll();
+      } catch (error) {
+        console.error("ADMIN LOAD ERROR (session):", error);
+        setActionMessage("Impossible de charger le centre de pilotage. Actualisez la page.");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
   useEffect(() => {
-    const interval = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
-    return () => window.clearInterval(interval);
-  }, []);
-  async function handleProductSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!profile) return;
-    setProductError(null); setProductSubmitting(true);
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    const payload = {
-      name: String(form.get("name") || ""),
-      category: form.get("category") as ProductCategory,
-      price: Number(form.get("price") || 0),
-      description: String(form.get("description") || ""),
-      image_urls: productImages,
-    };
-    const result = editingProduct ? await updateProduct(profile.id, String(editingProduct.id), payload) : await createProduct(profile.id, payload);
-    setProductSubmitting(false);
-    if (result.error) { setProductError(result.error); return; }
-    setEditingProduct(null); setProductImages([]); formElement.reset(); await refreshAll(profile.id);
+    const timer = window.setTimeout(() => { if (me?.role === "ADMIN") void searchProfiles(search).then(setUsers); }, 300);
+    return () => window.clearTimeout(timer);
+  }, [search, me]);
+  async function decideStand(id: string, status: "approved" | "rejected") { setActionMessage(null); if (!await updateStandStatus(id, status)) { setActionMessage("Impossible de mettre à jour ce stand."); return; } await refreshAll(); }
+  async function removeStandForAdmin(stand: Stand) { if (!window.confirm(`Supprimer définitivement le stand « ${stand.name} » ?`)) return; setActionMessage(null); const result = await deleteStandForAdmin(String(stand.id)); if (result.error) { setActionMessage(result.error); return; } await refreshAll(); }
+  async function decideVerification(id: string, status: "approved" | "rejected", note?: string) { setActionMessage(null); if (!await setVerificationStatus(id, status, note)) { setActionMessage("Impossible de mettre à jour cette vérification."); return; } await refreshAll(); }
+  async function viewCard(path: string) { const popup = window.open("about:blank", "_blank"); const result = await getStudentIdSignedUrl(path); if (result.url) { if (popup) popup.location.href = result.url; else window.open(result.url, "_blank", "noopener,noreferrer"); } else { popup?.close(); setActionMessage(result.error || "Impossible d'ouvrir la carte."); } }
+  async function decideReview(id: string, status: "approved" | "rejected") { if (!await updateReviewStatus(id, status)) { setActionMessage("Impossible de mettre à jour cet avis."); return; } setReviews((items) => items.map((item) => item.id === id ? { ...item, status } : item)); setReviewStats(await getReviewStats()); }
+  async function removeReview(id: string) { if (!window.confirm("Supprimer définitivement cet avis ?")) return; if (!await deleteReviewForAdmin(id)) { setActionMessage("Impossible de supprimer cet avis."); return; } setReviews((items) => items.filter((item) => item.id !== id)); setReviewStats(await getReviewStats()); }
+  async function toggleSuspension(user: Profile) {
+    const suspend = user.is_active !== false;
+    const warning = suspend ? "\n\nLe compte pourra toujours se connecter et naviguer, mais ne pourra plus publier de nouveaux produits ni de nouveaux stands." : "";
+    if (!window.confirm(`${suspend ? "Suspendre" : "Réactiver"} le compte de ${user.full_name} ?${warning}`)) return;
+    setActionMessage(null);
+    const result = await setUserSuspension(user.id, suspend);
+    if (!result.ok) { setActionMessage(result.message || "Impossible de modifier la suspension."); return; }
+    setUsers((items) => items.map((item) => (item.id === user.id ? { ...item, is_active: !suspend } : item)));
+    setActionMessage(`Le compte de ${user.full_name} a été ${suspend ? "suspendu" : "réactivé"}.`);
   }
-  async function handleDeleteProduct(productId: string) {
-    if (!profile || !window.confirm("Supprimer définitivement ce produit ?")) return;
-    const ok = await deleteProduct(profile.id, productId);
-    if (!ok) { setProductError("Impossible de supprimer ce produit."); return; }
-    if (String(editingProduct?.id) === productId) setEditingProduct(null);
-    await refreshAll(profile.id);
-  }
-  async function handleStandSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!profile) return;
-    setStandError(null); setStandSubmitting(true);
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    const result = await createStand(profile.id, { name: String(form.get("name") || ""), description: String(form.get("description") || ""), banner_url: standBanner[0] || String(form.get("banner_url") || "") || undefined });
-    setStandSubmitting(false);
-    if (result.error) { setStandError(result.error); return; }
-    formElement.reset(); setStandBanner([]); await refreshAll(profile.id);
-  }
-  async function handleDeleteStand(standId: string) {
-    if (!profile || !window.confirm("Supprimer définitivement ce stand ? Cette place sera de nouveau disponible.")) return;
-    setStandError(null);
-    const result = await deleteStand(profile.id, standId);
-    if (result.error) { setStandError(result.error); return; }
-    await refreshAll(profile.id);
-  }
-  function editProduct(product: Product) {
-    setEditingProduct(product); setProductImages(product.images?.map((image) => image.url) ?? []); setProductError(null);
-    document.getElementById("product-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-  if (loading) return <PageShell><DashboardSkeleton /></PageShell>;
-  if (!profile) return <PageShell><main className="container-ucao py-24 text-center"><p className="mb-4 text-xl font-medium">Connectez-vous pour accéder à votre tableau de bord.</p><a className="btn btn-primary" href="/login">Se connecter</a></main></PageShell>;
-  if (profile.role === "ADMIN") return <PageShell><main className="container-ucao py-24 text-center"><p className="mb-4 text-xl font-medium">Vous êtes connecté en tant qu&apos;administrateur.</p><a className="btn btn-primary" href="/admin">Aller à l&apos;administration</a></main></PageShell>;
-  if (profile.role === "ACHETEUR") return <PageShell><main className="container-ucao py-24 text-center"><p className="mb-4 text-xl font-medium">Vous n&apos;êtes pas encore vendeur.</p><p className="mb-6 text-ucao-muted">Choisissez un palier pour publier vos produits et ouvrir un stand.</p><a className="btn btn-primary" href="/devenir-vendeur"><CirclePlus size={18} /> Devenir vendeur</a></main></PageShell>;
-  const daysLeft = daysUntilExpiry(status?.expiresAt ?? null);
-  const plan = SUBSCRIPTION_PLANS.find((item) => item.tier === status?.tier);
-  const atProductLimit = Boolean(status && !editingProduct && status.productCount >= status.productLimit);
-  const atStandLimit = Boolean(status && status.standCount >= status.standLimit);
-  const productCapacity = Math.max((status?.productLimit ?? 0) - (status?.productCount ?? 0), 0);
-  const standCapacity = Math.max((status?.standLimit ?? 0) - (status?.standCount ?? 0), 0);
-  const recentProducts = products.slice(0, 4);
-  const isSuspended = profile.is_active === false;
-  return (
-    <PageShell>
-      <main className="min-h-screen bg-[#f5f7fb] pb-20 dark:bg-[#071426]">
-        <section className="relative overflow-hidden bg-[linear-gradient(120deg,#18245f_0%,#1e2a6e_56%,#7a1e2d_145%)] pb-28 pt-12 text-white">
-          <div className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 left-1/3 size-56 rounded-full bg-ucao-success/20 blur-3xl" />
-          <div className="container-ucao relative">
-            <div className="flex flex-wrap items-start justify-between gap-6">
-              <div>
-                <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/65"><UserCheck size={15} /> Espace vendeur</p>
-                <h1 className="text-[clamp(32px,5vw,52px)] font-bold tracking-tight">Bonjour, {profile.full_name.split(" ")[0]}.</h1>
-                <p className="mt-2 max-w-xl text-white/72">Pilotez votre vitrine, vos produits et votre abonnement depuis un seul espace.</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <a className="inline-flex min-h-11 items-center gap-2 rounded-ucao border border-white/20 bg-white/10 px-4 font-medium text-white transition hover:bg-white/20" href="/products" target="_blank" rel="noopener noreferrer"><ExternalLink size={16} /> Voir le catalogue</a>
-                <span className="grid size-12 place-items-center rounded-full bg-white text-sm font-bold text-ucao-navy shadow-lg">{initials(profile.full_name)}</span>
-              </div>
-            </div>
-            <div className="mt-9 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-              <article className="rounded-ucao border border-white/15 bg-white p-6 text-ucao-ink shadow-2xl shadow-[#071426]/20 dark:bg-[#10233b] dark:text-white">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-ucao-muted dark:text-[#9db0c8]">Abonnement actif</p><h2 className="mt-2 text-3xl font-bold">{status?.tier ?? "—"}</h2><p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">{plan ? `${currency(plan.price)} / mois` : "Aucun palier actif"}</p></div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-ucao-success-soft px-3 py-1.5 text-xs font-bold text-ucao-success"><CheckCircle2 size={15} /> {isSuspended ? "Suspendu" : status?.isBlocked ? "À renouveler" : "Actif"}</span>
-                </div>
-                <div className="mt-7 grid gap-4 sm:grid-cols-2">
-                  <div><div className="mb-2 flex justify-between text-xs font-medium text-ucao-muted dark:text-[#a8b8cc]"><span>Produits publiés</span><span>{status?.productCount ?? 0}/{status?.productLimit ?? 0}</span></div><ProgressBar value={status?.productCount ?? 0} limit={status?.productLimit ?? 0} /></div>
-                  <div><div className="mb-2 flex justify-between text-xs font-medium text-ucao-muted dark:text-[#a8b8cc]"><span>Stands ouverts</span><span>{status?.standCount ?? 0}/{status?.standLimit ?? 0}</span></div><ProgressBar value={status?.standCount ?? 0} limit={status?.standLimit ?? 0} /></div>
-                </div>
-                <div className="mt-5 grid gap-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">
-                  {status?.activatedAt && <p className="flex items-center gap-2"><Clock3 size={15} /> Activé le {formatSubscriptionDate(status.activatedAt)}</p>}
-                  {status?.expiresAt && <p className="flex items-center gap-2"><Clock3 size={15} /> Expire le {formatSubscriptionDate(status.expiresAt)}{daysLeft !== null ? status.isBlocked ? " (expiré)" : ` — expire dans ${daysLeft} jour${daysLeft > 1 ? "s" : ""}` : ""}</p>}
-                </div>
-              </article>
-              <article className="rounded-ucao bg-ucao-success p-6 text-white shadow-2xl shadow-[#071426]/20">
-                <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-white/70">Action rapide</p><h2 className="mt-2 text-2xl font-bold">Développez votre vitrine</h2></div><BarChart3 size={24} className="text-white/70" /></div>
-                <p className="mt-3 text-sm leading-6 text-white/80">Il vous reste <strong className="text-white">{productCapacity} emplacement{productCapacity > 1 ? "s" : ""}</strong> produit{productCapacity > 1 ? "s" : ""} sur votre palier.</p>
-                <button className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-ucao bg-white px-4 font-bold text-ucao-success transition hover:bg-white/90" type="button" onClick={() => document.getElementById("product-form")?.scrollIntoView({ behavior: "smooth" })}><Plus size={17} /> Ajouter un produit</button>
-              </article>
-            </div>
+  function removeUser(id: string, _name?: string) { void _name; const user = users.find((item) => item.id === id); if (user) { setActionMessage(null); setAccountPendingDeletion(user); } }
+  async function confirmUserDeletion() { if (!accountPendingDeletion) return; setActionMessage(null); setDeletingUserId(accountPendingDeletion.id); const result = await deleteUserAccount(accountPendingDeletion.id); setDeletingUserId(null); if (!result.ok) { setActionMessage(result.message || "Impossible de supprimer ce compte."); return; } const deletedName = accountPendingDeletion.full_name; setUsers((items) => items.filter((item) => item.id !== accountPendingDeletion.id)); setStats((current) => current ? { ...current, totalUsers: Math.max(current.totalUsers - 1, 0) } : current); setAccountPendingDeletion(null); setActionMessage(`Le compte de ${deletedName} a été supprimé.`); }
+  async function addClub(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); const formElement = event.currentTarget; const form = new FormData(formElement); const result = await createClub({ name: String(form.get("name") || ""), banner_url: String(form.get("banner_url") || ""), external_url: String(form.get("external_url") || ""), short_description: String(form.get("short_description") || "") }); if (!result.ok) { setActionMessage(result.error || "Impossible de créer le club."); return; } formElement.reset(); setClubs(await getClubs()); }
+  async function removeClub(id: string) { if (!window.confirm("Supprimer ce club ?")) return; if (!await deleteClub(id)) { setActionMessage("Impossible de supprimer ce club."); return; } setClubs((items) => items.filter((item) => item.id !== id)); }
+  if (loading) return <PageShell><AdminSkeleton /></PageShell>;
+  if (!me || me.role !== "ADMIN") return <PageShell><main className="container-ucao py-24 text-center"><p className="text-xl font-medium">Accès réservé aux administrateurs.</p></main></PageShell>;
+  const pendingStands = stands.filter((stand) => stand.status === "pending");
+  return <PageShell>
+    <main className="min-h-screen bg-[#f5f7fb] pb-20 dark:bg-[#071426]">
+      <section className="relative isolate overflow-hidden bg-[#18245f] pb-28 pt-12 text-white">
+        <Image src="/images/admin-hero.jpg" alt="" fill priority sizes="100vw" className="-z-20 object-cover" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(7,20,38,0.72)_0%,rgba(7,20,38,0.5)_60%,rgba(7,20,38,0.68)_100%)]" />
+        <div className="container-ucao relative">
+          <div className="flex flex-wrap items-start justify-between gap-6"><div><p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/65"><Shield size={15} /> Centre de pilotage</p><h1 className="text-[clamp(32px,5vw,52px)] font-bold tracking-tight">Bonjour, {me.full_name.split(" ")[0]}.</h1><p className="mt-2 max-w-xl text-white/72">Suivez la croissance de la marketplace et traitez les actions prioritaires.</p></div><div className="flex items-center gap-3"><span className="hidden items-center gap-2 rounded-ucao border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium sm:inline-flex"><CalendarDays size={16} /> Vue du jour</span><span className="grid size-12 place-items-center rounded-full bg-white text-sm font-bold text-ucao-navy shadow-lg">{initials(me.full_name)}</span></div></div>
+          <div className="mt-9 flex flex-wrap items-center justify-between gap-4 rounded-ucao border border-white/15 bg-white/10 p-5 backdrop-blur-sm"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-white/60">État de la plateforme</p><p className="mt-1 text-2xl font-bold">Tout est sous contrôle</p></div><span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-ucao-success"><ShieldCheck size={15} /> Accès administrateur actif</span></div>
+        </div>
+      </section>
+      <section className="container-ucao relative z-10 -mt-16 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats && <><Kpi label="Utilisateurs" value={stats.totalUsers} hint="Comptes enregistrés" tone="navy" /><Kpi label="Vendeurs actifs" value={stats.totalVendors} hint="Abonnements actifs" tone="red" /><Kpi label="Produits publiés" value={stats.totalProducts} hint="Dans le catalogue" tone="green" /><Kpi label="À traiter" value={stats.pendingVerifications + stats.pendingStands} hint={`${stats.pendingVerifications} vérification(s) · ${stats.pendingStands} stand(s)`} tone="gold" /></>}
+      </section>
+      {actionMessage && <section className="container-ucao mt-5"><p className={`notice ${actionMessage.startsWith("Le compte") ? "" : "notice-error"}`} role="status">{actionMessage}</p></section>}
+      {accountPendingDeletion && <div className="fixed inset-0 z-50 grid place-items-center bg-[#071426]/65 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+        <div className="panel w-full max-w-md p-6 shadow-2xl">
+          <p className="eyebrow text-ucao-red">Action irréversible</p>
+          <h2 id="delete-account-title" className="mt-1 text-2xl font-bold">Supprimer ce compte ?</h2>
+          <p className="mt-3 text-sm text-ucao-muted">Le compte de <strong>{accountPendingDeletion.full_name}</strong> et ses données associées seront définitivement supprimés.</p>
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <button className="btn btn-ghost" type="button" onClick={() => setAccountPendingDeletion(null)} disabled={Boolean(deletingUserId)}>Annuler</button>
+            <button className="btn bg-ucao-red text-white hover:bg-ucao-red/90" type="button" onClick={confirmUserDeletion} disabled={Boolean(deletingUserId)}>{deletingUserId ? "Suppression..." : "Supprimer définitivement"}</button>
           </div>
-        </section>
-        <section className="container-ucao relative z-10 -mt-16 grid gap-4 sm:grid-cols-3">
-          <article className="panel p-5"><div className="flex items-center justify-between"><span className="grid size-10 place-items-center rounded-ucao bg-ucao-red-soft text-ucao-red"><Package size={19} /></span><ArrowUpRight size={17} className="text-ucao-muted" /></div><p className="mt-5 text-sm font-medium text-ucao-muted">Produits publiés</p><p className="mt-1 text-3xl font-bold">{status?.productCount ?? 0}<span className="ml-1 text-base font-medium text-ucao-muted">/ {status?.productLimit ?? 0}</span></p></article>
-          <article className="panel p-5"><div className="flex items-center justify-between"><span className="grid size-10 place-items-center rounded-ucao bg-ucao-success-soft text-ucao-success"><Store size={19} /></span><ArrowUpRight size={17} className="text-ucao-muted" /></div><p className="mt-5 text-sm font-medium text-ucao-muted">Stands ouverts</p><p className="mt-1 text-3xl font-bold">{status?.standCount ?? 0}<span className="ml-1 text-base font-medium text-ucao-muted">/ {status?.standLimit ?? 0}</span></p></article>
-          <article className="panel p-5"><div className="flex items-center justify-between"><span className="grid size-10 place-items-center rounded-ucao bg-ucao-navy-soft text-ucao-navy"><ShieldCheck size={19} /></span><span className="text-xs font-bold text-ucao-success">{isSuspended ? "Suspendu" : status?.isBlocked ? "Inactif" : "Actif"}</span></div><p className="mt-5 text-sm font-medium text-ucao-muted">Statut vendeur</p><p className="mt-1 text-3xl font-bold">{isSuspended ? "Suspendu" : status?.isBlocked ? "Bloqué" : "En ligne"}</p></article>
-        </section>
-        {isSuspended && (
-          <section className="container-ucao mt-5">
-            <div role="alert" className="flex items-start gap-3 rounded-ucao bg-[#ffe8e8] px-4 py-3 text-sm font-medium text-ucao-red dark:bg-[#3a1a1c]">
-              <Lock size={18} className="mt-0.5 shrink-0" />
-              <div>
-                <p className="font-bold">Votre compte est suspendu.</p>
-                <p className="mt-1 font-normal">
-                  Vous pouvez toujours vous connecter et naviguer, mais vous ne pouvez plus publier de nouveaux produits ni de nouveaux stands. Contactez l&apos;équipe :{" "}
-                  <a className="underline" href="mailto:ucaomarketplace2026@gmail.com">ucaomarketplace2026@gmail.com</a>
-                  {" · "}
-                  <a className="underline" href="tel:+22892982926">+228 92 98 29 26</a>.
+        </div>
+      </div>}
+      <section className="container-ucao mt-8">{stats && <AdminCharts stats={stats} signups={signups} productPublishes={productPublishes} userSignups={userSignups} roles={roles} tiers={tiers} />}</section>
+      <section className="container-ucao mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <article className="panel p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Priorité</p><h2 className="text-2xl font-bold">Vérifications étudiantes</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-red-soft text-ucao-red"><IdCard size={18} /></span></div>{verifications.length ? <ul className="space-y-3">{verifications.map((user) => <li key={user.id} className="rounded-ucao bg-ucao-soft p-4 dark:bg-[#132238]"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-bold">{user.full_name}</p><p className="text-sm text-ucao-muted">{user.email}</p></div><div className="flex flex-wrap gap-2">{user.student_id_url && <button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => viewCard(user.student_id_url!)}><IdCard size={14} /> Voir la carte</button>}<button className="btn btn-primary min-h-9 px-3 text-xs" type="button" onClick={() => decideVerification(user.id, "approved")}><Check size={14} /> Valider</button><button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => decideVerification(user.id, "rejected", window.prompt("Motif du refus (optionnel) :") || undefined)}><X size={14} /> Rejeter</button></div></div></li>)}</ul> : <p className="rounded-ucao bg-ucao-success-soft p-5 font-medium text-ucao-success">Aucune vérification en attente.</p>}</article>
+        <article className="panel p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Modération</p><h2 className="text-2xl font-bold">Stands à traiter</h2></div><span className="text-3xl font-bold text-ucao-red">{pendingStands.length}</span></div>{pendingStands.length ? <ul className="space-y-3">{pendingStands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name}</p></div><div className="flex gap-1"><button className="btn btn-primary min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "approved")} aria-label="Valider"><Check size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "rejected")} aria-label="Rejeter"><X size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)} aria-label={`Supprimer le stand ${stand.name}`} title="Supprimer définitivement"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="rounded-ucao bg-ucao-success-soft p-5 font-medium text-ucao-success">Aucun stand à traiter.</p>}</article>
+      </section>
+      <section className="container-ucao mt-5"><article className="panel p-5 sm:p-6"><div className="mb-4 flex items-center justify-between"><div><p className="eyebrow">Catalogue</p><h2 className="text-2xl font-bold">Gestion des stands</h2></div><span className="text-sm font-medium text-ucao-muted">{stands.length} stand{stands.length > 1 ? "s" : ""}</span></div>{stands.length ? <ul className="max-h-80 space-y-2 overflow-auto pr-1">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div className="min-w-0"><p className="truncate font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name || "Vendeur UCAO"} · {stand.status === "approved" ? "Validé" : stand.status === "rejected" ? "Rejeté" : "En attente"}</p></div><button className="btn btn-ghost min-h-9 px-3 text-xs text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)}><Trash2 size={14} /> Supprimer</button></li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 text-sm text-ucao-muted dark:bg-[#132238]">Aucun stand enregistré.</p>}</article></section>
+      <section className="container-ucao mt-5 grid gap-5 xl:grid-cols-2">
+        <article className="panel overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-ucao-line p-5 dark:border-[#263d5c]"><div><p className="eyebrow">Comptes</p><h2 className="text-2xl font-bold">Utilisateurs</h2></div><label className="relative min-w-[230px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ucao-muted" size={16} /><span className="sr-only">Rechercher</span><input className="input-field min-h-10 py-2 pl-9 text-sm" type="search" placeholder="Nom ou email" value={search} onChange={(event) => setSearch(event.target.value)} /></label></div><div className="max-h-[430px] overflow-auto p-3"><ul className="space-y-2">{users.map((user) => (
+            <li key={user.id} className="flex items-center gap-3 rounded-ucao p-3 transition hover:bg-ucao-soft dark:hover:bg-[#132238]">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-ucao-navy text-xs font-bold text-white">{initials(user.full_name)}</span>
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-2 font-medium">
+                  <span className="truncate">{user.full_name}</span>
+                  {user.is_active === false && <span className="shrink-0 rounded-full bg-ucao-red-soft px-2 py-0.5 text-[10px] font-bold uppercase text-ucao-red">Suspendu</span>}
                 </p>
+                <p className="truncate text-xs text-ucao-muted">{user.email} · {roleLabel(user.role)}</p>
               </div>
-            </div>
-          </section>
-        )}
-        {(status?.isBlocked || (!status?.isBlocked && daysLeft !== null && daysLeft <= 5)) && <section className="container-ucao mt-5"><div className={`flex flex-wrap items-center gap-3 rounded-ucao px-4 py-3 text-sm font-medium ${status?.isBlocked ? "bg-[#ffe8e8] text-ucao-red dark:bg-[#3a1a1c]" : "bg-ucao-gold-soft text-ucao-red"}`}><Lock size={18} /><span>{status?.isBlocked ? "Votre abonnement a expiré. Vos produits sont masqués publiquement." : `Votre abonnement expire dans ${daysLeft} jour${daysLeft && daysLeft > 1 ? "s" : ""}.`}</span><a className="btn btn-primary ml-auto min-h-9 px-3 text-xs" href="/devenir-vendeur">Renouveler</a></div></section>}
-        <section className="container-ucao mt-8 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
-          <article className="panel p-5 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">Votre activité</p><h2 className="text-2xl font-bold">Derniers produits</h2></div><button className="btn btn-ghost min-h-10 px-3 text-sm" type="button" onClick={() => profile && refreshAll(profile.id)}><RefreshCcw size={15} /> Actualiser</button></div>
-            {recentProducts.length ? <ul className="mt-5 divide-y divide-ucao-line dark:divide-[#263d5c]">{recentProducts.map((product) => <li key={product.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"><div className="relative size-12 shrink-0 overflow-hidden rounded-ucao bg-ucao-soft dark:bg-[#132238]">{product.image_url ? <Image src={product.image_url} alt={product.name} fill sizes="48px" className="object-cover" /> : <Package className="absolute inset-0 m-auto text-ucao-muted" size={19} />}</div><div className="min-w-0 flex-1"><p className="truncate font-medium">{product.name}</p><p className="text-sm text-ucao-muted">{currency(product.price)}</p></div><span className="hidden rounded-full bg-ucao-success-soft px-2.5 py-1 text-xs font-bold text-ucao-success sm:inline-flex">Publié</span><button className="grid size-9 place-items-center rounded-ucao text-ucao-muted transition hover:bg-ucao-soft hover:text-ucao-red" type="button" onClick={() => editProduct(product)} aria-label={`Modifier ${product.name}`}><Pencil size={16} /></button></li>)}</ul> : <div className="mt-5 rounded-ucao bg-ucao-soft p-6 text-center dark:bg-[#132238]"><Package className="mx-auto text-ucao-muted" size={28} /><p className="mt-2 font-medium">Votre catalogue est encore vide.</p><p className="mt-1 text-sm text-ucao-muted">Ajoutez votre premier produit pour commencer.</p></div>}
-          </article>
-          <article className="panel p-5 sm:p-6"><p className="eyebrow">Capacité</p><h2 className="text-2xl font-bold">Votre palier</h2><div className="mt-6 space-y-5"><div><div className="mb-2 flex justify-between text-sm font-medium"><span>Produits</span><span>{productCapacity} restant{productCapacity > 1 ? "s" : ""}</span></div><ProgressBar value={status?.productCount ?? 0} limit={status?.productLimit ?? 0} /></div><div><div className="mb-2 flex justify-between text-sm font-medium"><span>Stands</span><span>{standCapacity} restant{standCapacity > 1 ? "s" : ""}</span></div><ProgressBar value={status?.standCount ?? 0} limit={status?.standLimit ?? 0} /></div></div><div className="mt-7 rounded-ucao bg-ucao-soft p-4 dark:bg-[#132238]"><p className="text-sm font-medium text-ucao-muted">Besoin de plus de visibilité ?</p><a className="mt-3 inline-flex items-center gap-2 font-bold text-ucao-red hover:underline" href="/devenir-vendeur">Changer de palier <ArrowUpRight size={16} /></a></div></article>
-        </section>
-        <section className="container-ucao mt-5 grid gap-5 lg:grid-cols-2">
-          <form id="product-form" className="panel scroll-mt-6 p-5 sm:p-6" onSubmit={handleProductSubmit} key={editingProduct ? String(editingProduct.id) : "new"}>
-            <div className="mb-5 flex items-start justify-between gap-3"><div><p className="eyebrow">Catalogue</p><h2 className="text-2xl font-bold">{editingProduct ? "Modifier le produit" : "Ajouter un produit"}</h2></div>{editingProduct && <button className="btn btn-ghost min-h-9 px-3 text-sm" type="button" onClick={() => { setEditingProduct(null); setProductImages([]); }}><X size={15} /> Annuler</button>}</div>
-            <div className="grid gap-3"><input className="input-field" name="name" placeholder="Nom du produit" defaultValue={editingProduct?.name ?? ""} required /><select className="select-field" name="category" defaultValue={editingProduct?.category ?? ""} required><option value="" disabled>Catégorie</option>{PRODUCT_CATEGORIES.filter((category) => category.value !== "tous").map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}</select><input className="input-field" name="price" type="number" min="0" placeholder="Prix en FCFA" defaultValue={editingProduct?.price ?? ""} required /><ImageUpload folder="products" multiple maxFiles={5} label="Photos du produit" value={productImages} onChange={setProductImages} /><textarea className="textarea-field" name="description" placeholder="Description complète" defaultValue={editingProduct?.description ?? ""} required />{productError && <p className="notice notice-error flex items-center gap-2"><AlertTriangle size={16} /> {productError}</p>}{isSuspended && <p className="notice notice-error">Publication désactivée : votre compte est suspendu.</p>}{atProductLimit && <p className="notice">Limite atteinte. <a className="underline" href="/devenir-vendeur">Changer de palier</a></p>}<button className="btn btn-primary" type="submit" disabled={productSubmitting || atProductLimit || isSuspended}><CirclePlus size={18} /> {productSubmitting ? "Enregistrement..." : editingProduct ? "Enregistrer les modifications" : "Publier le produit"}</button></div>
-          </form>
-          <div className="grid gap-5"><form className="panel p-5 sm:p-6" onSubmit={handleStandSubmit}><div className="mb-5 flex items-start justify-between gap-3"><div><p className="eyebrow">Vitrine</p><h2 className="text-2xl font-bold">Ouvrir un stand</h2></div><Store className="text-ucao-success" size={25} /></div><div className="grid gap-3"><input className="input-field" name="name" placeholder="Nom du stand" required /><ImageUpload folder="stands" label="Bannière du stand" value={standBanner} onChange={setStandBanner} compact /><input className="input-field" name="banner_url" type="url" placeholder="URL de bannière (optionnel)" /><textarea className="textarea-field" name="description" placeholder="Description du stand" required />{standError && <p className="notice notice-error flex items-center gap-2"><AlertTriangle size={16} /> {standError}</p>}{isSuspended && <p className="notice notice-error">Création désactivée : votre compte est suspendu.</p>}{atStandLimit && <p className="notice">Votre palier ne permet pas de créer un stand supplémentaire. <a className="underline" href="/devenir-vendeur">Changer de palier</a>.</p>}<button className="btn btn-primary" type="submit" disabled={standSubmitting || atStandLimit || isSuspended}><Store size={18} /> {standSubmitting ? "Création..." : "Créer le stand"}</button></div></form>
-            <article className="panel p-5 sm:p-6"><div className="flex items-center justify-between"><div><p className="eyebrow">Vos vitrines</p><h2 className="text-2xl font-bold">Stands actifs</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-success-soft text-ucao-success"><Store size={18} /></span></div>{stands.length ? <ul className="mt-4 space-y-3">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft px-3 py-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.status === "approved" ? "Visible dans le catalogue" : "En attente de validation"}</p></div><div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${stand.status === "approved" ? "bg-ucao-success-soft text-ucao-success" : "bg-ucao-red-soft text-ucao-red"}`}>{stand.status}</span><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => handleDeleteStand(String(stand.id))} aria-label={`Supprimer le stand ${stand.name}`} title="Supprimer le stand"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="mt-4 rounded-ucao bg-ucao-soft p-4 text-sm font-medium text-ucao-muted dark:bg-[#132238]">Aucun stand pour le moment.</p>}</article></div>
-        </section>
-        {products.length > 4 && <section className="container-ucao mt-5"><article className="panel p-5"><div className="mb-4 flex items-center justify-between"><div><p className="eyebrow">Gestion</p><h2 className="text-2xl font-bold">Tous vos produits</h2></div><span className="text-sm font-medium text-ucao-muted">{products.length} article{products.length > 1 ? "s" : ""}</span></div><ul className="grid gap-2 sm:grid-cols-2">{products.slice(4).map((product) => <li key={product.id} className="flex items-center justify-between rounded-ucao border border-ucao-line p-3 dark:border-[#263d5c]"><div><p className="font-medium">{product.name}</p><p className="text-sm text-ucao-muted">{currency(product.price)}</p></div><div className="flex gap-1"><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => editProduct(product)} aria-label={`Modifier ${product.name}`}><Pencil size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => handleDeleteProduct(String(product.id))} aria-label={`Supprimer ${product.name}`}><Trash2 size={15} /></button></div></li>)}</ul></article></section>}
-      </main>
-    </PageShell>
-  );
+              {user.id !== me.id && user.role !== "ADMIN" && (
+                <button
+                  className="grid size-9 place-items-center rounded-ucao text-ucao-muted transition hover:bg-ucao-soft hover:text-ucao-red"
+                  type="button"
+                  onClick={() => toggleSuspension(user)}
+                  aria-label={user.is_active === false ? `Réactiver le compte de ${user.full_name}` : `Suspendre le compte de ${user.full_name}`}
+                  title={user.is_active === false ? "Réactiver le compte" : "Suspendre le compte"}
+                >
+                  {user.is_active === false ? <CheckCircle2 size={16} /> : <Lock size={16} />}
+                </button>
+              )}
+              {user.id !== me.id && (
+                <button className="grid size-9 place-items-center rounded-ucao text-ucao-red transition hover:bg-ucao-red-soft" type="button" onClick={() => removeUser(user.id, user.full_name)} aria-label={`Supprimer le compte de ${user.full_name}`} title="Supprimer le compte">
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </li>
+          ))}</ul>{users.length === 0 && <p className="p-4 text-sm font-medium text-ucao-muted">Aucun utilisateur trouvé.</p>}</div></article>
+        <article className="panel p-5"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Clubs</p><h2 className="text-2xl font-bold">Gestion des clubs</h2></div><UsersRound className="text-ucao-success" size={23} /></div><form className="grid gap-2.5" onSubmit={addClub}><input className="input-field" name="name" placeholder="Nom du club" required /><input className="input-field" name="banner_url" type="url" placeholder="URL de bannière" required /><input className="input-field" name="external_url" type="url" placeholder="Lien externe" required /><input className="input-field" name="short_description" placeholder="Description courte (optionnel)" /><button className="btn btn-primary w-fit" type="submit">Créer le club</button></form><ul className="mt-5 space-y-2">{clubs.map((club) => <li key={club.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><span className="font-medium">{club.name}</span><button className="btn btn-ghost min-h-9 px-3 text-xs text-ucao-red" type="button" onClick={() => removeClub(club.id)}><Trash2 size={14} /> Supprimer</button></li>)}</ul></article>
+      </section>
+      <section className="container-ucao mt-5"><article className="panel p-5"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Avis</p><h2 className="text-2xl font-bold">Modération récente</h2></div><span className="text-sm font-medium text-ucao-muted">{reviewStats.pending} en attente</span></div>{reviews.length ? <ul className="grid gap-3 md:grid-cols-2">{reviews.slice(0, 6).map((review) => <li key={review.id} className="rounded-ucao border border-ucao-line p-4 dark:border-[#263d5c]"><div className="flex items-start justify-between gap-3"><div><Stars rating={review.rating} /><p className="mt-2 line-clamp-2 text-sm text-ucao-muted">«{review.comment}»</p></div><button className="grid size-9 place-items-center rounded-ucao text-ucao-red hover:bg-ucao-red-soft" type="button" onClick={() => removeReview(review.id)} aria-label="Supprimer l'avis"><Trash2 size={15} /></button></div>{review.status === "pending" && <div className="mt-3 flex gap-2"><button className="btn btn-primary min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "approved")}><Check size={14} /> Valider</button><button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "rejected")}><X size={14} /> Rejeter</button></div>}</li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 font-medium text-ucao-muted dark:bg-[#132238]">Aucun avis enregistré.</p>}</article></section>
+    </main>
+  </PageShell>;
 }
