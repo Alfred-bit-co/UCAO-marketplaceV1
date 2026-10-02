@@ -1,3 +1,5 @@
+import uuid
+
 import requests
 from flask import Blueprint, current_app, jsonify, request
 
@@ -6,6 +8,21 @@ from ..security import check_rate_limit, clean_text, client_ip, verify_webhook_s
 subscriptions_bp = Blueprint("subscriptions", __name__)
 
 TIER_PRICES = {"STANDARD": 500, "PREMIUM": 1500, "VIP": 5000}
+
+# Statuts FedaPay qui marquent un paiement comme non abouti -> statut en base.
+FAILED_STATUSES = {"declined": "failed", "canceled": "cancelled", "cancelled": "cancelled"}
+
+# Statuts FedaPay que l'on traite. Tout le reste (pending, refunded...) est ignoré.
+HANDLED_STATUSES = {"approved"} | set(FAILED_STATUSES)
+
+# Résultats de confirm_subscription_payment() qui ne doivent PAS être rejoués par FedaPay :
+# rien n'a été activé, une relance donnerait le même résultat. On répond 200 et on journalise.
+NON_RETRYABLE_RESULTS = {
+    "unknown_payment",
+    "amount_mismatch",
+    "transaction_mismatch",
+    "duplicate_transaction",
+}
 
 
 def _fedapay_headers():
@@ -22,6 +39,85 @@ def _supabase_headers():
         "Authorization": f"Bearer {service_key}",
         "Content-Type": "application/json",
     }
+
+
+def _call_rpc(function_name, params):
+    """Appelle une fonction SQL Supabase avec la clé service_role (jamais depuis le navigateur)."""
+    return requests.post(
+        f"{current_app.config['SUPABASE_URL']}/rest/v1/rpc/{function_name}",
+        headers=_supabase_headers(),
+        json=params,
+        timeout=15,
+    )
+
+
+def _parse_uuid(value):
+    try:
+        return str(uuid.UUID(str(value)))
+    except (ValueError, AttributeError, TypeError):
+        return None
+
+
+def _parse_amount(value):
+    """Montant FedaPay -> entier strictement positif, sinon None."""
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number or number <= 0 or number != int(number):
+        return None
+    return int(number)
+
+
+def _unwrap_transaction(data):
+    """FedaPay enveloppe parfois la transaction sous la clé 'v1/transaction'."""
+    if not isinstance(data, dict):
+        return {}
+    inner = data.get("v1/transaction")
+    return inner if isinstance(inner, dict) else data
+
+
+def _fetch_fedapay_transaction(transaction_id):
+    """Relit la transaction chez FedaPay : c'est la source de vérité, pas le corps du webhook."""
+    try:
+        response = requests.get(
+            f"{current_app.config['FEDAPAY_API_BASE_URL']}/transactions/{transaction_id}",
+            headers=_fedapay_headers(),
+            timeout=15,
+        )
+    except requests.RequestException:
+        current_app.logger.exception(
+            "Impossible de relire la transaction FedaPay %s.", transaction_id
+        )
+        return None
+
+    if response.status_code >= 400:
+        current_app.logger.error(
+            "FedaPay a refusé la relecture de la transaction %s : %s %s",
+            transaction_id,
+            response.status_code,
+            response.text,
+        )
+        return None
+
+    try:
+        return _unwrap_transaction(response.json())
+    except ValueError:
+        current_app.logger.error(
+            "Réponse FedaPay illisible pour la transaction %s.", transaction_id
+        )
+        return None
+
+
+def _rpc_text_result(response):
+    """PostgREST renvoie une fonction `returns text` sous la forme d'une chaîne JSON."""
+    try:
+        value = response.json()
+    except ValueError:
+        return None
+    return value if isinstance(value, str) else None
 
 
 def _get_authenticated_user(req):
@@ -238,8 +334,10 @@ def initiate_subscription():
             }
         ), 502
 
+    # Rattache l'identifiant FedaPay au paiement. Avant, le résultat n'était pas contrôlé :
+    # un échec silencieux laissait des paiements sans identifiant de transaction.
     try:
-        requests.patch(
+        patch_response = requests.patch(
             f"{current_app.config['SUPABASE_URL']}/rest/v1/subscription_payments"
             f"?id=eq.{payment_row['id']}",
             headers=_supabase_headers(),
@@ -248,12 +346,106 @@ def initiate_subscription():
             },
             timeout=15,
         )
+        if patch_response.status_code >= 400:
+            current_app.logger.error(
+                "Enregistrement de la transaction FedaPay refusé (paiement=%s, status=%s): %s",
+                payment_row["id"],
+                patch_response.status_code,
+                patch_response.text,
+            )
     except requests.RequestException:
         current_app.logger.exception(
             "Impossible d'enregistrer la transaction FedaPay."
         )
 
     return jsonify({"payment_url": payment_url}), 201
+
+
+def _handle_approved_transaction(payment_id, transaction_id, raw_amount):
+    """Confirme un paiement approuvé. Toute la logique sensible est dans la base (verrou + une seule activation)."""
+    amount = _parse_amount(raw_amount)
+
+    if transaction_id in (None, "") or amount is None:
+        current_app.logger.error(
+            "Webhook FedaPay approuvé mais incomplet (paiement=%s, transaction=%r, montant=%r) : revue manuelle nécessaire.",
+            payment_id,
+            transaction_id,
+            raw_amount,
+        )
+        return jsonify({"received": True, "status": "invalid_payload"}), 200
+
+    try:
+        response = _call_rpc(
+            "confirm_subscription_payment",
+            {
+                "p_payment_id": payment_id,
+                "p_transaction_id": str(transaction_id),
+                "p_paid_amount": amount,
+            },
+        )
+    except requests.RequestException:
+        current_app.logger.exception("Impossible de confirmer le paiement d'abonnement.")
+        # 502 : FedaPay réessaiera plus tard, la confirmation est idempotente.
+        return jsonify({"error": "Confirmation du paiement indisponible."}), 502
+
+    if response.status_code >= 400:
+        current_app.logger.error(
+            "Erreur confirm_subscription_payment (paiement=%s): %s",
+            payment_id,
+            response.text,
+        )
+        return jsonify({"error": "Confirmation du paiement impossible."}), 502
+
+    result = _rpc_text_result(response)
+
+    if result == "activated":
+        current_app.logger.info(
+            "Abonnement activé (paiement=%s, transaction=%s).", payment_id, transaction_id
+        )
+        return jsonify({"received": True, "status": "paid"}), 200
+
+    if result == "already_processed":
+        current_app.logger.info(
+            "Webhook déjà traité, ignoré (paiement=%s, transaction=%s).", payment_id, transaction_id
+        )
+        return jsonify({"received": True, "status": "already_processed"}), 200
+
+    if result in NON_RETRYABLE_RESULTS:
+        current_app.logger.error(
+            "Paiement NON activé : %s (paiement=%s, transaction=%s, montant=%s). Revue manuelle nécessaire.",
+            result,
+            payment_id,
+            transaction_id,
+            amount,
+        )
+        return jsonify({"received": True, "status": result}), 200
+
+    current_app.logger.error(
+        "Réponse inattendue de confirm_subscription_payment (paiement=%s): %r",
+        payment_id,
+        response.text,
+    )
+    return jsonify({"error": "Confirmation du paiement impossible."}), 502
+
+
+def _handle_failed_transaction(payment_id, new_status):
+    """Marque un paiement refusé/annulé. Sans effet sur un paiement déjà payé (garanti par la base)."""
+    try:
+        response = _call_rpc(
+            "fail_subscription_payment",
+            {"p_payment_id": payment_id, "p_status": new_status},
+        )
+        if response.status_code >= 400:
+            current_app.logger.error(
+                "Erreur fail_subscription_payment (paiement=%s): %s",
+                payment_id,
+                response.text,
+            )
+    except requests.RequestException:
+        current_app.logger.exception("Impossible de marquer le paiement comme échoué.")
+
+    # Un échec d'enregistrement ici est sans gravité : on répond 200 pour ne pas relancer FedaPay.
+    return jsonify({"received": True, "status": new_status}), 200
 
 
 @subscriptions_bp.post("/subscriptions/webhook")
@@ -271,74 +463,59 @@ def subscriptions_webhook():
     if not verify_webhook_signature(payload, signature, webhook_secret):
         return jsonify({"error": "Signature webhook invalide."}), 401
 
+    if (
+        not current_app.config["SUPABASE_URL"]
+        or not current_app.config["SUPABASE_SERVICE_ROLE_KEY"]
+        or not current_app.config["FEDAPAY_SECRET_KEY"]
+    ):
+        current_app.logger.error("Webhook FedaPay : configuration serveur incomplète.")
+        return jsonify({"error": "Service momentanément indisponible."}), 503
+
     event = request.get_json(silent=True) or {}
-    transaction = event.get("entity") or event.get("transaction") or {}
+    event_transaction = _unwrap_transaction(event.get("entity") or event.get("transaction") or {})
 
-    status = transaction.get("status")
-    merchant_reference = transaction.get("merchant_reference")
-    metadata = transaction.get("custom_metadata") or {}
+    transaction_id = event_transaction.get("id")
+    event_status = str(event_transaction.get("status") or "").lower()
 
-    user_id = metadata.get("user_id")
-    tier = metadata.get("tier")
+    if transaction_id in (None, "") or event_status not in HANDLED_STATUSES:
+        return jsonify({"received": True, "status": event_status or "ignored"}), 200
 
-    if status != "approved" or not user_id or not tier:
-        if merchant_reference:
-            requests.patch(
-                f"{current_app.config['SUPABASE_URL']}/rest/v1/subscription_payments"
-                f"?id=eq.{merchant_reference}",
-                headers=_supabase_headers(),
-                json={
-                    "status": (
-                        "failed"
-                        if status in ("declined", "canceled")
-                        else "pending"
-                    )
-                },
-                timeout=15,
-            )
+    transaction_id = str(transaction_id)
 
-        return jsonify(
-            {
-                "received": True,
-                "status": status,
-            }
+    # Le corps du webhook ne sert qu'à identifier la transaction. Statut, montant et référence
+    # marchande sont relus chez FedaPay avant de toucher à l'abonnement.
+    verified = _fetch_fedapay_transaction(transaction_id)
+    if verified is None:
+        # Panne passagère : FedaPay réessaiera plus tard.
+        return jsonify({"error": "Vérification de la transaction impossible."}), 502
+
+    provider_status = str(verified.get("status") or "").lower()
+
+    # On ne fait confiance qu'à l'identifiant du paiement enregistré par NOTRE serveur :
+    # l'utilisateur, le palier et le montant attendus sont lus dans la base, pas dans le webhook.
+    payment_id = _parse_uuid(verified.get("merchant_reference"))
+    if not payment_id:
+        current_app.logger.warning(
+            "Webhook FedaPay ignoré : transaction %s sans merchant_reference valide.",
+            transaction_id,
         )
+        return jsonify({"received": True, "ignored": True}), 200
 
-    try:
-        activation_response = requests.post(
-            f"{current_app.config['SUPABASE_URL']}/rest/v1/rpc/"
-            "activate_or_renew_subscription",
-            headers=_supabase_headers(),
-            json={
-                "p_user_id": user_id,
-                "p_tier": tier,
-            },
-            timeout=15,
+    if provider_status == "approved":
+        return _handle_approved_transaction(payment_id, transaction_id, verified.get("amount"))
+
+    if provider_status in FAILED_STATUSES:
+        return _handle_failed_transaction(payment_id, FAILED_STATUSES[provider_status])
+
+    if event_status == "approved":
+        # Le webhook annonce « approuvé » mais FedaPay ne le confirme pas (encore) :
+        # on demande une relance plutôt que de perdre un paiement réellement approuvé.
+        current_app.logger.warning(
+            "Webhook approuvé mais transaction %s encore « %s » chez FedaPay : relance demandée.",
+            transaction_id,
+            provider_status,
         )
-    except requests.RequestException:
-        current_app.logger.exception("Impossible d'activer l'abonnement paye.")
-        return jsonify({"error": "Activation de l'abonnement indisponible."}), 502
+        return jsonify({"error": "Statut de la transaction pas encore confirmé."}), 502
 
-    if activation_response.status_code >= 400:
-        current_app.logger.error(
-            "Erreur activation abonnement: %s", activation_response.text
-        )
-        return jsonify({"error": "Activation de l'abonnement impossible."}), 502
-
-    if merchant_reference:
-        requests.patch(
-            f"{current_app.config['SUPABASE_URL']}/rest/v1/subscription_payments"
-            f"?id=eq.{merchant_reference}",
-            headers=_supabase_headers(),
-            json={"status": "paid"},
-            timeout=15,
-        )
-
-    return jsonify(
-        {
-            "received": True,
-            "status": "paid",
-            "user_id": user_id,
-            "tier": tier,
-        }
-    )
+    # pending / autres : rien à faire, et surtout jamais de rétrogradation.
+    return jsonify({"received": True, "status": provider_status}), 200
