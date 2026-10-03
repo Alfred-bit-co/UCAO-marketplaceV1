@@ -21,6 +21,7 @@ import {
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ImageUpload } from "@/components/image-upload";
+import { SubscriptionAlert } from "@/components/subscription-alert";
 import { PageShell } from "@/components/page-shell";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { createProduct, deleteProduct, getMyProducts, updateProduct } from "@/lib/products";
@@ -208,7 +209,7 @@ export default function DashboardPage() {
             </div>
           </section>
         )}
-        {(status?.isBlocked || (!status?.isBlocked && daysLeft !== null && daysLeft <= 5)) && <section className="container-ucao mt-5"><div className={`flex flex-wrap items-center gap-3 rounded-ucao px-4 py-3 text-sm font-medium ${status?.isBlocked ? "bg-[#ffe8e8] text-ucao-red dark:bg-[#3a1a1c]" : "bg-ucao-gold-soft text-ucao-red"}`}><Lock size={18} /><span>{status?.isBlocked ? "Votre abonnement a expiré. Vos produits sont masqués publiquement." : `Votre abonnement expire dans ${daysLeft} jour${daysLeft && daysLeft > 1 ? "s" : ""}.`}</span><a className="btn btn-primary ml-auto min-h-9 px-3 text-xs" href="/devenir-vendeur">Renouveler</a></div></section>}
+        <SubscriptionAlert expiresAt={status?.expiresAt ?? null} isBlocked={Boolean(status?.isBlocked)} onExpired={() => void refreshAll(profile.id)} />
         <section className="container-ucao mt-8 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
           <article className="panel p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">Votre activité</p><h2 className="text-2xl font-bold">Derniers produits</h2></div><button className="btn btn-ghost min-h-10 px-3 text-sm" type="button" onClick={() => profile && refreshAll(profile.id)}><RefreshCcw size={15} /> Actualiser</button></div>
