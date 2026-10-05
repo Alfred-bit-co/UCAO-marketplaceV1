@@ -22,6 +22,13 @@ type ProductRow = {
   created_at: string;
 };
 
+type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
+
+type CatalogFilters = {
+  search?: string;
+  category?: string;
+};
+
 function sortImages(images?: ProductImageRow[] | null): ProductImage[] {
   return [...(images ?? [])].sort((a, b) => a.position - b.position);
 }
@@ -79,6 +86,45 @@ function filterDemoProducts(
   };
 }
 
+/**
+ * Classement GLOBAL du catalogue : la vue catalog_products trie tous les produits visibles
+ * par palier du vendeur (VIP, puis Premium, puis Standard) puis par date décroissante,
+ * AVANT la pagination. Sans cela, la page 1 ne contenait que les produits les plus récents
+ * (souvent ceux d'un seul vendeur) et le tri par palier n'agissait qu'à l'intérieur de la page.
+ *
+ * Retourne null en cas d'erreur pour permettre un repli (voir getProducts).
+ */
+async function getRankedProductIds(
+  supabase: SupabaseClient,
+  filters: CatalogFilters,
+  from: number,
+  to: number,
+): Promise<{ ids: string[]; total: number } | null> {
+  let query = supabase.from("catalog_products").select("id", { count: "exact" });
+
+  if (filters.category && filters.category !== "tous") {
+    query = query.eq("category", filters.category);
+  }
+  if (filters.search?.trim()) {
+    const term = escapeIlike(filters.search.trim());
+    query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+  }
+
+  const { data, error, count } = await query
+    .order("tier_rank", { ascending: true })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .range(from, to);
+
+  if (error || !data) {
+    console.error("SUPABASE ERROR (getRankedProductIds):", error);
+    return null;
+  }
+
+  const ids = (data as { id: string }[]).map((row) => row.id);
+  return { ids, total: count ?? ids.length };
+}
+
 export async function getProducts(options?: {
   page?: number;
   perPage?: number;
@@ -97,6 +143,41 @@ export async function getProducts(options?: {
     return filterDemoProducts(page, perPage, options?.search, options?.category);
   }
 
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  // 1) Voie principale : classement global par palier, puis pagination.
+  const ranked = await getRankedProductIds(
+    supabase,
+    { search: options?.search, category: options?.category },
+    from,
+    to,
+  );
+
+  if (ranked) {
+    const pages = Math.max(Math.ceil(ranked.total / perPage), 1);
+
+    if (ranked.ids.length === 0) {
+      return { items: [], page, pages, total: ranked.total };
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("*, product_images(url, position)")
+      .in("id", ranked.ids);
+
+    if (!error && data) {
+      const position = new Map(ranked.ids.map((id, index) => [id, index]));
+      const ordered = [...(data as ProductRow[])].sort(
+        (a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0),
+      );
+      return { items: await mapProducts(ordered), page, pages, total: ranked.total };
+    }
+
+    console.error("SUPABASE ERROR (getProducts, détails des produits):", error);
+  }
+
+  // 2) Repli : ancienne méthode (par date, tri par palier dans la page seulement).
   let query = supabase
     .from("products")
     .select(
@@ -112,8 +193,6 @@ export async function getProducts(options?: {
     query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
-  const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
   const { data, error, count } = await query
     .order("created_at", { ascending: false })
     .range(from, to);

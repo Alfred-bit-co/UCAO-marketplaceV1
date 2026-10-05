@@ -6,7 +6,7 @@
 --
 -- Règles appliquées aux rôles `authenticated` et `anon` (donc aux utilisateurs du site) :
 --   - un administrateur peut tout modifier ;
---   - à la création, un stand ne peut pas être inséré directement avec le statut "approved" ;
+--   - à la création, le statut est toujours forcé à "pending" (un vendeur ne peut pas créer un stand déjà approuvé) ;
 --   - à la modification, ni `status` ni `user_id` ne peuvent changer.
 -- Les rôles internes (SQL Editor, service_role) ne sont pas concernés.
 
@@ -29,9 +29,8 @@ begin
   end if;
 
   if tg_op = 'INSERT' then
-    if new.status = 'approved'::public.stand_status then
-      raise exception 'Un stand doit etre valide par un administrateur avant d''etre visible';
-    end if;
+    -- Valeurs de l'enum stand_status : pending, approved, rejected (défaut : pending).
+    new.status := 'pending'::public.stand_status;
     return new;
   end if;
 
