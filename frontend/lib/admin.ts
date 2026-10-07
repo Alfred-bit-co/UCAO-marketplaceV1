@@ -1,5 +1,4 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
-import { PAYMENT_API_URL } from "./constants";
 import { escapeIlike } from "./utils";
 import type { Profile, SubscriptionTier, UserRole } from "./types";
 export type MonthlySignup = { month: string; count: number };
@@ -141,6 +140,12 @@ export async function searchProfiles(query: string): Promise<Profile[]> {
   }
   return data as Profile[];
 }
+/**
+ * Suppression d'un compte par un administrateur.
+ * Passe par la fonction Edge Supabase "admin-delete-user" (supabase/functions/admin-delete-user) :
+ * elle vérifie que l'appelant est admin, supprime le compte (les produits, stands, avis et
+ * paiements partent en cascade) et supprime aussi ses fichiers du stockage.
+ */
 export async function deleteUserAccount(userId: string): Promise<{ ok: boolean; message?: string }> {
   const supabase = createClient();
   if (!supabase) return { ok: false, message: "Supabase non configuré." };
@@ -149,13 +154,22 @@ export async function deleteUserAccount(userId: string): Promise<{ ok: boolean; 
   } = await supabase.auth.getSession();
   if (!session) return { ok: false, message: "Vous devez être connecté." };
   try {
-    const response = await fetch(`${PAYMENT_API_URL}/admin/users/${userId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const data = await response.json().catch(() => null);
-    if (!response.ok) {
-      return { ok: false, message: data?.error || `Erreur (code ${response.status}).` };
+    // supabase.functions.invoke envoie automatiquement le jeton de la session en cours.
+    const { data, error } = await supabase.functions.invoke("admin-delete-user", { body: { userId } });
+    if (error) {
+      let message = "Impossible de supprimer ce compte.";
+      // Pour une réponse d'erreur du serveur, le détail est dans error.context (objet Response).
+      const context = (error as { context?: Response }).context;
+      if (context && typeof context.json === "function") {
+        const body = await context.json().catch(() => null);
+        if (body?.error) message = String(body.error);
+      }
+      console.error("ADMIN ERROR (deleteUserAccount):", error);
+      return { ok: false, message };
+    }
+    if (data?.error) return { ok: false, message: String(data.error) };
+    if (Array.isArray(data?.warnings) && data.warnings.length > 0) {
+      console.warn("ADMIN WARNING (deleteUserAccount, nettoyage du stockage):", data.warnings);
     }
     return { ok: true };
   } catch (err) {
