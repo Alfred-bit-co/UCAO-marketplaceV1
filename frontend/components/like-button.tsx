@@ -14,8 +14,7 @@ function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="18"
-      height="18"
+      className="size-[18px]"
       aria-hidden="true"
       fill={filled ? "currentColor" : "none"}
       stroke="currentColor"
@@ -101,7 +100,7 @@ export function LikeButton({ productId, className = "" }: LikeButtonProps) {
       aria-pressed={liked}
       aria-label={count > 0 ? `${label} (${count} j'aime)` : label}
       title={notice || label}
-      className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full bg-white/95 px-2.5 text-sm font-semibold shadow-md backdrop-blur transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ucao-navy ${
+      className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full bg-white px-2.5 text-sm font-semibold shadow-md ring-1 ring-black/5 backdrop-blur transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ucao-navy ${
         liked ? "text-ucao-red" : "text-ucao-navy"
       } ${busy ? "opacity-70" : ""} ${className}`}
     >

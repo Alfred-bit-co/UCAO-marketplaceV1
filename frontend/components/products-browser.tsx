@@ -105,7 +105,7 @@ export function ProductsBrowser({
       {isPending ? (
         <ProductGridSkeleton />
       ) : (
-        <div className="grid grid-cols-3 gap-2 pb-[42px] sm:grid-cols-4 sm:gap-3 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 pb-[42px] sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
           {initialData.items.length ? (
             initialData.items.map((product) => <ProductCard key={product.id} product={product} showDescription />)
           ) : (
