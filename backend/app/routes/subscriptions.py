@@ -34,11 +34,15 @@ def _fedapay_headers():
 
 def _supabase_headers():
     service_key = current_app.config["SUPABASE_SERVICE_ROLE_KEY"]
-    return {
+    headers = {
         "apikey": service_key,
-        "Authorization": f"Bearer {service_key}",
         "Content-Type": "application/json",
     }
+    # Anciennes clés service_role = JWT (elles commencent par "eyJ") : acceptées aussi en Bearer.
+    # Nouvelles clés sb_secret_... : ce ne sont pas des JWT, elles vont uniquement dans "apikey".
+    if service_key.startswith("eyJ"):
+        headers["Authorization"] = f"Bearer {service_key}"
+    return headers
 
 
 def _call_rpc(function_name, params):
@@ -461,6 +465,9 @@ def subscriptions_webhook():
         return jsonify({"error": "Webhook non configuré."}), 503
 
     if not verify_webhook_signature(payload, signature, webhook_secret):
+        current_app.logger.warning(
+            "Signature webhook invalide (début de l'en-tête reçu : %s)", signature[:12]
+        )
         return jsonify({"error": "Signature webhook invalide."}), 401
 
     if (

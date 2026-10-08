@@ -4,6 +4,7 @@ import hashlib
 from dataclasses import dataclass
 from threading import Lock
 from time import monotonic
+import time
 
 _EVENTS = defaultdict(deque)
 _LOCK = Lock()
@@ -48,8 +49,45 @@ def clean_email(value):
     return clean_text(value, 180).lower()
 
 
+WEBHOOK_TOLERANCE_SECONDS = 300  # 5 minutes
+
+
 def verify_webhook_signature(payload, signature, secret):
     if not signature or not secret:
         return False
+
+    signature = signature.strip()
+
+    # Format avec horodatage : "t=1700000000,s=abcdef..."
+    parts = {}
+    for item in signature.split(","):
+        key, separator, value = item.partition("=")
+        if separator:
+            parts[key.strip()] = value.strip()
+
+    timestamp = parts.get("t")
+    provided = parts.get("s")
+
+    if timestamp and provided:
+        try:
+            timestamp_value = int(timestamp)
+        except ValueError:
+            return False
+
+        # Tolère un horodatage en millisecondes.
+        if timestamp_value > 10**11:
+            timestamp_value //= 1000
+
+        # Rejette les webhooks trop anciens (protection contre le rejeu).
+        if abs(time.time() - timestamp_value) > WEBHOOK_TOLERANCE_SECONDS:
+            return False
+
+        signed_payload = timestamp.encode("utf-8") + b"." + payload
+        expected = hmac.new(
+            secret.encode("utf-8"), signed_payload, hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(expected, provided)
+
+    # Ancien format : signature seule, sans horodatage.
     expected = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature)
