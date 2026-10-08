@@ -2,12 +2,18 @@ import Link from "next/link";
 import { Instagram, MessageCircle } from "@/lib/icons";
 import { Brand } from "./navbar";
 
+const CONTACT_EMAIL = "ucaomarketplace2026@gmail.com";
+const RIGHTS_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Exercice de mes droits sur mes données personnelles")}`;
+const ABUSE_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Signalement d'un contenu ou d'un compte")}`;
+
 export function Footer({ full = false }: { full?: boolean }) {
+  const year = new Date().getFullYear();
+
   if (!full) {
     return (
       <footer className="bg-ucao-footer px-4 py-6 text-center text-white/75">
         <div className="container-ucao flex flex-col items-center justify-between gap-3 text-sm md:flex-row">
-          <p>© 2026 UCAO Marketplace. Tous droits réservés.</p>
+          <p>© {year} UCAO Marketplace. Tous droits réservés.</p>
           <p>UCAO Marketplace est un projet étudiant indépendant, non affilié officiellement à l&apos;administration de l&apos;UCAO-UUT.</p>
           <LegalLinks />
         </div>
@@ -31,32 +37,32 @@ export function Footer({ full = false }: { full?: boolean }) {
             </a>
           </div>
         </div>
-        <div>
+        <nav aria-label="Navigation du site">
           <h2 className="mb-3.5 text-base font-medium text-white">Navigation</h2>
           <Link className="my-2 block" href="/products">Produits</Link>
           <Link className="my-2 block" href="/stands">Stands</Link>
           <Link className="my-2 block" href="/devenir-vendeur">Devenir vendeur</Link>
           <Link className="my-2 block" href="/dashboard">Tableau de bord</Link>
-        </div>
-        <div>
+        </nav>
+        <nav aria-label="Informations">
           <h2 className="mb-3.5 text-base font-medium text-white">Informations</h2>
           <Link className="my-2 block" href="/a-propos">À propos</Link>
           <Link className="my-2 block" href="/comment-ca-marche">Comment ça marche</Link>
-          <a className="my-2 block" href="mailto:ucaomarketplace2026@gmail.com">Nous contacter</a>
-        </div>
-        <div>
-          <h2 className="mb-3.5 text-base font-medium text-white">Aide &amp; Support</h2>
-          <Link className="my-2 block" href="/faq">Centre d&apos;aide</Link>
-          <a className="my-2 block" href="mailto:ucaomarketplace2026@gmail.com">Support</a>
           <Link className="my-2 block" href="/faq">FAQ</Link>
-        </div>
+        </nav>
+        <nav aria-label="Aide et support">
+          <h2 className="mb-3.5 text-base font-medium text-white">Aide &amp; Support</h2>
+          <a className="my-2 block" href={`mailto:${CONTACT_EMAIL}`}>Nous contacter</a>
+          <a className="my-2 block" href={ABUSE_MAILTO}>Signaler un abus</a>
+          <a className="my-2 block" href={RIGHTS_MAILTO}>Mes données et mes droits</a>
+        </nav>
         <div>
           <h2 className="mb-3.5 text-base font-medium text-white">Légal</h2>
           <LegalLinks stacked />
         </div>
       </div>
       <p className="mx-auto mt-10 border-t border-white/10 pt-5 text-center">
-        © 2026 UCAO Marketplace. Tous droits réservés.
+        © {year} UCAO Marketplace. Tous droits réservés.
       </p>
     </footer>
   );
