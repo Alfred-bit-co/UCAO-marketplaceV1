@@ -12,6 +12,8 @@ import { useEffect, useRef, useState } from "react";
  *   `resetKey` pour obtenir un nouveau jeton.
  * - La vérification du jeton est faite par Supabase Auth (option « CAPTCHA protection »
  *   du tableau de bord) : on lui transmet le jeton via `options.captchaToken`.
+ * - En cas d'échec, le code d'erreur Cloudflare et l'adresse du site sont affichés à
+ *   l'écran : c'est ce qui permet de diagnostiquer sans ouvrir la console du navigateur.
  */
 
 declare global {
@@ -47,6 +49,17 @@ function loadTurnstile(): Promise<void> {
   return scriptPromise;
 }
 
+/** Explication en français pour les codes d'erreur les plus fréquents (indicative). */
+function hintFor(code: string | null): string {
+  if (!code) return "";
+  if (code === "script") return "Le script de Cloudflare n'a pas pu être chargé : bloqueur de publicité, réseau filtré ou connexion coupée.";
+  if (code === "render") return "Le widget n'a pas pu démarrer : la clé de site est probablement invalide.";
+  if (code.startsWith("110200")) return "Cette adresse n'est probablement pas autorisée : ajoutez-la dans les Hostnames du widget Cloudflare, puis enregistrez.";
+  if (code.startsWith("110100") || code.startsWith("110110")) return "La clé de site est probablement invalide ou mal copiée.";
+  if (code.startsWith("200100")) return "L'horloge de l'ordinateur est probablement décalée : synchronisez l'heure de Windows.";
+  return "Notez ce code et envoyez-le au développeur.";
+}
+
 type TurnstileWidgetProps = {
   onToken: (token: string | null) => void;
   /** Changez cette valeur pour redemander un jeton (après chaque envoi de formulaire). */
@@ -62,6 +75,7 @@ export function TurnstileWidget({ onToken, resetKey = 0, action, className }: Tu
   const widgetIdRef = useRef<string | null>(null);
   const onTokenRef = useRef(onToken);
   const [failed, setFailed] = useState(false);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   useEffect(() => {
     onTokenRef.current = onToken;
@@ -75,22 +89,37 @@ export function TurnstileWidget({ onToken, resetKey = 0, action, className }: Tu
       .then(() => {
         if (cancelled || !containerRef.current || !window.turnstile) return;
         setFailed(false);
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
-          sitekey: siteKey,
-          action,
-          theme: "auto",
-          language: "fr",
-          callback: (token: string) => onTokenRef.current(token),
-          "expired-callback": () => onTokenRef.current(null),
-          "error-callback": () => {
-            onTokenRef.current(null);
-            setFailed(true);
-          },
-        });
+        setErrorCode(null);
+        try {
+          widgetIdRef.current = window.turnstile.render(containerRef.current, {
+            sitekey: siteKey,
+            action,
+            theme: "auto",
+            language: "fr",
+            callback: (token: string) => {
+              setFailed(false);
+              setErrorCode(null);
+              onTokenRef.current(token);
+            },
+            "expired-callback": () => onTokenRef.current(null),
+            "error-callback": (code?: string | number) => {
+              console.error("TURNSTILE ERROR:", code, "adresse :", window.location.hostname);
+              onTokenRef.current(null);
+              setErrorCode(code === undefined ? null : String(code));
+              setFailed(true);
+            },
+          });
+        } catch (error) {
+          console.error("TURNSTILE RENDER ERROR:", error);
+          onTokenRef.current(null);
+          setErrorCode("render");
+          setFailed(true);
+        }
       })
       .catch(() => {
         if (cancelled) return;
         onTokenRef.current(null);
+        setErrorCode("script");
         setFailed(true);
       });
 
@@ -114,9 +143,13 @@ export function TurnstileWidget({ onToken, resetKey = 0, action, className }: Tu
     <div className={className}>
       <div ref={containerRef} />
       {failed && (
-        <p className="mt-2 text-sm text-ucao-red" role="alert">
-          La vérification anti-robot n&apos;a pas pu se charger. Rechargez la page ou vérifiez votre connexion.
-        </p>
+        <div className="mt-2 text-sm text-ucao-red" role="alert">
+          <p>La vérification anti-robot n&apos;a pas pu se charger. Rechargez la page ou vérifiez votre connexion.</p>
+          <p className="mt-1 text-xs opacity-90">
+            Code : <strong>{errorCode ?? "inconnu"}</strong> · Adresse : <strong>{typeof window !== "undefined" ? window.location.hostname : ""}</strong>
+          </p>
+          {hintFor(errorCode) && <p className="mt-1 text-xs opacity-90">{hintFor(errorCode)}</p>}
+        </div>
       )}
     </div>
   );
