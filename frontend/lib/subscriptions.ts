@@ -10,6 +10,8 @@ export type SubscriptionStatus = {
   activatedAt: string | null;
   expiresAt: string | null;
   isBlocked: boolean;
+  isTrial: boolean;
+  trialEndsAt: string | null;
   productCount: number;
   productLimit: number;
   standCount: number;
@@ -32,7 +34,7 @@ export async function getMySubscriptionStatus(): Promise<SubscriptionStatus | nu
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role, subscription_tier, subscription_activated_at, subscription_expires_at")
+    .select("role, subscription_tier, subscription_activated_at, subscription_expires_at, trial_ends_at")
     .eq("id", user.id)
     .single();
 
@@ -41,6 +43,7 @@ export async function getMySubscriptionStatus(): Promise<SubscriptionStatus | nu
   const tier = profile.subscription_tier as SubscriptionTier | null;
   const activatedAt = profile.subscription_activated_at as string | null;
   const expiresAt = profile.subscription_expires_at as string | null;
+  const trialEndsAt = (profile.trial_ends_at as string | null) ?? null;
   const isBlocked =
     profile.role === "VENDEUR" && (!expiresAt || new Date(expiresAt).getTime() <= Date.now());
 
@@ -56,6 +59,8 @@ export async function getMySubscriptionStatus(): Promise<SubscriptionStatus | nu
     activatedAt,
     expiresAt,
     isBlocked,
+    isTrial: Boolean(trialEndsAt && expiresAt && new Date(expiresAt).getTime() <= new Date(trialEndsAt).getTime()),
+    trialEndsAt,
     productCount: productCount ?? 0,
     productLimit: plan?.productLimit ?? 0,
     standCount: standCount ?? 0,

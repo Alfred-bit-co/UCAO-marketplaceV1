@@ -168,7 +168,7 @@ export default function DashboardPage() {
             <div className="mt-9 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
               <article className="rounded-ucao border border-white/15 bg-white p-6 text-ucao-ink shadow-2xl shadow-[#071426]/20 dark:bg-[#10233b] dark:text-white">
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-ucao-muted dark:text-[#9db0c8]">Abonnement actif</p><h2 className="mt-2 text-3xl font-bold">{status?.tier ?? "—"}</h2><p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">{plan ? `${currency(plan.price)} / mois` : "Aucun palier actif"}</p></div>
+                  <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-ucao-muted dark:text-[#9db0c8]">{status?.isTrial ? "Essai gratuit" : "Abonnement actif"}</p><h2 className="mt-2 text-3xl font-bold">{status?.tier ?? "—"}</h2><p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">{plan ? (status?.isTrial ? "Essai gratuit, sans paiement" : `${currency(plan.price)} / mois`) : "Aucun palier actif"}</p></div>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-ucao-success-soft px-3 py-1.5 text-xs font-bold text-ucao-success"><CheckCircle2 size={15} /> {isSuspended ? "Suspendu" : status?.isBlocked ? "À renouveler" : "Actif"}</span>
                 </div>
                 <div className="mt-7 grid gap-4 sm:grid-cols-2">
@@ -209,7 +209,7 @@ export default function DashboardPage() {
             </div>
           </section>
         )}
-        <SubscriptionAlert expiresAt={status?.expiresAt ?? null} isBlocked={Boolean(status?.isBlocked)} onExpired={() => void refreshAll(profile.id)} />
+        <SubscriptionAlert expiresAt={status?.expiresAt ?? null} isBlocked={Boolean(status?.isBlocked)} isTrial={Boolean(status?.isTrial)} onExpired={() => void refreshAll(profile.id)} />
         <section className="container-ucao mt-8 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
           <article className="panel p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">Votre activité</p><h2 className="text-2xl font-bold">Derniers produits</h2></div><button className="btn btn-ghost min-h-10 px-3 text-sm" type="button" onClick={() => profile && refreshAll(profile.id)}><RefreshCcw size={15} /> Actualiser</button></div>

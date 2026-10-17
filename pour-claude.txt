@@ -1,0 +1,1168 @@
+﻿===== FILE: frontend/app/admin/page.tsx =====
+"use client";
+import {
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  IdCard,
+  LayoutDashboard,
+  Lock,
+  Search,
+  Shield,
+  ShieldCheck,
+  Trash2,
+  UsersRound,
+  X,
+} from "@/lib/icons";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { AdminCharts } from "@/components/admin-charts";
+import { PageShell } from "@/components/page-shell";
+import { AdminSkeleton } from "@/components/skeletons";
+import { Stars } from "@/components/testimonials";
+import {
+  deleteUserAccount,
+  getAdminStats,
+  getMonthlyUserSignups,
+  getProductPublishByMonth,
+  getSubscriptionTierDistribution,
+  getUsersByRole,
+  getVendorSignupsByMonth,
+  searchProfiles,
+  setUserSuspension,
+} from "@/lib/admin";
+import type { AdminStats } from "@/lib/admin";
+import { createClub, deleteClub, getClubs } from "@/lib/clubs";
+import { deleteReviewForAdmin, getAllReviewsForAdmin, getReviewStats, updateReviewStatus } from "@/lib/reviews";
+import type { PlatformReview } from "@/lib/reviews";
+import { deleteStandForAdmin, getAllStandsForAdmin, updateStandStatus } from "@/lib/stands";
+import { getPendingVerifications, getStudentIdSignedUrl, setVerificationStatus } from "@/lib/verification";
+import type { Club, Profile, Stand } from "@/lib/types";
+import { roleLabel } from "@/lib/utils";
+import { getCurrentProfile } from "@/lib/users";
+function initials(name: string) {
+  return name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "A";
+}
+function Kpi({ label, value, hint, tone }: { label: string; value: number; hint: string; tone: "navy" | "red" | "green" | "gold" }) {
+  const styles = { navy: "bg-ucao-navy-soft text-ucao-navy", red: "bg-ucao-red-soft text-ucao-red", green: "bg-ucao-success-soft text-ucao-success", gold: "bg-[#f6e8eb] text-ucao-red" };
+  return <article className="panel p-5"><div className="flex items-start justify-between gap-3"><span className={`grid size-10 place-items-center rounded-ucao ${styles[tone]}`}><LayoutDashboard size={18} /></span><span className="text-xs font-bold uppercase tracking-wide text-ucao-muted">Admin</span></div><p className="mt-5 text-sm font-medium text-ucao-muted">{label}</p><p className="mt-1 text-3xl font-bold">{value.toLocaleString("fr-FR")}</p><p className="mt-1 text-xs font-medium text-ucao-muted">{hint}</p></article>;
+}
+export default function AdminPage() {
+  const [me, setMe] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [signups, setSignups] = useState<Awaited<ReturnType<typeof getVendorSignupsByMonth>>>([]);
+  const [productPublishes, setProductPublishes] = useState<Awaited<ReturnType<typeof getProductPublishByMonth>>>([]);
+  const [userSignups, setUserSignups] = useState<Awaited<ReturnType<typeof getMonthlyUserSignups>>>([]);
+  const [roles, setRoles] = useState<Awaited<ReturnType<typeof getUsersByRole>>>([]);
+  const [tiers, setTiers] = useState<Awaited<ReturnType<typeof getSubscriptionTierDistribution>>>([]);
+  const [stands, setStands] = useState<Stand[]>([]);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [verifications, setVerifications] = useState<Profile[]>([]);
+  const [reviews, setReviews] = useState<PlatformReview[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [reviewStats, setReviewStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
+  const [search, setSearch] = useState("");
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [accountPendingDeletion, setAccountPendingDeletion] = useState<Profile | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  async function refreshAll() {
+    const failed: string[] = [];
+    function pick<T>(result: PromiseSettledResult<T>, label: string, fallback: T): T {
+      if (result.status === "fulfilled") return result.value;
+      console.error(`ADMIN LOAD ERROR (${label}):`, result.reason);
+      failed.push(label);
+      return fallback;
+    }
+    const [statsR, signupsR, productsR, userSignupsR, rolesR, tiersR, standsR, usersR, verificationsR, reviewsR, reviewStatsR, clubsR] = await Promise.allSettled([
+      getAdminStats(), getVendorSignupsByMonth(), getProductPublishByMonth(), getMonthlyUserSignups(), getUsersByRole(), getSubscriptionTierDistribution(), getAllStandsForAdmin(), searchProfiles(""), getPendingVerifications(), getAllReviewsForAdmin(), getReviewStats(), getClubs(),
+    ]);
+    setStats(pick<AdminStats | null>(statsR, "statistiques", null));
+    setSignups(pick(signupsR, "inscriptions vendeurs", []));
+    setProductPublishes(pick(productsR, "publications", []));
+    setUserSignups(pick(userSignupsR, "inscriptions", []));
+    setRoles(pick(rolesR, "rÃ´les", []));
+    setTiers(pick(tiersR, "paliers", []));
+    setStands(pick(standsR, "stands", []));
+    setUsers(pick(usersR, "utilisateurs", []));
+    setVerifications(pick(verificationsR, "vÃ©rifications", []));
+    const reviewsResult = pick(reviewsR, "avis", { reviews: [] as PlatformReview[], error: "chargement impossible" });
+    setReviews(reviewsResult.reviews);
+    setReviewStats(pick(reviewStatsR, "statistiques des avis", { total: 0, approved: 0, pending: 0, rejected: 0 }));
+    setClubs(pick(clubsR, "clubs", []));
+    if (failed.length > 0) setActionMessage(`Certaines donnÃ©es n'ont pas pu Ãªtre chargÃ©es : ${failed.join(", ")}.`);
+    else if (reviewsResult.error) setActionMessage(`Avis : ${reviewsResult.error}`);
+  }
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const profile = await getCurrentProfile();
+        setMe(profile);
+        if (profile?.role === "ADMIN") await refreshAll();
+      } catch (error) {
+        console.error("ADMIN LOAD ERROR (session):", error);
+        setActionMessage("Impossible de charger le centre de pilotage. Actualisez la page.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { if (me?.role === "ADMIN") void searchProfiles(search).then(setUsers); }, 300);
+    return () => window.clearTimeout(timer);
+  }, [search, me]);
+  async function decideStand(id: string, status: "approved" | "rejected") { setActionMessage(null); if (!await updateStandStatus(id, status)) { setActionMessage("Impossible de mettre Ã  jour ce stand."); return; } await refreshAll(); }
+  async function removeStandForAdmin(stand: Stand) { if (!window.confirm(`Supprimer dÃ©finitivement le stand Â« ${stand.name} Â» ?`)) return; setActionMessage(null); const result = await deleteStandForAdmin(String(stand.id)); if (result.error) { setActionMessage(result.error); return; } await refreshAll(); }
+  async function decideVerification(id: string, status: "approved" | "rejected", note?: string) { setActionMessage(null); if (!await setVerificationStatus(id, status, note)) { setActionMessage("Impossible de mettre Ã  jour cette vÃ©rification."); return; } await refreshAll(); }
+  async function viewCard(path: string) { const popup = window.open("about:blank", "_blank"); const result = await getStudentIdSignedUrl(path); if (result.url) { if (popup) popup.location.href = result.url; else window.open(result.url, "_blank", "noopener,noreferrer"); } else { popup?.close(); setActionMessage(result.error || "Impossible d'ouvrir la carte."); } }
+  async function decideReview(id: string, status: "approved" | "rejected") { if (!await updateReviewStatus(id, status)) { setActionMessage("Impossible de mettre Ã  jour cet avis."); return; } setReviews((items) => items.map((item) => item.id === id ? { ...item, status } : item)); setReviewStats(await getReviewStats()); }
+  async function removeReview(id: string) { if (!window.confirm("Supprimer dÃ©finitivement cet avis ?")) return; if (!await deleteReviewForAdmin(id)) { setActionMessage("Impossible de supprimer cet avis."); return; } setReviews((items) => items.filter((item) => item.id !== id)); setReviewStats(await getReviewStats()); }
+  async function toggleSuspension(user: Profile) {
+    const suspend = user.is_active !== false;
+    const warning = suspend ? "\n\nLe compte pourra toujours se connecter et naviguer, mais ne pourra plus publier de nouveaux produits ni de nouveaux stands." : "";
+    if (!window.confirm(`${suspend ? "Suspendre" : "RÃ©activer"} le compte de ${user.full_name} ?${warning}`)) return;
+    setActionMessage(null);
+    const result = await setUserSuspension(user.id, suspend);
+    if (!result.ok) { setActionMessage(result.message || "Impossible de modifier la suspension."); return; }
+    setUsers((items) => items.map((item) => (item.id === user.id ? { ...item, is_active: !suspend } : item)));
+    setActionMessage(`Le compte de ${user.full_name} a Ã©tÃ© ${suspend ? "suspendu" : "rÃ©activÃ©"}.`);
+  }
+  function removeUser(id: string, _name?: string) { void _name; const user = users.find((item) => item.id === id); if (user) { setActionMessage(null); setAccountPendingDeletion(user); } }
+  async function confirmUserDeletion() { if (!accountPendingDeletion) return; setActionMessage(null); setDeletingUserId(accountPendingDeletion.id); const result = await deleteUserAccount(accountPendingDeletion.id); setDeletingUserId(null); if (!result.ok) { setActionMessage(result.message || "Impossible de supprimer ce compte."); return; } const deletedName = accountPendingDeletion.full_name; setUsers((items) => items.filter((item) => item.id !== accountPendingDeletion.id)); setStats((current) => current ? { ...current, totalUsers: Math.max(current.totalUsers - 1, 0) } : current); setAccountPendingDeletion(null); setActionMessage(`Le compte de ${deletedName} a Ã©tÃ© supprimÃ©.`); }
+  async function addClub(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); const formElement = event.currentTarget; const form = new FormData(formElement); const result = await createClub({ name: String(form.get("name") || ""), banner_url: String(form.get("banner_url") || ""), external_url: String(form.get("external_url") || ""), short_description: String(form.get("short_description") || "") }); if (!result.ok) { setActionMessage(result.error || "Impossible de crÃ©er le club."); return; } formElement.reset(); setClubs(await getClubs()); }
+  async function removeClub(id: string) { if (!window.confirm("Supprimer ce club ?")) return; if (!await deleteClub(id)) { setActionMessage("Impossible de supprimer ce club."); return; } setClubs((items) => items.filter((item) => item.id !== id)); }
+  if (loading) return <PageShell><AdminSkeleton /></PageShell>;
+  if (!me || me.role !== "ADMIN") return <PageShell><main className="container-ucao py-24 text-center"><p className="text-xl font-medium">AccÃ¨s rÃ©servÃ© aux administrateurs.</p></main></PageShell>;
+  const pendingStands = stands.filter((stand) => stand.status === "pending");
+  return <PageShell>
+    <main className="min-h-screen bg-[#f5f7fb] pb-20 dark:bg-[#071426]">
+      <section className="relative isolate overflow-hidden bg-[#18245f] pb-28 pt-12 text-white">
+        <Image src="/images/admin-hero.jpg" alt="" fill priority sizes="100vw" className="-z-20 object-cover" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(7,20,38,0.72)_0%,rgba(7,20,38,0.5)_60%,rgba(7,20,38,0.68)_100%)]" />
+        <div className="container-ucao relative">
+          <div className="flex flex-wrap items-start justify-between gap-6"><div><p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/65"><Shield size={15} /> Centre de pilotage</p><h1 className="text-[clamp(32px,5vw,52px)] font-bold tracking-tight">Bonjour, {me.full_name.split(" ")[0]}.</h1><p className="mt-2 max-w-xl text-white/72">Suivez la croissance de la marketplace et traitez les actions prioritaires.</p></div><div className="flex items-center gap-3"><span className="hidden items-center gap-2 rounded-ucao border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium sm:inline-flex"><CalendarDays size={16} /> Vue du jour</span><span className="grid size-12 place-items-center rounded-full bg-white text-sm font-bold text-ucao-navy shadow-lg">{initials(me.full_name)}</span></div></div>
+          <div className="mt-9 flex flex-wrap items-center justify-between gap-4 rounded-ucao border border-white/15 bg-white/10 p-5 backdrop-blur-sm"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-white/60">Ã‰tat de la plateforme</p><p className="mt-1 text-2xl font-bold">Tout est sous contrÃ´le</p></div><span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-ucao-success"><ShieldCheck size={15} /> AccÃ¨s administrateur actif</span></div>
+        </div>
+      </section>
+      <section className="container-ucao relative z-10 -mt-16 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats && <><Kpi label="Utilisateurs" value={stats.totalUsers} hint="Comptes enregistrÃ©s" tone="navy" /><Kpi label="Vendeurs actifs" value={stats.totalVendors} hint="Abonnements actifs" tone="red" /><Kpi label="Produits publiÃ©s" value={stats.totalProducts} hint="Dans le catalogue" tone="green" /><Kpi label="Ã€ traiter" value={stats.pendingVerifications + stats.pendingStands} hint={`${stats.pendingVerifications} vÃ©rification(s) Â· ${stats.pendingStands} stand(s)`} tone="gold" /></>}
+      </section>
+      {actionMessage && <section className="container-ucao mt-5"><p className={`notice ${actionMessage.startsWith("Le compte") ? "" : "notice-error"}`} role="status">{actionMessage}</p></section>}
+      {accountPendingDeletion && <div className="fixed inset-0 z-50 grid place-items-center bg-[#071426]/65 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+        <div className="panel w-full max-w-md p-6 shadow-2xl">
+          <p className="eyebrow text-ucao-red">Action irrÃ©versible</p>
+          <h2 id="delete-account-title" className="mt-1 text-2xl font-bold">Supprimer ce compte ?</h2>
+          <p className="mt-3 text-sm text-ucao-muted">Le compte de <strong>{accountPendingDeletion.full_name}</strong> et ses donnÃ©es associÃ©es seront dÃ©finitivement supprimÃ©s.</p>
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <button className="btn btn-ghost" type="button" onClick={() => setAccountPendingDeletion(null)} disabled={Boolean(deletingUserId)}>Annuler</button>
+            <button className="btn bg-ucao-red text-white hover:bg-ucao-red/90" type="button" onClick={confirmUserDeletion} disabled={Boolean(deletingUserId)}>{deletingUserId ? "Suppression..." : "Supprimer dÃ©finitivement"}</button>
+          </div>
+        </div>
+      </div>}
+      <section className="container-ucao mt-8">{stats && <AdminCharts stats={stats} signups={signups} productPublishes={productPublishes} userSignups={userSignups} roles={roles} tiers={tiers} />}</section>
+      <section className="container-ucao mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <article className="panel p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">PrioritÃ©</p><h2 className="text-2xl font-bold">VÃ©rifications Ã©tudiantes</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-red-soft text-ucao-red"><IdCard size={18} /></span></div>{verifications.length ? <ul className="space-y-3">{verifications.map((user) => <li key={user.id} className="rounded-ucao bg-ucao-soft p-4 dark:bg-[#132238]"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-bold">{user.full_name}</p><p className="text-sm text-ucao-muted">{user.email}</p></div><div className="flex flex-wrap gap-2">{user.student_id_url && <button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => viewCard(user.student_id_url!)}><IdCard size={14} /> Voir la carte</button>}<button className="btn btn-primary min-h-9 px-3 text-xs" type="button" onClick={() => decideVerification(user.id, "approved")}><Check size={14} /> Valider</button><button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => decideVerification(user.id, "rejected", window.prompt("Motif du refus (optionnel) :") || undefined)}><X size={14} /> Rejeter</button></div></div></li>)}</ul> : <p className="rounded-ucao bg-ucao-success-soft p-5 font-medium text-ucao-success">Aucune vÃ©rification en attente.</p>}</article>
+        <article className="panel p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">ModÃ©ration</p><h2 className="text-2xl font-bold">Stands Ã  traiter</h2></div><span className="text-3xl font-bold text-ucao-red">{pendingStands.length}</span></div>{pendingStands.length ? <ul className="space-y-3">{pendingStands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name}</p></div><div className="flex gap-1"><button className="btn btn-primary min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "approved")} aria-label="Valider"><Check size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "rejected")} aria-label="Rejeter"><X size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)} aria-label={`Supprimer le stand ${stand.name}`} title="Supprimer dÃ©finitivement"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="rounded-ucao bg-ucao-success-soft p-5 font-medium text-ucao-success">Aucun stand Ã  traiter.</p>}</article>
+      </section>
+      <section className="container-ucao mt-5"><article className="panel p-5 sm:p-6"><div className="mb-4 flex items-center justify-between"><div><p className="eyebrow">Catalogue</p><h2 className="text-2xl font-bold">Gestion des stands</h2></div><span className="text-sm font-medium text-ucao-muted">{stands.length} stand{stands.length > 1 ? "s" : ""}</span></div>{stands.length ? <ul className="max-h-80 space-y-2 overflow-auto pr-1">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div className="min-w-0"><p className="truncate font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name || "Vendeur UCAO"} Â· {stand.status === "approved" ? "ValidÃ©" : stand.status === "rejected" ? "RejetÃ©" : "En attente"}</p></div><button className="btn btn-ghost min-h-9 px-3 text-xs text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)}><Trash2 size={14} /> Supprimer</button></li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 text-sm text-ucao-muted dark:bg-[#132238]">Aucun stand enregistrÃ©.</p>}</article></section>
+      <section className="container-ucao mt-5 grid gap-5 xl:grid-cols-2">
+        <article className="panel overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-ucao-line p-5 dark:border-[#263d5c]"><div><p className="eyebrow">Comptes</p><h2 className="text-2xl font-bold">Utilisateurs</h2></div><label className="relative min-w-[230px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ucao-muted" size={16} /><span className="sr-only">Rechercher</span><input className="input-field min-h-10 py-2 pl-9 text-sm" type="search" placeholder="Nom ou email" value={search} onChange={(event) => setSearch(event.target.value)} /></label></div><div className="max-h-[430px] overflow-auto p-3"><ul className="space-y-2">{users.map((user) => (
+            <li key={user.id} className="flex items-center gap-3 rounded-ucao p-3 transition hover:bg-ucao-soft dark:hover:bg-[#132238]">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-ucao-navy text-xs font-bold text-white">{initials(user.full_name)}</span>
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-2 font-medium">
+                  <span className="truncate">{user.full_name}</span>
+                  {user.is_active === false && <span className="shrink-0 rounded-full bg-ucao-red-soft px-2 py-0.5 text-[10px] font-bold uppercase text-ucao-red">Suspendu</span>}
+                </p>
+                <p className="truncate text-xs text-ucao-muted">{user.email} Â· {roleLabel(user.role)}</p>
+              </div>
+              {user.id !== me.id && user.role !== "ADMIN" && (
+                <button
+                  className="grid size-9 place-items-center rounded-ucao text-ucao-muted transition hover:bg-ucao-soft hover:text-ucao-red"
+                  type="button"
+                  onClick={() => toggleSuspension(user)}
+                  aria-label={user.is_active === false ? `RÃ©activer le compte de ${user.full_name}` : `Suspendre le compte de ${user.full_name}`}
+                  title={user.is_active === false ? "RÃ©activer le compte" : "Suspendre le compte"}
+                >
+                  {user.is_active === false ? <CheckCircle2 size={16} /> : <Lock size={16} />}
+                </button>
+              )}
+              {user.id !== me.id && (
+                <button className="grid size-9 place-items-center rounded-ucao text-ucao-red transition hover:bg-ucao-red-soft" type="button" onClick={() => removeUser(user.id, user.full_name)} aria-label={`Supprimer le compte de ${user.full_name}`} title="Supprimer le compte">
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </li>
+          ))}</ul>{users.length === 0 && <p className="p-4 text-sm font-medium text-ucao-muted">Aucun utilisateur trouvÃ©.</p>}</div></article>
+        <article className="panel p-5"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Clubs</p><h2 className="text-2xl font-bold">Gestion des clubs</h2></div><UsersRound className="text-ucao-success" size={23} /></div><form className="grid gap-2.5" onSubmit={addClub}><input className="input-field" name="name" placeholder="Nom du club" required /><input className="input-field" name="banner_url" type="url" placeholder="URL de banniÃ¨re" required /><input className="input-field" name="external_url" type="url" placeholder="Lien externe" required /><input className="input-field" name="short_description" placeholder="Description courte (optionnel)" /><button className="btn btn-primary w-fit" type="submit">CrÃ©er le club</button></form><ul className="mt-5 space-y-2">{clubs.map((club) => <li key={club.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><span className="font-medium">{club.name}</span><button className="btn btn-ghost min-h-9 px-3 text-xs text-ucao-red" type="button" onClick={() => removeClub(club.id)}><Trash2 size={14} /> Supprimer</button></li>)}</ul></article>
+      </section>
+      <section className="container-ucao mt-5"><article className="panel p-5"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Avis</p><h2 className="text-2xl font-bold">ModÃ©ration rÃ©cente</h2></div><span className="text-sm font-medium text-ucao-muted">{reviewStats.pending} en attente</span></div>{reviews.length ? <ul className="grid gap-3 md:grid-cols-2">{reviews.slice(0, 6).map((review) => <li key={review.id} className="rounded-ucao border border-ucao-line p-4 dark:border-[#263d5c]"><div className="flex items-start justify-between gap-3"><div><Stars rating={review.rating} /><p className="mt-2 line-clamp-2 text-sm text-ucao-muted">Â«{review.comment}Â»</p></div><button className="grid size-9 place-items-center rounded-ucao text-ucao-red hover:bg-ucao-red-soft" type="button" onClick={() => removeReview(review.id)} aria-label="Supprimer l'avis"><Trash2 size={15} /></button></div>{review.status === "pending" && <div className="mt-3 flex gap-2"><button className="btn btn-primary min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "approved")}><Check size={14} /> Valider</button><button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "rejected")}><X size={14} /> Rejeter</button></div>}</li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 font-medium text-ucao-muted dark:bg-[#132238]">Aucun avis enregistrÃ©.</p>}</article></section>
+    </main>
+  </PageShell>;
+}
+
+===== FILE: frontend/lib/types.ts =====
+// ============================================
+// RÃ”LE (statut) â€” sÃ©parÃ© du palier d'abonnement
+// ============================================
+export type UserRole = "ACHETEUR" | "VENDEUR" | "ADMIN";
+
+export type VerificationStatus = "pending" | "approved" | "rejected";
+
+// ============================================
+// PALIER D'ABONNEMENT â€” uniquement pertinent pour un VENDEUR
+// ============================================
+export type SubscriptionTier = "STANDARD" | "PREMIUM" | "VIP";
+
+export type Seller = {
+  id?: string;
+  name: string;
+  email?: string;
+  role: UserRole;
+  phone?: string;
+  subscription_tier?: SubscriptionTier | null;
+};
+
+export type Product = {
+  id: string | number;
+  name: string;
+  description?: string;
+  price: number;
+  category: ProductCategory;
+  images?: ProductImage[];
+  image_url?: string | null;
+  user_id?: string;
+  stand_id?: string | null;
+  seller?: Seller | null;
+  seller_tier?: SubscriptionTier | null;
+  created_at?: string;
+};
+
+export type ProductImage = {
+  url: string;
+  position: number;
+};
+
+export type Stand = {
+  id: string | number;
+  name: string;
+  description: string;
+  banner_url?: string | null;
+  user_id?: string;
+  seller?: Seller | null;
+  seller_tier?: SubscriptionTier | null;
+  products?: Product[];
+  status?: "pending" | "approved" | "rejected";
+  created_at?: string;
+};
+
+export type Club = {
+  id: string;
+  name: string;
+  banner_url: string;
+  external_url: string;
+  short_description?: string | null;
+  created_at?: string;
+  created_by?: string | null;
+};
+
+export type ProductCategory =
+  | "nourriture"
+  | "vetements"
+  | "numerique"
+  | "livres"
+  | "services";
+
+export type PaginatedResult<T> = {
+  items: T[];
+  page: number;
+  pages: number;
+  total: number;
+};
+
+export type Order = {
+  id: string;
+  user_id: string;
+  amount: number;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  fedapay_transaction_id?: string;
+  items: OrderItem[];
+  created_at?: string;
+};
+
+export type OrderItem = {
+  id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  product?: {
+    name: string;
+    category: ProductCategory;
+  } | null;
+};
+
+export type Profile = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: UserRole;
+  phone?: string | null;
+  field_of_study?: string | null;
+  study_level?: string | null;
+  subscription_tier?: SubscriptionTier | null;
+  subscription_activated_at?: string | null;
+  subscription_expires_at?: string | null;
+  verification_status?: VerificationStatus;
+  student_id_url?: string | null;
+  verification_note?: string | null;
+  cgu_accepted_at?: string | null;
+  // false = compte suspendu par un administrateur (ne bloque ni connexion ni navigation,
+  // seulement les nouvelles publications). Absent/true = compte normal.
+  is_active?: boolean;
+  stands_count?: number;
+  products_count?: number;
+  created_at?: string;
+};
+
+// ============================================
+// HISTORIQUE DES PAIEMENTS D'ABONNEMENT
+// ============================================
+export type SubscriptionPayment = {
+  id: string;
+  user_id: string;
+  tier: SubscriptionTier;
+  amount: number;
+  fedapay_transaction_id?: string | null;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  created_at: string;
+};
+
+export const PRODUCT_CATEGORIES: { value: ProductCategory | "tous"; label: string }[] = [
+  { value: "tous", label: "Tous" },
+  { value: "nourriture", label: "Nourriture" },
+  { value: "vetements", label: "VÃªtements" },
+  { value: "numerique", label: "NumÃ©rique" },
+  { value: "livres", label: "Livres" },
+  { value: "services", label: "Services" },
+];
+
+// PrioritÃ© d'affichage dans le catalogue : VIP en premier, puis PREMIUM, puis STANDARD.
+// Un profil sans palier (ex: pas encore vendeur) tombe en dernier.
+export const TIER_PRIORITY: Record<SubscriptionTier, number> = {
+  VIP: 1,
+  PREMIUM: 2,
+  STANDARD: 3,
+};
+
+// Grille tarifaire (doit rester synchronisÃ©e avec les fonctions SQL tier_price / tier_product_limit / tier_stand_limit)
+export const SUBSCRIPTION_PLANS: {
+  tier: SubscriptionTier;
+  price: number;
+  productLimit: number;
+  standLimit: number;
+  recommended?: boolean;
+}[] = [
+  { tier: "STANDARD", price: 500, productLimit: 5, standLimit: 0 },
+  { tier: "PREMIUM", price: 1500, productLimit: 10, standLimit: 1, recommended: true },
+  { tier: "VIP", price: 5000, productLimit: 30, standLimit: 5 },
+];
+
+===== FILE: frontend/app/devenir-vendeur/page.tsx =====
+"use client";
+
+import { AlertTriangle, CheckCircle2, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus } from "@/lib/icons";
+import { useEffect, useState } from "react";
+import { PageHero } from "@/components/page-hero";
+import { PageShell } from "@/components/page-shell";
+import { PageSkeleton } from "@/components/skeletons";
+import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscriptions";
+import { cn } from "@/lib/utils";
+import { getCurrentProfile, updateProfile } from "@/lib/users";
+import type { Profile, SubscriptionTier } from "@/lib/types";
+
+const PHONE_PATTERN = /^\+\d{8,15}$/;
+
+const TIER_STYLES: Record<SubscriptionTier, { Icon: typeof Send; iconBg: string; button: string }> = {
+  STANDARD: {
+    Icon: Send,
+    iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
+    button: "border-2 border-ucao-navy bg-transparent text-ucao-navy hover:bg-ucao-navy hover:text-white dark:text-white dark:border-white/40",
+  },
+  PREMIUM: { Icon: Star, iconBg: "bg-red-50 text-ucao-red dark:bg-red-500/10", button: "btn-primary" },
+  VIP: {
+    Icon: Crown,
+    iconBg: "bg-green-50 text-ucao-success dark:bg-green-500/10",
+    button: "border-2 border-ucao-success bg-transparent text-ucao-success hover:bg-ucao-success hover:text-white",
+  },
+};
+
+type PageState = "loading" | "error" | "unauthenticated" | "missing_phone" | "ready";
+
+export default function DevenirVendeurPage() {
+  const [state, setState] = useState<PageState>("loading");
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [phone, setPhone] = useState("");
+  const [phoneStatus, setPhoneStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [phoneMessage, setPhoneMessage] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadProfile() {
+    setState("loading");
+    try {
+      const current = await getCurrentProfile();
+      if (!current) {
+        setState("unauthenticated");
+        return;
+      }
+      setProfile(current);
+      setState(current.phone ? "ready" : "missing_phone");
+    } catch (err) {
+      console.error("DEVENIR-VENDEUR ERROR: Ã©chec du chargement du profil", err);
+      setState("error");
+    }
+  }
+
+  useEffect(() => {
+    void loadProfile();
+  }, []);
+
+  async function handleSavePhone(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!profile) return;
+    setPhoneMessage(null);
+    if (!PHONE_PATTERN.test(phone)) {
+      setPhoneStatus("error");
+      setPhoneMessage("Le numÃ©ro doit Ãªtre au format +xxxxxxxxxxx (uniquement des chiffres aprÃ¨s le +).");
+      return;
+    }
+    setPhoneStatus("saving");
+    const { error: saveError } = await updateProfile(profile.id, { phone });
+    setPhoneStatus(saveError ? "error" : "idle");
+    setPhoneMessage(saveError);
+    if (!saveError) {
+      setProfile({ ...profile, phone });
+      setState("ready");
+    }
+  }
+
+  async function handleChoose(tier: SubscriptionTier) {
+    setError(null);
+    if (!accepted) {
+      setError("Veuillez accepter les Conditions GÃ©nÃ©rales d'Utilisation avant de continuer.");
+      return;
+    }
+    setLoadingTier(tier);
+    const result = await initiateSubscriptionPayment(tier);
+    setLoadingTier(null);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    window.location.href = result.paymentUrl;
+  }
+
+  if (state === "loading") {
+    return <PageShell><PageSkeleton /></PageShell>;
+  }
+
+  if (state === "error") {
+    return (
+      <PageShell>
+        <main className="container-ucao py-[84px] text-center">
+          <AlertTriangle className="mx-auto mb-3 text-ucao-red" size={28} />
+          <p className="mb-4 text-xl font-medium">Impossible de charger votre profil.</p>
+          <p className="mb-6 text-ucao-muted dark:text-[#a8b8cc]">VÃ©rifiez votre connexion internet et rÃ©essayez.</p>
+          <button className="btn btn-primary" type="button" onClick={loadProfile}>RÃ©essayer</button>
+        </main>
+      </PageShell>
+    );
+  }
+
+  if (state === "unauthenticated") {
+    return (
+      <PageShell>
+        <main>
+          <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="CrÃ©ez votre compte vendeur">
+            La crÃ©ation de compte est rÃ©servÃ©e aux vendeurs et ne prend qu&apos;une minute.
+          </PageHero>
+          <section className="container-ucao max-w-md py-[54px] pb-[84px] text-center">
+            <p className="mb-6 text-ucao-muted dark:text-[#a8b8cc]">Vous devez d&apos;abord crÃ©er un compte (avec votre numÃ©ro de tÃ©lÃ©phone) avant de choisir un palier.</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <a className="btn btn-primary" href="/register"><UserPlus size={18} /> CrÃ©er un compte vendeur</a>
+              <a className="btn btn-ghost" href="/login">J&apos;ai dÃ©jÃ  un compte</a>
+            </div>
+          </section>
+        </main>
+      </PageShell>
+    );
+  }
+
+  if (state === "missing_phone" && profile) {
+    return (
+      <PageShell>
+        <main>
+          <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="Une derniÃ¨re Ã©tape">Un numÃ©ro de tÃ©lÃ©phone est requis avant de choisir un palier.</PageHero>
+          <section className="container-ucao max-w-md py-[54px] pb-[84px]">
+            <form className="panel grid gap-4 p-6" onSubmit={handleSavePhone}>
+              <label className="grid gap-1 text-sm">
+                NumÃ©ro de tÃ©lÃ©phone
+                <input className="input-field" type="tel" placeholder="+22892982926" pattern="\+\d{8,15}" value={phone} onChange={(event) => setPhone(event.target.value)} required />
+              </label>
+              {phoneMessage && <p className={"notice " + (phoneStatus === "error" ? "notice-error" : "")}>{phoneMessage}</p>}
+              <button className="btn btn-primary" type="submit" disabled={phoneStatus === "saving"}>
+                <Save size={16} /> {phoneStatus === "saving" ? "Enregistrement..." : "Continuer"}
+              </button>
+            </form>
+          </section>
+        </main>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell>
+      <main>
+        <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="Choisissez votre palier">
+          Chaque palier est un abonnement mensuel payÃ© via Mobile Money (TMoney, Flooz). Aucun renouvellement automatique : pensez Ã  renouveler chaque mois.
+        </PageHero>
+        <section className="container-ucao grid gap-6 py-[42px] pb-[54px] md:grid-cols-3">
+          {SUBSCRIPTION_PLANS.map((plan) => {
+            const style = TIER_STYLES[plan.tier];
+            return (
+              <article key={plan.tier} className={cn("panel relative flex flex-col gap-3 p-6", plan.recommended && "border-2 border-ucao-red")}>
+                {plan.recommended && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-ucao-red px-3 py-1 text-xs font-bold text-white">RecommandÃ©</span>}
+                <span className={cn("grid size-12 place-items-center rounded-full", style.iconBg)}><style.Icon size={22} /></span>
+                <h2 className="text-2xl font-medium">{plan.tier}</h2>
+                <p className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")} FCFA<span className="text-sm font-normal"> / mois</span></p>
+                <ul className="flex-1 space-y-2 border-t border-ucao-line pt-3 text-sm dark:border-[#2a3a52]">
+                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" /> {plan.productLimit} produits maximum</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" />{plan.standLimit === 0 ? "Aucun stand" : plan.standLimit + " stand(s) maximum"}</li>
+                </ul>
+                <button type="button" className={cn("btn w-full", style.button === "btn-primary" ? "btn-primary" : style.button)} disabled={loadingTier !== null} onClick={() => handleChoose(plan.tier)}>
+                  {loadingTier === plan.tier ? <Loader2 className="animate-spin" size={18} /> : null}
+                  Choisir {plan.tier}
+                </button>
+              </article>
+            );
+          })}
+        </section>
+        <section className="container-ucao pb-[84px]">
+          <label className="flex items-start gap-3 text-sm">
+            <input type="checkbox" className="mt-1" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
+            <span>
+              J&apos;ai lu et j&apos;accepte les{" "}
+              <a className="font-medium text-ucao-red underline" href="/conditions-generales" target="_blank" rel="noopener noreferrer">Conditions GÃ©nÃ©rales d&apos;Utilisation</a>
+              , notamment la clause sur les Ã©changes au sein du campus et l&apos;absence de renouvellement automatique.
+            </span>
+          </label>
+          {error && <p className="notice notice-error mt-4">{error}</p>}
+        </section>
+      </main>
+    </PageShell>
+  );
+}
+
+
+===== FILE: frontend/components/subscription-alert.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { AlertTriangle, Clock3, Lock } from "@/lib/icons";
+
+/**
+ * Bandeau d'alerte avant l'expiration de l'abonnement d'un vendeur.
+ *
+ * Paliers dÃ©cidÃ©s pour le projet :
+ *   - de 7 jours Ã  3 jours avant l'expiration  -> "info"
+ *   - de 3 jours Ã  30 minutes avant            -> "warning"
+ *   - les 30 derniÃ¨res minutes (compte Ã  rebours en direct) -> "critical"
+ *   - aprÃ¨s l'expiration                        -> "expired"
+ *
+ * Chaque message rappelle les consÃ©quences : produits et stand masquÃ©s au public.
+ * Le calcul se base sur Date.now() : la base de donnÃ©es reste la rÃ©fÃ©rence rÃ©elle
+ * (la policy RLS masque les contenus Ã  la seconde oÃ¹ l'abonnement expire).
+ */
+
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+const INFO_MS = 7 * DAY;
+const WARNING_MS = 3 * DAY;
+const CRITICAL_MS = 30 * MINUTE;
+
+type AlertLevel = "none" | "info" | "warning" | "critical" | "expired";
+
+type SubscriptionAlertProps = {
+  /** Date d'expiration de l'abonnement (ISO string ou Date), null si inconnue. */
+  expiresAt: string | Date | null;
+  /** Vrai quand l'abonnement est dÃ©jÃ  considÃ©rÃ© comme expirÃ©/bloquÃ© cÃ´tÃ© serveur. */
+  isBlocked: boolean;
+  /** AppelÃ© une seule fois quand le compte Ã  rebours atteint zÃ©ro (pour recharger le statut). */
+  onExpired?: () => void;
+};
+
+function getLevel(msLeft: number | null, isBlocked: boolean): AlertLevel {
+  if (isBlocked || (msLeft !== null && msLeft <= 0)) return "expired";
+  if (msLeft === null) return "none";
+  if (msLeft <= CRITICAL_MS) return "critical";
+  if (msLeft <= WARNING_MS) return "warning";
+  if (msLeft <= INFO_MS) return "info";
+  return "none";
+}
+
+function plural(count: number, word: string) {
+  return `${count} ${word}${count > 1 ? "s" : ""}`;
+}
+
+/** "6 jours et 5 heures", "2 heures et 10 minutes", "42 minutes" */
+function formatRemaining(ms: number) {
+  const totalMinutes = Math.max(Math.ceil(ms / MINUTE), 1);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) {
+    return hours > 0 ? `${plural(days, "jour")} et ${plural(hours, "heure")}` : plural(days, "jour");
+  }
+  if (hours > 0) {
+    return minutes > 0 ? `${plural(hours, "heure")} et ${plural(minutes, "minute")}` : plural(hours, "heure");
+  }
+  return plural(minutes, "minute");
+}
+
+/** "07:42" */
+function formatCountdown(ms: number) {
+  const totalSeconds = Math.max(Math.ceil(ms / SECOND), 0);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+const STYLES: Record<Exclude<AlertLevel, "none">, string> = {
+  info: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100",
+  warning: "border-orange-300 bg-orange-50 text-orange-900 dark:border-orange-900/60 dark:bg-orange-950/40 dark:text-orange-100",
+  critical: "border-red-300 bg-red-50 text-red-900 dark:border-red-900/60 dark:bg-red-950/50 dark:text-red-100",
+  expired: "border-transparent bg-[#ffe8e8] text-ucao-red dark:bg-[#3a1a1c]",
+};
+
+export function SubscriptionAlert({ expiresAt, isBlocked, onExpired }: SubscriptionAlertProps) {
+  const parsed = expiresAt ? new Date(expiresAt).getTime() : Number.NaN;
+  const expiresAtMs = Number.isNaN(parsed) ? null : parsed;
+
+  const [now, setNow] = useState(() => Date.now());
+  const firedRef = useRef(false);
+  const onExpiredRef = useRef(onExpired);
+
+  useEffect(() => {
+    onExpiredRef.current = onExpired;
+  }, [onExpired]);
+
+  const msLeft = expiresAtMs === null ? null : expiresAtMs - now;
+  const level = getLevel(msLeft, isBlocked);
+
+  // Une mise Ã  jour par seconde seulement quand on approche des 30 derniÃ¨res minutes,
+  // sinon toutes les 30 secondes : suffisant pour les paliers de 7 jours et 3 jours.
+  const nearCritical = msLeft !== null && msLeft > 0 && msLeft <= CRITICAL_MS + MINUTE;
+  const tickMs = nearCritical ? SECOND : 30 * SECOND;
+
+  useEffect(() => {
+    setNow(Date.now());
+    const id = window.setInterval(() => setNow(Date.now()), tickMs);
+    return () => window.clearInterval(id);
+  }, [tickMs, expiresAtMs]);
+
+  // Les navigateurs ralentissent les minuteurs des onglets en arriÃ¨re-plan :
+  // on resynchronise l'horloge dÃ¨s que l'onglet redevient visible.
+  useEffect(() => {
+    const sync = () => {
+      if (document.visibilityState === "visible") setNow(Date.now());
+    };
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+
+  // AprÃ¨s un renouvellement, la date change : on rÃ©arme la notification d'expiration.
+  useEffect(() => {
+    firedRef.current = false;
+  }, [expiresAtMs]);
+
+  // Quand le compte Ã  rebours atteint zÃ©ro, on prÃ©vient la page (une seule fois)
+  // pour qu'elle recharge le statut de l'abonnement.
+  useEffect(() => {
+    if (msLeft !== null && msLeft <= 0 && !isBlocked && !firedRef.current) {
+      firedRef.current = true;
+      onExpiredRef.current?.();
+    }
+  }, [msLeft, isBlocked]);
+
+  if (level === "none") return null;
+
+  const remaining = msLeft !== null && msLeft > 0 ? formatRemaining(msLeft) : "";
+  const expiryLabel =
+    expiresAtMs !== null
+      ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short" }).format(new Date(expiresAtMs))
+      : "";
+
+  let title = "";
+  let body: ReactNode = null;
+  let icon: ReactNode = null;
+
+  if (level === "info") {
+    title = "Votre abonnement arrive Ã  Ã©chÃ©ance";
+    body = `Votre abonnement expire dans ${remaining} (le ${expiryLabel}). Ã€ l'expiration, vos produits et votre stand seront masquÃ©s au public.`;
+    icon = <Clock3 size={18} className="shrink-0" />;
+  } else if (level === "warning") {
+    title = "Votre abonnement expire bientÃ´t";
+    body = `Votre abonnement expire dans ${remaining}. Sans renouvellement, vos produits et votre stand disparaÃ®tront du catalogue et vos clients ne pourront plus les voir.`;
+    icon = <Clock3 size={18} className="shrink-0" />;
+  } else if (level === "critical") {
+    title = "DerniÃ¨res minutes avant l'expiration";
+    body = (
+      <>
+        <span aria-hidden="true">
+          Votre abonnement expire dans <strong className="tabular-nums">{formatCountdown(msLeft ?? 0)}</strong>.{" "}
+        </span>
+        <span className="sr-only">Votre abonnement expire dans moins de 30 minutes. </span>
+        Renouvelez maintenant pour que vos produits restent visibles.
+      </>
+    );
+    icon = <AlertTriangle size={18} className="shrink-0 motion-safe:animate-pulse" />;
+  } else {
+    title = "Votre abonnement a expirÃ©.";
+    body = "Vos produits et votre stand sont masquÃ©s publiquement. Renouvelez votre abonnement pour les rendre de nouveau visibles.";
+    icon = <Lock size={18} className="shrink-0" />;
+  }
+
+  return (
+    <section className="container-ucao mt-5">
+      <div
+        role={level === "critical" || level === "expired" ? "alert" : "status"}
+        className={`flex flex-wrap items-center gap-3 rounded-ucao border px-4 py-3 text-sm ${STYLES[level]}`}
+      >
+        {icon}
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">{title}</p>
+          <p className="mt-0.5 font-normal opacity-90">{body}</p>
+        </div>
+        <a className="btn btn-primary ml-auto min-h-9 px-3 text-xs" href="/devenir-vendeur">
+          Renouveler
+        </a>
+      </div>
+    </section>
+  );
+}
+
+===== FILE: frontend/components/auth-form.tsx =====
+"use client";
+
+import Link from "next/link";
+import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
+import { useState } from "react";
+import { Brand } from "./navbar";
+import { GoogleIcon } from "./google-icon";
+import { ThemeProvider } from "./theme-provider";
+import { createClient } from "@/lib/supabase";
+import { getPostLoginRedirect } from "@/lib/utils";
+import type { Profile } from "@/lib/types";
+import { validateImageFile } from "@/lib/storage";
+import { submitStudentVerification } from "@/lib/verification";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_PATTERN = /^\+\d{8,15}$/;
+const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+async function checkAuthRateLimit(action: "login" | "register"): Promise<{ allowed: boolean; message?: string }> {
+  try {
+    const response = await fetch("/api/security/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      return { allowed: false, message: data?.error || "Trop de tentatives. RÃ©essayez dans quelques minutes." };
+    }
+    return { allowed: true };
+  } catch {
+    return { allowed: true };
+  }
+}
+
+async function fetchProfileAfterLogin(supabase: NonNullable<ReturnType<typeof createClient>>): Promise<Profile | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    full_name: data.full_name,
+    email: user.email ?? data.email ?? "",
+    role: data.role,
+    phone: data.phone,
+    subscription_tier: data.subscription_tier,
+    subscription_expires_at: data.subscription_expires_at,
+    verification_status: data.verification_status,
+    student_id_url: data.student_id_url,
+    verification_note: data.verification_note,
+    cgu_accepted_at: data.cgu_accepted_at,
+  };
+}
+
+export function AuthForm({ mode, embedded = false }: { mode: "login" | "register"; embedded?: boolean }) {
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [resending, setResending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function signInWithGoogle() {
+    const supabase = createClient();
+    if (!supabase) {
+      setError(true);
+      setMessage("Supabase n'est pas encore configurÃ©. Ajoutez les clÃ©s dans frontend/.env.local.");
+      return;
+    }
+
+    setSubmitting(true);
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?oauth=google` },
+    });
+    if (oauthError) {
+      setSubmitting(false);
+      setError(true);
+      setMessage(oauthError.message);
+    }
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") || "").trim();
+    const name = String(form.get("name") || "").trim();
+    const phone = String(form.get("phone") || "").trim();
+    const password = String(form.get("password") || "");
+    const fieldOfStudy = String(form.get("field_of_study") || "").trim();
+    const studyLevel = String(form.get("study_level") || "").trim();
+    const studentCard = form.get("student_card");
+
+    if (!EMAIL_PATTERN.test(email)) {
+      setError(true);
+      setMessage("Veuillez saisir une adresse email valide (ex : nom@domaine.com).");
+      return;
+    }
+
+    if (mode === "register") {
+      if (name.length < 2) {
+        setError(true);
+        setMessage("Veuillez saisir votre nom complet.");
+        return;
+      }
+      if (!PASSWORD_PATTERN.test(password)) {
+        setError(true);
+        setMessage("Le mot de passe doit contenir au moins 8 caractÃ¨res, un chiffre et un caractÃ¨re spÃ©cial.");
+        return;
+      }
+      if (!PHONE_PATTERN.test(phone)) {
+        setError(true);
+        setMessage("Le numÃ©ro de tÃ©lÃ©phone doit Ãªtre au format +xxxxxxxxxxx (uniquement des chiffres aprÃ¨s le +, sans espace).");
+        return;
+      }
+      if (!fieldOfStudy || !studyLevel) {
+        setError(true);
+        setMessage("Veuillez renseigner votre filiÃ¨re et votre niveau d'Ã©tude.");
+        return;
+      }
+      if (!(studentCard instanceof File) || !studentCard.size) {
+        setError(true);
+        setMessage("La photo de votre carte d'Ã©tudiant est obligatoire.");
+        return;
+      }
+      const imageError = validateImageFile(studentCard);
+      if (imageError) {
+        setError(true);
+        setMessage(imageError);
+        return;
+      }
+      if (!accepted) {
+        setError(true);
+        setMessage("Veuillez accepter les Conditions GÃ©nÃ©rales d'Utilisation pour crÃ©er un compte.");
+        return;
+      }
+    }
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError(true);
+      setMessage("Supabase n'est pas encore configurÃ©. Ajoutez les clÃ©s dans frontend/.env.local.");
+      return;
+    }
+
+    const rateCheck = await checkAuthRateLimit(mode);
+    if (!rateCheck.allowed) {
+      setError(true);
+      setMessage(rateCheck.message || "Trop de tentatives.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (mode === "login") {
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) {
+          setError(true);
+          setMessage(loginError.message);
+          return;
+        }
+        const profile = await fetchProfileAfterLogin(supabase);
+        const destination = profile ? getPostLoginRedirect(profile) : "/profil";
+        setError(false);
+        setMessage("Connexion rÃ©ussie. Redirection...");
+        window.setTimeout(() => {
+          window.location.href = destination;
+        }, 500);
+        return;
+      }
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: name,
+            phone,
+            field_of_study: fieldOfStudy,
+            study_level: studyLevel,
+          },
+        },
+      });
+      if (!signUpError && signUpData.session) {
+        const verification = await submitStudentVerification(studentCard as File, { phone, fieldOfStudy, studyLevel });
+        if (verification.error) {
+          setError(true);
+          setMessage(verification.error);
+          return;
+        }
+        window.location.href = "/devenir-vendeur";
+        return;
+      }
+      setError(Boolean(signUpError));
+      setRegisteredEmail(signUpError ? "" : email);
+      setMessage(
+        signUpError
+          ? signUpError.message
+          : "Compte crÃ©Ã©. Confirmez votre email, connectez-vous puis envoyez votre carte d'Ã©tudiant pour activer votre compte.",
+      );
+    } catch {
+      setError(true);
+      setMessage("Une erreur inattendue est survenue. VÃ©rifiez votre connexion puis rÃ©essayez.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function resendConfirmationEmail() {
+    const email = registeredEmail;
+    if (!email) return;
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError(true);
+      setMessage("Supabase n'est pas encore configurÃ©.");
+      return;
+    }
+
+    setResending(true);
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email });
+    setResending(false);
+    setError(Boolean(resendError));
+    setMessage(resendError ? resendError.message : "L'email de confirmation a Ã©tÃ© renvoyÃ©. VÃ©rifiez aussi vos spams.");
+  }
+
+  const formContent = (
+    <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
+      <form className="panel w-[min(520px,100%)] p-8" onSubmit={submit} noValidate>
+        <Link
+          className="mb-5 inline-flex size-10 items-center justify-center rounded-ucao text-ucao-ink transition-colors hover:bg-ucao-soft dark:text-white dark:hover:bg-white/10"
+          href="/"
+          aria-label="Retourner Ã  l'accueil"
+          title="Retour Ã  l'accueil"
+        >
+          <ArrowLeft size={20} />
+        </Link>
+        <Brand />
+        <h1 className="mt-7 text-3xl font-medium">{mode === "login" ? "Connexion" : "CrÃ©er un compte Ã©tudiant"}</h1>
+        <p className="mb-5 text-ucao-muted dark:text-[#a8b8cc]">
+          {mode === "login"
+            ? "AccÃ©dez Ã  votre espace aprÃ¨s validation de votre carte d'Ã©tudiant."
+            : "RÃ©servÃ© aux Ã©tudiants UCAO-UUT. La photo de votre carte d'Ã©tudiant est obligatoire aprÃ¨s la confirmation de l'email pour activer le compte."}
+        </p>
+        {mode === "register" && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-1">
+                Nom complet
+                <input className="input-field" name="name" required minLength={2} />
+              </label>
+              <label className="grid gap-1">
+                Email
+                <input className="input-field" name="email" type="email" required autoComplete="email" />
+              </label>
+            </div>
+            <label className="mt-4 grid gap-1">
+              TÃ©lÃ©phone
+              <input
+                className="input-field"
+                name="phone"
+                type="tel"
+                placeholder="+22892982926"
+                pattern="\+\d{8,15}"
+                required
+              />
+              <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">
+                Format obligatoire : +suivi uniquement de chiffres, sans espace (ex : +22892982926).
+              </span>
+            </label>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-1">FiliÃ¨re<input className="input-field" name="field_of_study" required placeholder="Ex. Informatique" /></label>
+              <label className="grid gap-1">Niveau d&apos;Ã©tude<input className="input-field" name="study_level" required placeholder="Ex. Licence 2" /></label>
+            </div>
+            <label className="mt-4 grid gap-1">
+              Photo de la carte d&apos;Ã©tudiant
+              <input className="input-field py-2" name="student_card" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required />
+              <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">Photo nette, recto visible. JPG, PNG, WebP ou AVIF, 5 Mo maximum.</span>
+            </label>
+          </>
+        )}
+        {mode === "login" && (
+          <label className="grid gap-1">
+            Email
+            <input className="input-field" name="email" type="email" required autoComplete="email" />
+          </label>
+        )}
+        <label className="mt-4 grid gap-1">
+          Mot de passe
+          <span className="relative">
+            <input
+              className="input-field pr-12"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={8}
+              pattern={mode === "register" ? "(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}" : undefined}
+              title={mode === "register" ? "8 caractÃ¨res minimum, avec au moins un chiffre et un caractÃ¨re spÃ©cial." : undefined}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+            />
+            <button
+              className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-ucao text-ucao-muted hover:bg-ucao-soft dark:hover:bg-white/10"
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </span>
+          {mode === "register" && (
+            <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">
+              8 caractÃ¨res minimum, avec au moins un chiffre et un caractÃ¨re spÃ©cial.
+            </span>
+          )}
+        </label>
+        {mode === "login" && (
+          <Link className="mt-2 block text-right text-sm font-medium text-ucao-red hover:underline" href="/mot-de-passe-oublie">
+            Mot de passe oubliÃ© ?
+          </Link>
+        )}
+        {mode === "register" && (
+          <label className="mt-4 flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-1" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
+            <span>
+              J&apos;accepte les{" "}
+              <a className="font-medium text-ucao-red underline" href="/conditions-generales" target="_blank" rel="noopener noreferrer">
+                Conditions GÃ©nÃ©rales d&apos;Utilisation
+              </a>{" "}
+              et la{" "}
+              <a className="font-medium text-ucao-red underline" href="/politique-confidentialite" target="_blank" rel="noopener noreferrer">
+                Politique de confidentialitÃ©
+              </a>
+              .
+            </span>
+          </label>
+        )}
+        {message && <div className={`notice ${error ? "notice-error" : ""} mt-4`}>{message}</div>}
+        {mode === "register" && registeredEmail && !error && (
+          <button className="btn btn-ghost mt-3 w-full" type="button" onClick={resendConfirmationEmail} disabled={resending}>
+            {resending ? "Renvoi en cours..." : "Renvoyer l'email de confirmation"}
+          </button>
+        )}
+        <button className="btn btn-primary mt-5 w-full" type="submit" disabled={submitting}>
+          {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
+          {submitting ? "Veuillez patienter..." : mode === "login" ? "Se connecter" : "CrÃ©er mon compte"}
+        </button>
+        <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
+        <button className="btn btn-ghost w-full" type="button" onClick={signInWithGoogle} disabled={submitting}>
+          <GoogleIcon size={18} />
+          Continuer avec Google
+        </button>
+        <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/register" : "/login"}>
+          {mode === "login" ? "CrÃ©er un compte" : "J'ai dÃ©jÃ  un compte"}
+        </Link>
+      </form>
+    </main>
+  );
+
+  if (embedded) return formContent;
+  return <ThemeProvider>{formContent}</ThemeProvider>;
+}
+
+===== FILE: frontend/package.json =====
+{
+  "name": "ucao-marketplace-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.1",
+    "next": "^15.2.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^3.10.1",
+    "vitest": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.1.3",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.23.0",
+    "eslint-config-next": "^15.2.4",
+    "tailwindcss": "^4.1.3",
+    "typescript": "^5.8.2"
+  }
+}
+
+

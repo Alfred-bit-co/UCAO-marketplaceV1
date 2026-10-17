@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Découvrez les données traitées et vos droits sur UCAO Marketplace.",
 };
 
-const LAST_UPDATE = "7 octobre 2026";
+const LAST_UPDATE = "14 octobre 2026";
 
 const sections = [
   {
@@ -24,6 +24,8 @@ const sections = [
       "Votre numéro de téléphone, votre filière et votre niveau d'études (pour les vendeurs)",
       "Si vous utilisez la connexion Google : le nom et l'adresse e-mail transmis par Google",
       "La photo de votre carte d'étudiant (pour les vendeurs)",
+      "Des empreintes numériques irréversibles (valeurs hachées avec un secret conservé côté serveur) de votre numéro de téléphone, de votre adresse e-mail et du fichier de votre carte d'étudiant, utilisées pour reconnaître une réinscription frauduleuse et appliquer la règle d'un seul essai gratuit par personne",
+      "La date, le palier et la fin de votre essai gratuit, si vous en démarrez un",
       "Vos produits, vos stands, votre abonnement et vos paiements d'abonnement (montant, palier, statut, identifiant de transaction ; jamais votre numéro de carte ni votre code Mobile Money)",
       "Vos avis sur la plateforme et les produits que vous avez aimés",
       "Des données techniques (adresse IP, navigateur, journaux d'erreurs), conservées par nos prestataires d'hébergement",
@@ -62,6 +64,7 @@ const sections = [
       "Afficher vos produits et votre stand, et gérer votre abonnement et son échéance",
       "Modérer les stands et les avis, et suspendre un compte en cas d'abus",
       "Protéger la plateforme contre la fraude et vous contacter au sujet de votre compte",
+      "Appliquer la règle d'un seul essai gratuit par personne et repérer les comptes en double",
     ],
   },
   {
@@ -73,6 +76,7 @@ const sections = [
     items: [
       "Vos données sont conservées tant que votre compte existe.",
       "Quand un compte est supprimé, son profil, ses produits, ses stands, ses avis, ses « j'aime », ses paiements d'abonnement et ses fichiers (dont la carte d'étudiant) sont supprimés.",
+      "Exception : les empreintes hachées et l'historique d'essai gratuit sont conservés 12 mois après la suppression du compte, uniquement pour empêcher les abus. Elles ne permettent pas de retrouver votre numéro, votre e-mail ou votre carte.",
       "Les journaux techniques sont conservés par nos prestataires selon leurs propres durées.",
     ],
   },

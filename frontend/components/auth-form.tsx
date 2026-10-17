@@ -5,6 +5,7 @@ import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
 import { useState } from "react";
 import { Brand } from "./navbar";
 import { GoogleIcon } from "./google-icon";
+import { TurnstileWidget } from "./turnstile-widget";
 import { ThemeProvider } from "./theme-provider";
 import { createClient } from "@/lib/supabase";
 import { getPostLoginRedirect } from "@/lib/utils";
@@ -14,7 +15,19 @@ import { submitStudentVerification } from "@/lib/verification";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_PATTERN = /^\+\d{8,15}$/;
+const CAPTCHA_ENABLED = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+function friendlySignUpError(message: string): string {
+  const text = message.toLowerCase();
+  if (text.includes("database error saving new user")) {
+    return "Impossible de créer le compte : ce numéro de téléphone est probablement déjà utilisé par un autre compte. Connectez-vous avec votre compte existant ou vérifiez le numéro saisi.";
+  }
+  if (text.includes("already registered")) {
+    return "Un compte existe déjà avec cet e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».";
+  }
+  return message;
+}
 
 async function checkAuthRateLimit(action: "login" | "register"): Promise<{ allowed: boolean; message?: string }> {
   try {
@@ -65,6 +78,8 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
   const [resending, setResending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function signInWithGoogle() {
     const supabase = createClient();
@@ -149,6 +164,12 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       return;
     }
 
+    if (CAPTCHA_ENABLED && !captchaToken) {
+      setError(true);
+      setMessage("Veuillez valider la vérification anti-robot avant de continuer.");
+      return;
+    }
+
     const rateCheck = await checkAuthRateLimit(mode);
     if (!rateCheck.allowed) {
       setError(true);
@@ -159,7 +180,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     setSubmitting(true);
     try {
       if (mode === "login") {
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: captchaToken ?? undefined } });
         if (loginError) {
           setError(true);
           setMessage(loginError.message);
@@ -180,6 +201,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          captchaToken: captchaToken ?? undefined,
           data: {
             full_name: name,
             phone,
@@ -202,7 +224,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       setRegisteredEmail(signUpError ? "" : email);
       setMessage(
         signUpError
-          ? signUpError.message
+          ? friendlySignUpError(signUpError.message)
           : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
       );
     } catch {
@@ -210,6 +232,10 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       setMessage("Une erreur inattendue est survenue. Vérifiez votre connexion puis réessayez.");
     } finally {
       setSubmitting(false);
+      if (CAPTCHA_ENABLED) {
+        setCaptchaToken(null);
+        setCaptchaReset((count) => count + 1);
+      }
     }
   }
 
@@ -224,9 +250,19 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       return;
     }
 
+    if (CAPTCHA_ENABLED && !captchaToken) {
+      setError(true);
+      setMessage("Veuillez valider la vérification anti-robot, puis réessayez.");
+      return;
+    }
+
     setResending(true);
-    const { error: resendError } = await supabase.auth.resend({ type: "signup", email });
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email, options: { captchaToken: captchaToken ?? undefined } });
     setResending(false);
+    if (CAPTCHA_ENABLED) {
+      setCaptchaToken(null);
+      setCaptchaReset((count) => count + 1);
+    }
     setError(Boolean(resendError));
     setMessage(resendError ? resendError.message : "L'email de confirmation a été renvoyé. Vérifiez aussi vos spams.");
   }
@@ -347,6 +383,9 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           <button className="btn btn-ghost mt-3 w-full" type="button" onClick={resendConfirmationEmail} disabled={resending}>
             {resending ? "Renvoi en cours..." : "Renvoyer l'email de confirmation"}
           </button>
+        )}
+        {CAPTCHA_ENABLED && (
+          <TurnstileWidget className="mt-5" action={mode} onToken={setCaptchaToken} resetKey={captchaReset} />
         )}
         <button className="btn btn-primary mt-5 w-full" type="submit" disabled={submitting}>
           {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
