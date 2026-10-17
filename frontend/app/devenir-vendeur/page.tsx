@@ -1,11 +1,13 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus } from "@/lib/icons";
+import { AlertTriangle, CheckCircle2, Clock3, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { PageSkeleton } from "@/components/skeletons";
 import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscriptions";
+import { TRIAL_DURATIONS, getTrialStatus, startTrial } from "@/lib/trial";
+import type { TrialStatus } from "@/lib/trial";
 import { cn } from "@/lib/utils";
 import { getCurrentProfile, updateProfile } from "@/lib/users";
 import type { Profile, SubscriptionTier } from "@/lib/types";
@@ -36,6 +38,8 @@ export default function DevenirVendeurPage() {
   const [phoneMessage, setPhoneMessage] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
+  const [loadingTrialTier, setLoadingTrialTier] = useState<SubscriptionTier | null>(null);
+  const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function loadProfile() {
@@ -47,7 +51,12 @@ export default function DevenirVendeurPage() {
         return;
       }
       setProfile(current);
-      setState(current.phone ? "ready" : "missing_phone");
+      if (current.phone) {
+        setTrialStatus(await getTrialStatus());
+        setState("ready");
+      } else {
+        setState("missing_phone");
+      }
     } catch (err) {
       console.error("DEVENIR-VENDEUR ERROR: échec du chargement du profil", err);
       setState("error");
@@ -73,6 +82,7 @@ export default function DevenirVendeurPage() {
     setPhoneMessage(saveError);
     if (!saveError) {
       setProfile({ ...profile, phone });
+      setTrialStatus(await getTrialStatus());
       setState("ready");
     }
   }
@@ -91,6 +101,26 @@ export default function DevenirVendeurPage() {
       return;
     }
     window.location.href = result.paymentUrl;
+  }
+
+  async function handleTrial(tier: SubscriptionTier) {
+    setError(null);
+    if (!accepted) {
+      setError("Veuillez accepter les Conditions Générales d'Utilisation avant de continuer.");
+      return;
+    }
+    setLoadingTrialTier(tier);
+    const result = await startTrial(tier);
+    if (!result.ok) {
+      setLoadingTrialTier(null);
+      setError(result.message);
+      if (result.reason === "already_used" || result.reason === "already_active") {
+        setTrialStatus({ eligible: false, reason: result.reason });
+      }
+      return;
+    }
+    // L'essai est actif : on garde le bouton en chargement pendant la redirection.
+    window.location.href = "/dashboard";
   }
 
   if (state === "loading") {
@@ -151,29 +181,67 @@ export default function DevenirVendeurPage() {
     );
   }
 
+  const canTrial = trialStatus?.eligible === true;
+  const trialUsed = trialStatus?.reason === "already_used";
+  const busy = loadingTier !== null || loadingTrialTier !== null;
+
   return (
     <PageShell>
       <main>
         <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="Choisissez votre palier">
           Chaque palier est un abonnement mensuel payé via Mobile Money (TMoney, Flooz). Aucun renouvellement automatique : pensez à renouveler chaque mois.
         </PageHero>
-        <section className="container-ucao grid gap-6 py-[42px] pb-[54px] md:grid-cols-3">
+
+        {canTrial && (
+          <section className="container-ucao pt-[42px]">
+            <div className="panel flex items-start gap-3 border-2 border-ucao-success/40 p-5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-green-50 text-ucao-success dark:bg-green-500/10">
+                <Clock3 size={20} />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold">Essayez avant de payer</h2>
+                <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">
+                  Testez gratuitement le palier de votre choix, sans aucun paiement. Un seul essai par personne. À la fin de l&apos;essai, vos produits sont masqués au public mais conservés : ils redeviennent visibles dès que vous vous abonnez.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {trialUsed && (
+          <section className="container-ucao pt-[42px]">
+            <p className="notice" role="status">Votre essai gratuit a déjà été utilisé. Choisissez un abonnement pour continuer à vendre.</p>
+          </section>
+        )}
+
+        <section className={cn("container-ucao grid gap-6 pb-[54px] md:grid-cols-3", canTrial || trialUsed ? "pt-[28px]" : "pt-[42px]")}>
           {SUBSCRIPTION_PLANS.map((plan) => {
             const style = TIER_STYLES[plan.tier];
+            const trialLabel = TRIAL_DURATIONS[plan.tier].label;
+            const paidButtonClass = canTrial ? "btn-ghost" : style.button === "btn-primary" ? "btn-primary" : style.button;
             return (
-              <article key={plan.tier} className={cn("panel relative flex flex-col gap-3 p-6", plan.recommended && "border-2 border-ucao-red")}>
-                {plan.recommended && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-ucao-red px-3 py-1 text-xs font-bold text-white">Recommandé</span>}
+              <article key={plan.tier} className={cn("panel relative flex flex-col gap-3 p-6", plan.recommended && "border-ucao-red ring-1 ring-ucao-red")}>
+                {plan.recommended && <span className="absolute right-4 top-4 rounded-full bg-ucao-red px-3 py-1 text-xs font-bold text-white">Recommandé</span>}
                 <span className={cn("grid size-12 place-items-center rounded-full", style.iconBg)}><style.Icon size={22} /></span>
                 <h2 className="text-2xl font-medium">{plan.tier}</h2>
                 <p className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")} FCFA<span className="text-sm font-normal"> / mois</span></p>
                 <ul className="flex-1 space-y-2 border-t border-ucao-line pt-3 text-sm dark:border-[#2a3a52]">
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" /> {plan.productLimit} produits maximum</li>
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" />{plan.standLimit === 0 ? "Aucun stand" : plan.standLimit + " stand(s) maximum"}</li>
+                  {canTrial && <li className="flex items-center gap-2 font-medium"><Clock3 size={16} className="text-ucao-success" /> Essai gratuit : {trialLabel}</li>}
                 </ul>
-                <button type="button" className={cn("btn w-full", style.button === "btn-primary" ? "btn-primary" : style.button)} disabled={loadingTier !== null} onClick={() => handleChoose(plan.tier)}>
-                  {loadingTier === plan.tier ? <Loader2 className="animate-spin" size={18} /> : null}
-                  Choisir {plan.tier}
-                </button>
+                <div className="grid gap-2">
+                  {canTrial && (
+                    <button type="button" className="btn btn-primary w-full" disabled={busy} onClick={() => handleTrial(plan.tier)}>
+                      {loadingTrialTier === plan.tier ? <Loader2 className="animate-spin" size={18} /> : null}
+                      Essayer gratuitement · {trialLabel}
+                    </button>
+                  )}
+                  <button type="button" className={cn("btn w-full", paidButtonClass)} disabled={busy} onClick={() => handleChoose(plan.tier)}>
+                    {loadingTier === plan.tier ? <Loader2 className="animate-spin" size={18} /> : null}
+                    {canTrial ? "S'abonner directement" : `Choisir ${plan.tier}`}
+                  </button>
+                </div>
               </article>
             );
           })}
@@ -187,7 +255,7 @@ export default function DevenirVendeurPage() {
               , notamment la clause sur les échanges au sein du campus et l&apos;absence de renouvellement automatique.
             </span>
           </label>
-          {error && <p className="notice notice-error mt-4">{error}</p>}
+          {error && <p className="notice notice-error mt-4" role="alert">{error}</p>}
         </section>
       </main>
     </PageShell>

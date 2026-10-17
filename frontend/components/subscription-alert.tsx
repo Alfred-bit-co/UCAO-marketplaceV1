@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { AlertTriangle, Clock3, Lock } from "@/lib/icons";
 
 /**
- * Bandeau d'alerte avant l'expiration de l'abonnement d'un vendeur.
+ * Bandeau d'alerte avant l'expiration de l'abonnement (ou de l'essai gratuit) d'un vendeur.
  *
  * Paliers décidés pour le projet :
  *   - de 7 jours à 3 jours avant l'expiration  -> "info"
@@ -14,6 +14,8 @@ import { AlertTriangle, Clock3, Lock } from "@/lib/icons";
  *   - après l'expiration                        -> "expired"
  *
  * Chaque message rappelle les conséquences : produits et stand masqués au public.
+ * Pendant un essai gratuit (isTrial), les messages invitent à choisir un abonnement
+ * plutôt qu'à "renouveler".
  * Le calcul se base sur Date.now() : la base de données reste la référence réelle
  * (la policy RLS masque les contenus à la seconde où l'abonnement expire).
  */
@@ -34,6 +36,8 @@ type SubscriptionAlertProps = {
   expiresAt: string | Date | null;
   /** Vrai quand l'abonnement est déjà considéré comme expiré/bloqué côté serveur. */
   isBlocked: boolean;
+  /** Vrai quand la période en cours (ou terminée) est un essai gratuit. */
+  isTrial?: boolean;
   /** Appelé une seule fois quand le compte à rebours atteint zéro (pour recharger le statut). */
   onExpired?: () => void;
 };
@@ -82,7 +86,7 @@ const STYLES: Record<Exclude<AlertLevel, "none">, string> = {
   expired: "border-transparent bg-[#ffe8e8] text-ucao-red dark:bg-[#3a1a1c]",
 };
 
-export function SubscriptionAlert({ expiresAt, isBlocked, onExpired }: SubscriptionAlertProps) {
+export function SubscriptionAlert({ expiresAt, isBlocked, isTrial = false, onExpired }: SubscriptionAlertProps) {
   const parsed = expiresAt ? new Date(expiresAt).getTime() : Number.NaN;
   const expiresAtMs = Number.isNaN(parsed) ? null : parsed;
 
@@ -145,29 +149,49 @@ export function SubscriptionAlert({ expiresAt, isBlocked, onExpired }: Subscript
   let icon: ReactNode = null;
 
   if (level === "info") {
-    title = "Votre abonnement arrive à échéance";
-    body = `Votre abonnement expire dans ${remaining} (le ${expiryLabel}). À l'expiration, vos produits et votre stand seront masqués au public.`;
     icon = <Clock3 size={18} className="shrink-0" />;
+    if (isTrial) {
+      title = "Votre essai gratuit se termine bientôt";
+      body = `Votre essai gratuit se termine dans ${remaining} (le ${expiryLabel}). Pour garder vos produits et votre stand visibles, choisissez un abonnement avant cette date.`;
+    } else {
+      title = "Votre abonnement arrive à échéance";
+      body = `Votre abonnement expire dans ${remaining} (le ${expiryLabel}). À l'expiration, vos produits et votre stand seront masqués au public.`;
+    }
   } else if (level === "warning") {
-    title = "Votre abonnement expire bientôt";
-    body = `Votre abonnement expire dans ${remaining}. Sans renouvellement, vos produits et votre stand disparaîtront du catalogue et vos clients ne pourront plus les voir.`;
     icon = <Clock3 size={18} className="shrink-0" />;
+    if (isTrial) {
+      title = "Votre essai gratuit expire bientôt";
+      body = `Votre essai se termine dans ${remaining}. Sans abonnement, vos produits et votre stand seront masqués au public. Ils sont conservés et redeviennent visibles dès que vous vous abonnez.`;
+    } else {
+      title = "Votre abonnement expire bientôt";
+      body = `Votre abonnement expire dans ${remaining}. Sans renouvellement, vos produits et votre stand disparaîtront du catalogue et vos clients ne pourront plus les voir.`;
+    }
   } else if (level === "critical") {
-    title = "Dernières minutes avant l'expiration";
+    icon = <AlertTriangle size={18} className="shrink-0 motion-safe:animate-pulse" />;
+    title = isTrial ? "Dernières minutes de votre essai gratuit" : "Dernières minutes avant l'expiration";
     body = (
       <>
         <span aria-hidden="true">
-          Votre abonnement expire dans <strong className="tabular-nums">{formatCountdown(msLeft ?? 0)}</strong>.{" "}
+          {isTrial ? "Votre essai se termine dans " : "Votre abonnement expire dans "}
+          <strong className="tabular-nums">{formatCountdown(msLeft ?? 0)}</strong>.{" "}
         </span>
-        <span className="sr-only">Votre abonnement expire dans moins de 30 minutes. </span>
-        Renouvelez maintenant pour que vos produits restent visibles.
+        <span className="sr-only">
+          {isTrial ? "Votre essai se termine dans moins de 30 minutes. " : "Votre abonnement expire dans moins de 30 minutes. "}
+        </span>
+        {isTrial
+          ? "Choisissez un abonnement maintenant pour que vos produits restent visibles."
+          : "Renouvelez maintenant pour que vos produits restent visibles."}
       </>
     );
-    icon = <AlertTriangle size={18} className="shrink-0 motion-safe:animate-pulse" />;
   } else {
-    title = "Votre abonnement a expiré.";
-    body = "Vos produits et votre stand sont masqués publiquement. Renouvelez votre abonnement pour les rendre de nouveau visibles.";
     icon = <Lock size={18} className="shrink-0" />;
+    if (isTrial) {
+      title = "Votre essai gratuit est terminé.";
+      body = "Vos produits et votre stand sont masqués au public, mais ils sont conservés. Choisissez un abonnement pour les rendre de nouveau visibles.";
+    } else {
+      title = "Votre abonnement a expiré.";
+      body = "Vos produits et votre stand sont masqués publiquement. Renouvelez votre abonnement pour les rendre de nouveau visibles.";
+    }
   }
 
   return (
@@ -182,7 +206,7 @@ export function SubscriptionAlert({ expiresAt, isBlocked, onExpired }: Subscript
           <p className="mt-0.5 font-normal opacity-90">{body}</p>
         </div>
         <a className="btn btn-primary ml-auto min-h-9 px-3 text-xs" href="/devenir-vendeur">
-          Renouveler
+          {isTrial ? "Choisir un abonnement" : "Renouveler"}
         </a>
       </div>
     </section>

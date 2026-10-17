@@ -4,11 +4,16 @@ import { useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { createClient } from "@/lib/supabase";
+import { TurnstileWidget } from "@/components/turnstile-widget";
+
+const CAPTCHA_ENABLED = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 export default function MotDePasseOubliePage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -18,11 +23,23 @@ export default function MotDePasseOubliePage() {
       setMessage("Supabase non configuré.");
       return;
     }
+    if (CAPTCHA_ENABLED && !captchaToken) {
+      setStatus("error");
+      setMessage("Veuillez valider la vérification anti-robot avant de continuer.");
+      return;
+    }
+
     setStatus("sending");
     setMessage(null);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+      captchaToken: captchaToken ?? undefined,
     });
+    if (CAPTCHA_ENABLED) {
+      setCaptchaToken(null);
+      setCaptchaReset((count) => count + 1);
+    }
+
     if (error) {
       console.error("RESET PASSWORD ERROR:", error);
       setStatus("error");
@@ -59,6 +76,9 @@ export default function MotDePasseOubliePage() {
                   required
                 />
               </div>
+              {CAPTCHA_ENABLED && (
+                <TurnstileWidget action="password-reset" onToken={setCaptchaToken} resetKey={captchaReset} />
+              )}
               {message && <p className="notice notice-error" role="alert">{message}</p>}
               <button className="btn btn-primary" type="submit" disabled={status === "sending"}>
                 {status === "sending" ? "Envoi..." : "Recevoir le lien"}

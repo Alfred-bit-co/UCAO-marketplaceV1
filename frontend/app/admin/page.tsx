@@ -3,7 +3,6 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
-  IdCard,
   LayoutDashboard,
   Lock,
   Search,
@@ -39,6 +38,9 @@ import { getPendingVerifications, getStudentIdSignedUrl, setVerificationStatus }
 import type { Club, Profile, Stand } from "@/lib/types";
 import { roleLabel } from "@/lib/utils";
 import { getCurrentProfile } from "@/lib/users";
+import { AdminVerifications } from "@/components/admin-verifications";
+import { getDuplicateFlags } from "@/lib/trial";
+import type { DuplicateFlag } from "@/lib/trial";
 function initials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "A";
 }
@@ -58,6 +60,7 @@ export default function AdminPage() {
   const [stands, setStands] = useState<Stand[]>([]);
   const [users, setUsers] = useState<Profile[]>([]);
   const [verifications, setVerifications] = useState<Profile[]>([]);
+  const [duplicateFlags, setDuplicateFlags] = useState<Record<string, DuplicateFlag>>({});
   const [reviews, setReviews] = useState<PlatformReview[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   const [reviewStats, setReviewStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
@@ -73,8 +76,8 @@ export default function AdminPage() {
       failed.push(label);
       return fallback;
     }
-    const [statsR, signupsR, productsR, userSignupsR, rolesR, tiersR, standsR, usersR, verificationsR, reviewsR, reviewStatsR, clubsR] = await Promise.allSettled([
-      getAdminStats(), getVendorSignupsByMonth(), getProductPublishByMonth(), getMonthlyUserSignups(), getUsersByRole(), getSubscriptionTierDistribution(), getAllStandsForAdmin(), searchProfiles(""), getPendingVerifications(), getAllReviewsForAdmin(), getReviewStats(), getClubs(),
+    const [statsR, signupsR, productsR, userSignupsR, rolesR, tiersR, standsR, usersR, verificationsR, reviewsR, reviewStatsR, clubsR, flagsR] = await Promise.allSettled([
+      getAdminStats(), getVendorSignupsByMonth(), getProductPublishByMonth(), getMonthlyUserSignups(), getUsersByRole(), getSubscriptionTierDistribution(), getAllStandsForAdmin(), searchProfiles(""), getPendingVerifications(), getAllReviewsForAdmin(), getReviewStats(), getClubs(), getDuplicateFlags(),
     ]);
     setStats(pick<AdminStats | null>(statsR, "statistiques", null));
     setSignups(pick(signupsR, "inscriptions vendeurs", []));
@@ -89,6 +92,7 @@ export default function AdminPage() {
     setReviews(reviewsResult.reviews);
     setReviewStats(pick(reviewStatsR, "statistiques des avis", { total: 0, approved: 0, pending: 0, rejected: 0 }));
     setClubs(pick(clubsR, "clubs", []));
+    setDuplicateFlags(pick(flagsR, "doublons", {}));
     if (failed.length > 0) setActionMessage(`Certaines données n'ont pas pu être chargées : ${failed.join(", ")}.`);
     else if (reviewsResult.error) setActionMessage(`Avis : ${reviewsResult.error}`);
   }
@@ -161,7 +165,7 @@ export default function AdminPage() {
       </div>}
       <section className="container-ucao mt-8">{stats && <AdminCharts stats={stats} signups={signups} productPublishes={productPublishes} userSignups={userSignups} roles={roles} tiers={tiers} />}</section>
       <section className="container-ucao mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-        <article className="panel p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Priorité</p><h2 className="text-2xl font-bold">Vérifications étudiantes</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-red-soft text-ucao-red"><IdCard size={18} /></span></div>{verifications.length ? <ul className="space-y-3">{verifications.map((user) => <li key={user.id} className="rounded-ucao bg-ucao-soft p-4 dark:bg-[#132238]"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-bold">{user.full_name}</p><p className="text-sm text-ucao-muted">{user.email}</p></div><div className="flex flex-wrap gap-2">{user.student_id_url && <button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => viewCard(user.student_id_url!)}><IdCard size={14} /> Voir la carte</button>}<button className="btn btn-primary min-h-9 px-3 text-xs" type="button" onClick={() => decideVerification(user.id, "approved")}><Check size={14} /> Valider</button><button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => decideVerification(user.id, "rejected", window.prompt("Motif du refus (optionnel) :") || undefined)}><X size={14} /> Rejeter</button></div></div></li>)}</ul> : <p className="rounded-ucao bg-ucao-success-soft p-5 font-medium text-ucao-success">Aucune vérification en attente.</p>}</article>
+        <AdminVerifications verifications={verifications} flags={duplicateFlags} onViewCard={viewCard} onDecide={decideVerification} />
         <article className="panel p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Modération</p><h2 className="text-2xl font-bold">Stands à traiter</h2></div><span className="text-3xl font-bold text-ucao-red">{pendingStands.length}</span></div>{pendingStands.length ? <ul className="space-y-3">{pendingStands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name}</p></div><div className="flex gap-1"><button className="btn btn-primary min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "approved")} aria-label="Valider"><Check size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "rejected")} aria-label="Rejeter"><X size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)} aria-label={`Supprimer le stand ${stand.name}`} title="Supprimer définitivement"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="rounded-ucao bg-ucao-success-soft p-5 font-medium text-ucao-success">Aucun stand à traiter.</p>}</article>
       </section>
       <section className="container-ucao mt-5"><article className="panel p-5 sm:p-6"><div className="mb-4 flex items-center justify-between"><div><p className="eyebrow">Catalogue</p><h2 className="text-2xl font-bold">Gestion des stands</h2></div><span className="text-sm font-medium text-ucao-muted">{stands.length} stand{stands.length > 1 ? "s" : ""}</span></div>{stands.length ? <ul className="max-h-80 space-y-2 overflow-auto pr-1">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div className="min-w-0"><p className="truncate font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name || "Vendeur UCAO"} · {stand.status === "approved" ? "Validé" : stand.status === "rejected" ? "Rejeté" : "En attente"}</p></div><button className="btn btn-ghost min-h-9 px-3 text-xs text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)}><Trash2 size={14} /> Supprimer</button></li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 text-sm text-ucao-muted dark:bg-[#132238]">Aucun stand enregistré.</p>}</article></section>
@@ -173,6 +177,7 @@ export default function AdminPage() {
                 <p className="flex items-center gap-2 font-medium">
                   <span className="truncate">{user.full_name}</span>
                   {user.is_active === false && <span className="shrink-0 rounded-full bg-ucao-red-soft px-2 py-0.5 text-[10px] font-bold uppercase text-ucao-red">Suspendu</span>}
+                  {duplicateFlags[user.id] && <span title={duplicateFlags[user.id].strong ? "Même téléphone, e-mail ou carte qu'un compte plus ancien" : "Même nom, filière et niveau qu'un compte plus ancien"} className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${duplicateFlags[user.id].strong ? "bg-ucao-red-soft text-ucao-red" : "bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100"}`}>Doublon{duplicateFlags[user.id].strong ? "" : " ?"}</span>}
                 </p>
                 <p className="truncate text-xs text-ucao-muted">{user.email} · {roleLabel(user.role)}</p>
               </div>
