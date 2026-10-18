@@ -18,15 +18,67 @@ const PHONE_PATTERN = /^\+\d{8,15}$/;
 const CAPTCHA_ENABLED = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
-function friendlySignUpError(message: string): string {
-  const text = message.toLowerCase();
-  if (text.includes("database error saving new user")) {
-    return "Impossible de créer le compte : ce numéro de téléphone est probablement déjà utilisé par un autre compte. Connectez-vous avec votre compte existant ou vérifiez le numéro saisi.";
+type AuthErrorLike = { message?: string | null; status?: number | null; code?: string | null };
+
+// Traduit les erreurs d'authentification (en anglais, techniques) en messages que
+// chaque étudiant comprend tout de suite. Aucun message brut n'est jamais affiché.
+function friendlyAuthError(error: AuthErrorLike, context: "login" | "signup" | "resend" | "oauth"): string {
+  const raw = (error.message ?? "").trim();
+  const text = raw.toLowerCase();
+  const code = (error.code ?? "").toLowerCase();
+  const status = error.status ?? 0;
+
+  if (code === "captcha_failed" || text.includes("captcha")) {
+    return "La vérification anti-robot a échoué. Attendez qu'elle affiche « Succès ! », puis réessayez (rechargez la page si besoin).";
   }
-  if (text.includes("already registered")) {
-    return "Un compte existe déjà avec cet e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».";
+  if (code.includes("rate_limit") || status === 429 || text.includes("rate limit") || text.includes("too many")) {
+    return "Trop de tentatives. Patientez quelques minutes avant de réessayer.";
   }
-  return message;
+  if (text.includes("failed to fetch") || text.includes("network") || text.includes("fetch failed")) {
+    return "Connexion internet instable : impossible de joindre le serveur. Vérifiez votre connexion et réessayez.";
+  }
+
+  if (context === "login") {
+    if (code === "invalid_credentials" || text.includes("invalid login credentials")) {
+      return "E-mail ou mot de passe incorrect.";
+    }
+    if (code === "email_not_confirmed" || text.includes("email not confirmed")) {
+      return "Votre adresse e-mail n'est pas encore confirmée. Ouvrez le lien reçu par e-mail (pensez à vérifier vos spams).";
+    }
+    if (code === "user_banned" || text.includes("banned")) {
+      return "Ce compte est suspendu. Contactez l'administration.";
+    }
+    if (status >= 500) return "Le service est momentanément indisponible. Réessayez dans quelques minutes.";
+    return "Connexion impossible pour le moment. Réessayez dans quelques minutes.";
+  }
+
+  if (context === "signup") {
+    if (code === "user_already_exists" || code === "email_exists" || text.includes("already registered") || text.includes("already been registered")) {
+      return "Un compte existe déjà avec cette adresse e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».";
+    }
+    if (code === "weak_password" || text.includes("password should") || text.includes("password is too")) {
+      return "Mot de passe trop faible : 8 caractères minimum, avec au moins un chiffre et un caractère spécial.";
+    }
+    if (code === "email_address_invalid" || text.includes("unable to validate email") || (text.includes("email address") && text.includes("invalid"))) {
+      return "Adresse e-mail invalide. Vérifiez qu'elle est bien écrite (ex : nom@domaine.com).";
+    }
+    if (code === "signup_disabled" || text.includes("signups not allowed")) {
+      return "Les inscriptions sont momentanément fermées. Réessayez plus tard.";
+    }
+    if (text.includes("error sending")) {
+      return "L'e-mail de confirmation n'a pas pu être envoyé. Réessayez dans quelques minutes.";
+    }
+    if (raw === "" || raw === "{}" || text.includes("database error") || code === "unexpected_failure" || status >= 500) {
+      return "Impossible de créer le compte. Le plus souvent, ce numéro de téléphone est déjà utilisé par un autre compte : utilisez un autre numéro, ou connectez-vous si c'est votre compte. Si le problème continue, contactez l'administration.";
+    }
+    return "Impossible de créer le compte pour le moment. Réessayez dans quelques minutes.";
+  }
+
+  if (context === "resend") {
+    return "L'e-mail de confirmation n'a pas pu être renvoyé. Réessayez dans quelques minutes.";
+  }
+
+  return "La connexion avec Google a échoué. Réessayez.";
 }
 
 async function checkAuthRateLimit(action: "login" | "register"): Promise<{ allowed: boolean; message?: string }> {
@@ -97,7 +149,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     if (oauthError) {
       setSubmitting(false);
       setError(true);
-      setMessage(oauthError.message);
+      setMessage(friendlyAuthError(oauthError, "oauth"));
     }
   }
 
@@ -183,7 +235,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: captchaToken ?? undefined } });
         if (loginError) {
           setError(true);
-          setMessage(loginError.message);
+          setMessage(friendlyAuthError(loginError, "login"));
           return;
         }
         const profile = await fetchProfileAfterLogin(supabase);
@@ -224,7 +276,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       setRegisteredEmail(signUpError ? "" : email);
       setMessage(
         signUpError
-          ? friendlySignUpError(signUpError.message)
+          ? friendlyAuthError(signUpError, "signup")
           : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
       );
     } catch {
@@ -264,7 +316,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       setCaptchaReset((count) => count + 1);
     }
     setError(Boolean(resendError));
-    setMessage(resendError ? resendError.message : "L'email de confirmation a été renvoyé. Vérifiez aussi vos spams.");
+    setMessage(resendError ? friendlyAuthError(resendError, "resend") : "L'email de confirmation a été renvoyé. Vérifiez aussi vos spams.");
   }
 
   const formContent = (
