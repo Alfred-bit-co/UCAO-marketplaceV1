@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Découvrez les données traitées et vos droits sur UCAO Marketplace.",
 };
 
-const LAST_UPDATE = "14 octobre 2026";
+const LAST_UPDATE = "20 octobre 2026";
 
 const sections = [
   {
@@ -28,6 +28,8 @@ const sections = [
       "La date, le palier et la fin de votre essai gratuit, si vous en démarrez un",
       "Vos produits, vos stands, votre abonnement et vos paiements d'abonnement (montant, palier, statut, identifiant de transaction ; jamais votre numéro de carte ni votre code Mobile Money)",
       "Vos avis sur la plateforme et les produits que vous avez aimés",
+      "Si vous aimez un produit sans être connecté(e) : un identifiant aléatoire anonyme, créé dans votre navigateur uniquement au moment où vous cliquez sur le cœur, et la liste des produits associés à cet identifiant (jamais votre nom)",
+      "Au moment d'un « j'aime » sans compte : une empreinte irréversible de votre adresse IP, utilisée uniquement pour limiter les abus",
       "Des données techniques (adresse IP, navigateur, journaux d'erreurs), conservées par nos prestataires d'hébergement",
     ],
   },
@@ -53,6 +55,7 @@ const sections = [
       "Votre adresse e-mail",
       "Votre carte d'étudiant, votre filière et votre niveau d'études",
       "Les produits que vous avez aimés",
+      "Votre identifiant anonyme de visiteur et l'empreinte de votre adresse IP",
       "Vos paiements d'abonnement",
     ],
   },
@@ -65,6 +68,7 @@ const sections = [
       "Modérer les stands et les avis, et suspendre un compte en cas d'abus",
       "Protéger la plateforme contre la fraude et vous contacter au sujet de votre compte",
       "Appliquer la règle d'un seul essai gratuit par personne et repérer les comptes en double",
+      "Compter les « j'aime » des produits et limiter les abus (par exemple, des centaines de « j'aime » en quelques minutes)",
     ],
   },
   {
@@ -78,6 +82,8 @@ const sections = [
       "Quand un compte est supprimé, son profil, ses produits, ses stands, ses avis, ses « j'aime », ses paiements d'abonnement et ses fichiers (dont la carte d'étudiant) sont supprimés.",
       "Exception : les empreintes hachées et l'historique d'essai gratuit sont conservés 12 mois après la suppression du compte, uniquement pour empêcher les abus. Elles ne permettent pas de retrouver votre numéro, votre e-mail ou votre carte.",
       "Les journaux techniques sont conservés par nos prestataires selon leurs propres durées.",
+      "Visiteurs sans compte : l'identifiant anonyme reste dans votre navigateur tant que vous n'effacez pas ses données, et vos « j'aime » restent enregistrés tant que le produit existe. Pour retirer un « j'aime », cliquez à nouveau sur le cœur. Sans compte, nous ne pouvons pas vous identifier : nous ne pouvons donc pas retrouver ces données à votre place.",
+      "L'empreinte de l'adresse IP liée aux « j'aime » est conservée 24 heures environ, puis effacée automatiquement lors des « j'aime » suivants.",
     ],
   },
   {
@@ -103,7 +109,7 @@ const sections = [
   {
     title: "Cookies et stockage local",
     items: [
-      "Nous utilisons uniquement ce qui est nécessaire au fonctionnement du site, comme la session qui vous garde connecté.",
+      "Nous utilisons uniquement ce qui est nécessaire au fonctionnement du site : la session qui vous garde connecté et, si vous aimez un produit sans compte, un identifiant anonyme enregistré dans le stockage local de votre navigateur. Il sert seulement à retenir vos « j'aime » et à limiter les abus. Si vous n'aimez jamais de produit sans compte, aucun identifiant n'est créé. Vous pouvez l'effacer à tout moment en vidant les données de votre navigateur.",
       "Nous n'utilisons pas de cookies publicitaires.",
     ],
   },

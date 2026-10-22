@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { loadLikeInfo, rememberLikeInfo, toggleLike } from "@/lib/likes";
 
 type LikeButtonProps = {
@@ -9,6 +8,8 @@ type LikeButtonProps = {
   /** Classes supplémentaires (positionnement sur l'image de la carte, par exemple). */
   className?: string;
 };
+
+const NOTICE_DURATION_MS = 4000;
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
@@ -30,16 +31,17 @@ function HeartIcon({ filled }: { filled: boolean }) {
 /**
  * Bouton "j'aime" avec compteur.
  * - Le compteur n'apparaît qu'à partir d'un like (un "0" n'est pas une bonne publicité).
- * - Un visiteur non connecté est invité à se connecter.
- * - La mise à jour est immédiate à l'écran et annulée si la base refuse.
+ * - Visiteurs sans compte et utilisateurs connectés peuvent aimer.
+ * - La mise à jour est immédiate à l'écran, puis alignée sur le compteur renvoyé par la base,
+ *   ou annulée si la base refuse (un message visible s'affiche alors quelques secondes).
  */
 export function LikeButton({ productId, className = "" }: LikeButtonProps) {
-  const router = useRouter();
   const [count, setCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const mounted = useRef(true);
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -50,8 +52,17 @@ export function LikeButton({ productId, className = "" }: LikeButtonProps) {
     });
     return () => {
       mounted.current = false;
+      if (noticeTimer.current) clearTimeout(noticeTimer.current);
     };
   }, [productId]);
+
+  function showNotice(message: string) {
+    setNotice(message);
+    if (noticeTimer.current) clearTimeout(noticeTimer.current);
+    noticeTimer.current = setTimeout(() => {
+      if (mounted.current) setNotice("");
+    }, NOTICE_DURATION_MS);
+  }
 
   async function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     // La carte est souvent un lien : on empêche d'ouvrir la fiche du produit.
@@ -70,43 +81,65 @@ export function LikeButton({ productId, className = "" }: LikeButtonProps) {
     setCount(nextCount);
 
     const result = await toggleLike(productId, wasLiked);
-    if (!mounted.current) return;
-    setBusy(false);
 
     if (result.ok) {
-      rememberLikeInfo(productId, { count: nextCount, liked: nextLiked });
+      // La base fait foi : pour un visiteur, elle renvoie l'état final et le total à jour.
+      const finalLiked = result.liked ?? nextLiked;
+      const finalCount = result.count ?? nextCount;
+      rememberLikeInfo(productId, { count: finalCount, liked: finalLiked });
+      if (!mounted.current) return;
+      setBusy(false);
+      setLiked(finalLiked);
+      setCount(finalCount);
       return;
     }
+
+    if (!mounted.current) return;
+    setBusy(false);
 
     // Échec : on revient à l'état précédent.
     setLiked(wasLiked);
     setCount(previousCount);
 
-    if (result.reason === "login") {
-      router.push("/login");
+    if (result.reason === "limit") {
+      showNotice("Trop de j'aime en peu de temps. Réessayez dans quelques minutes.");
     } else if (result.reason === "own") {
-      setNotice("Vous ne pouvez pas aimer vos propres produits.");
+      showNotice("Vous ne pouvez pas aimer vos propres produits.");
+    } else if (result.reason === "login") {
+      showNotice("Connectez-vous pour aimer ce produit.");
     } else {
-      setNotice("Impossible de mettre à jour votre j'aime. Réessayez.");
+      showNotice("Impossible de mettre à jour votre j'aime. Réessayez.");
     }
   }
 
   const label = liked ? "Retirer ce produit de mes j'aime" : "Aimer ce produit";
+
+  const buttonClasses = [
+    "inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full bg-white px-2.5 text-sm font-semibold shadow-md ring-1 ring-black/5 backdrop-blur transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ucao-navy",
+    liked ? "text-ucao-red" : "text-ucao-navy",
+    busy ? "opacity-70" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  // Bulle visible sous le bouton quand un message est affiché ; sinon réservée aux lecteurs d'écran.
+  const noticeClasses = notice
+    ? "absolute right-0 top-full z-20 mt-2 w-44 whitespace-normal rounded-lg bg-ucao-navy px-2.5 py-1.5 text-left text-xs font-medium leading-snug text-white shadow-lg"
+    : "sr-only";
 
   return (
     <button
       type="button"
       onClick={handleClick}
       aria-pressed={liked}
-      aria-label={count > 0 ? `${label} (${count} j'aime)` : label}
+      aria-label={count > 0 ? label + " (" + count + " j'aime)" : label}
       title={notice || label}
-      className={`inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full bg-white px-2.5 text-sm font-semibold shadow-md ring-1 ring-black/5 backdrop-blur transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ucao-navy ${
-        liked ? "text-ucao-red" : "text-ucao-navy"
-      } ${busy ? "opacity-70" : ""} ${className}`}
+      className={buttonClasses}
     >
       <HeartIcon filled={liked} />
       {count > 0 && <span className="tabular-nums">{count}</span>}
-      <span className="sr-only" role="status" aria-live="polite">
+      <span role="status" aria-live="polite" className={noticeClasses}>
         {notice}
       </span>
     </button>
