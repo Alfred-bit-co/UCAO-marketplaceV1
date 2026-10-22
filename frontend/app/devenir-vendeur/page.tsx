@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Clock3, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus } from "@/lib/icons";
+import { AlertTriangle, CheckCircle2, Clock3, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus, X } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
@@ -27,6 +27,15 @@ const TIER_STYLES: Record<SubscriptionTier, { Icon: typeof Send; iconBg: string;
     button: "border-2 border-ucao-success bg-transparent text-ucao-success hover:bg-ucao-success hover:text-white",
   },
 };
+
+const TIER_TAGLINES: Record<SubscriptionTier, string> = {
+  STANDARD: "Pour démarrer",
+  PREMIUM: "Pour développer votre activité",
+  VIP: "Pour vendre au maximum",
+};
+
+// Passer à false le jour où la page des demandes d'étudiants est en ligne : la mention « Bientôt » disparaît du palier VIP.
+const VIP_REQUESTS_SOON = true;
 
 type PageState = "loading" | "error" | "unauthenticated" | "missing_phone" | "ready";
 
@@ -219,18 +228,47 @@ export default function DevenirVendeurPage() {
             const style = TIER_STYLES[plan.tier];
             const trialLabel = TRIAL_DURATIONS[plan.tier].label;
             const paidButtonClass = canTrial ? "btn-ghost" : style.button === "btn-primary" ? "btn-primary" : style.button;
+            const hasStand = plan.standLimit > 0;
             return (
-              <article key={plan.tier} className={cn("panel relative flex flex-col gap-3 p-6", plan.recommended && "border-ucao-red ring-1 ring-ucao-red")}>
-                {plan.recommended && <span className="absolute right-4 top-4 rounded-full bg-ucao-red px-3 py-1 text-xs font-bold text-white">Recommandé</span>}
-                <span className={cn("grid size-12 place-items-center rounded-full", style.iconBg)}><style.Icon size={22} /></span>
-                <h2 className="text-2xl font-medium">{plan.tier}</h2>
-                <p className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")} FCFA<span className="text-sm font-normal"> / mois</span></p>
-                <ul className="flex-1 space-y-2 border-t border-ucao-line pt-3 text-sm dark:border-[#2a3a52]">
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" /> {plan.productLimit} produits maximum</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" />{plan.standLimit === 0 ? "Aucun stand" : plan.standLimit + " stand(s) maximum"}</li>
-                  {canTrial && <li className="flex items-center gap-2 font-medium"><Clock3 size={16} className="text-ucao-success" /> Essai gratuit : {trialLabel}</li>}
+              <article
+                key={plan.tier}
+                className={cn(
+                  "panel relative flex flex-col overflow-hidden p-0",
+                  plan.recommended && "border-ucao-red shadow-ucao ring-2 ring-ucao-red",
+                )}
+              >
+                {plan.recommended && (
+                  <span className="absolute right-4 top-4 rounded-full bg-ucao-red px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                    Recommandé
+                  </span>
+                )}
+                <header className="flex items-center gap-3 px-6 pt-6">
+                  <span className={cn("grid size-12 shrink-0 place-items-center rounded-full", style.iconBg)}>
+                    <style.Icon size={24} />
+                  </span>
+                  <div>
+                    <h2 className="text-xl font-semibold tracking-wide">{plan.tier}</h2>
+                    <p className="text-sm text-ucao-muted dark:text-[#a8b8cc]">{TIER_TAGLINES[plan.tier]}</p>
+                  </div>
+                </header>
+                <p className="flex items-baseline gap-1.5 px-6 pt-5">
+                  <span className="text-4xl font-bold tracking-tight">{plan.price.toLocaleString("fr-FR")}</span>
+                  <span className="text-base font-semibold">FCFA</span>
+                  <span className="text-sm text-ucao-muted dark:text-[#a8b8cc]">/ mois</span>
+                </p>
+                <ul className="mt-5 flex-1 space-y-3 border-t border-ucao-line px-6 pt-5 text-sm dark:border-[#2a3a52]">
+                  <PlanFeature variant="yes">{plan.productLimit} produits maximum</PlanFeature>
+                  <PlanFeature variant={hasStand ? "yes" : "no"}>
+                    {hasStand ? plan.standLimit + " stand" + (plan.standLimit > 1 ? "s" : "") + " maximum" : "Aucun stand"}
+                  </PlanFeature>
+                  {plan.tier === "VIP" && (
+                    <PlanFeature variant="yes" badge={VIP_REQUESTS_SOON ? "Bientôt" : undefined}>
+                      Voir les demandes des étudiants
+                    </PlanFeature>
+                  )}
+                  {canTrial && <PlanFeature variant="trial">Essai gratuit : {trialLabel}</PlanFeature>}
                 </ul>
-                <div className="grid gap-2">
+                <div className="mt-6 grid gap-2 px-6 pb-6">
                   {canTrial && (
                     <button type="button" className="btn btn-primary w-full" disabled={busy} onClick={() => handleTrial(plan.tier)}>
                       {loadingTrialTier === plan.tier ? <Loader2 className="animate-spin" size={18} /> : null}
@@ -239,7 +277,7 @@ export default function DevenirVendeurPage() {
                   )}
                   <button type="button" className={cn("btn w-full", paidButtonClass)} disabled={busy} onClick={() => handleChoose(plan.tier)}>
                     {loadingTier === plan.tier ? <Loader2 className="animate-spin" size={18} /> : null}
-                    {canTrial ? "S'abonner directement" : `Choisir ${plan.tier}`}
+                    {canTrial ? "S'abonner directement" : "Choisir " + plan.tier}
                   </button>
                 </div>
               </article>
@@ -259,5 +297,36 @@ export default function DevenirVendeurPage() {
         </section>
       </main>
     </PageShell>
+  );
+}
+
+type PlanFeatureProps = {
+  /** yes : inclus (coche verte) ; no : non inclus (croix rouge) ; trial : essai gratuit (horloge verte). */
+  variant: "yes" | "no" | "trial";
+  /** Petite étiquette à droite de la ligne, par exemple « Bientôt ». */
+  badge?: string;
+  children: React.ReactNode;
+};
+
+function PlanFeature({ variant, badge, children }: PlanFeatureProps) {
+  return (
+    <li className={cn("flex items-start gap-2.5", variant === "trial" && "font-medium")}>
+      {variant === "yes" && <CheckCircle2 size={18} weight="fill" className="mt-0.5 shrink-0 text-ucao-success" aria-hidden="true" />}
+      {variant === "trial" && <Clock3 size={18} className="mt-0.5 shrink-0 text-ucao-success" aria-hidden="true" />}
+      {variant === "no" && (
+        <span className="mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400">
+          <X size={12} weight="bold" aria-hidden="true" />
+        </span>
+      )}
+      <span className={cn(variant === "no" && "text-ucao-muted dark:text-[#a8b8cc]")}>
+        {children}
+        {variant === "no" && <span className="sr-only"> (non inclus)</span>}
+      </span>
+      {badge && (
+        <span className="ml-auto shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+          {badge}
+        </span>
+      )}
+    </li>
   );
 }
