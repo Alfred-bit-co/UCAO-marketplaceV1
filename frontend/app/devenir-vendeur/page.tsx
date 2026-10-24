@@ -9,8 +9,30 @@ import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscript
 import { TRIAL_DURATIONS, getTrialStatus, startTrial } from "@/lib/trial";
 import type { TrialStatus } from "@/lib/trial";
 import { cn } from "@/lib/utils";
+import { VIP_REQUESTS_SOON } from "@/lib/feature-flags";
 import { getCurrentProfile, updateProfile } from "@/lib/users";
 import type { Profile, SubscriptionTier } from "@/lib/types";
+
+function CrossIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="m15 9-6 6" />
+      <path d="m9 9 6 6" />
+    </svg>
+  );
+}
 
 const PHONE_PATTERN = /^\+\d{8,15}$/;
 
@@ -227,7 +249,20 @@ export default function DevenirVendeurPage() {
                 <p className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")} FCFA<span className="text-sm font-normal"> / mois</span></p>
                 <ul className="flex-1 space-y-2 border-t border-ucao-line pt-3 text-sm dark:border-[#2a3a52]">
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" /> {plan.productLimit} produits maximum</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" />{plan.standLimit === 0 ? "Aucun stand" : plan.standLimit + " stand(s) maximum"}</li>
+                  {plan.standLimit === 0 ? (
+                    <li className="flex items-center gap-2 text-ucao-muted"><CrossIcon size={16} className="shrink-0 text-ucao-red" /><span>Aucun stand</span></li>
+                  ) : (
+                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-ucao-success" />{plan.standLimit} stand(s) maximum</li>
+                  )}
+                  {plan.tier === "VIP" && (
+                    <li className="flex flex-wrap items-center gap-2">
+                      <CheckCircle2 size={16} className="shrink-0 text-ucao-success" />
+                      <span>Voir les demandes des étudiants</span>
+                      {VIP_REQUESTS_SOON && (
+                        <span className="rounded-full bg-ucao-success-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-ucao-success">Bientôt</span>
+                      )}
+                    </li>
+                  )}
                   {canTrial && <li className="flex items-center gap-2 font-medium"><Clock3 size={16} className="text-ucao-success" /> Essai gratuit : {trialLabel}</li>}
                 </ul>
                 <div className="grid gap-2">
