@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Brand } from "./navbar";
 import { GoogleIcon } from "./google-icon";
 import { TurnstileWidget } from "./turnstile-widget";
@@ -132,6 +132,13 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
   const [submitting, setSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
+  // Le bouton n'est actif qu'une fois la page prête : avant, un clic enverrait le formulaire « à l'ancienne »,
+  // avec l'e-mail et le mot de passe visibles dans l'adresse (et donc dans l'historique et les journaux).
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
   async function signInWithGoogle() {
     const supabase = createClient();
@@ -321,7 +328,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
 
   const formContent = (
     <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
-      <form className="panel w-[min(520px,100%)] p-8" onSubmit={submit} noValidate>
+      <form className="panel w-[min(520px,100%)] p-8" method="post" onSubmit={submit} noValidate>
         <Link
           className="mb-5 inline-flex size-10 items-center justify-center rounded-ucao text-ucao-ink transition-colors hover:bg-ucao-soft dark:text-white dark:hover:bg-white/10"
           href="/"
@@ -439,7 +446,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         {CAPTCHA_ENABLED && (
           <TurnstileWidget className="mt-5" action={mode} onToken={setCaptchaToken} resetKey={captchaReset} />
         )}
-        <button className="btn btn-primary mt-5 w-full" type="submit" disabled={submitting}>
+        <button className="btn btn-primary mt-5 w-full" type="submit" disabled={submitting || !ready}>
           {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
           {submitting ? "Veuillez patienter..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
