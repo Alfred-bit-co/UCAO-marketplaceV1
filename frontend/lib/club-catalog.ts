@@ -175,6 +175,20 @@ export const CLUBS: ClubEntry[] = [
     accent: { main: "#6366f1", light: "#a5b4fc", buttonFrom: "#4f46e5", buttonTo: "#4338ca" },
     managerPhone: "",
   },
+  {
+    slug: "cybersecurite",
+    prefix: "Club de",
+    name: "Cybersécurité",
+    tagline: "Apprends. Protège. Défie.",
+    description:
+      "Le club de cybersécurité de l'UCAO t'invite à découvrir les bases de la sécurité informatique, à pratiquer lors d'ateliers et de défis CTF, et à adopter les bons réflexes pour te protéger en ligne. Que tu sois débutant curieux ou passionné confirmé, viens apprendre en équipe !",
+    sideTitle: ["Protège tes données,", "maîtrise le numérique."],
+    sideText:
+      "Le club de cybersécurité de l'UCAO rassemble des étudiants curieux de comprendre comment fonctionnent les attaques et comment s'en défendre, dans un cadre éthique et collaboratif.",
+    image: "/images/clubs/cyber.jpg",
+    accent: { main: "#10b981", light: "#6ee7b7", buttonFrom: "#047857", buttonTo: "#065f46" },
+    managerPhone: "",
+  },
 ];
 
 export function getClubFullName(club: ClubEntry): string {

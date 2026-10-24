@@ -9,6 +9,7 @@ import {
   MicrophoneStage,
   PersonArmsSpread,
   Scales,
+  ShieldCheck,
   SoccerBall,
   Volleyball,
 } from "@phosphor-icons/react/ssr";
@@ -28,6 +29,7 @@ const CLUB_ICONS: Record<string, Icon> = {
   volley: Volleyball,
   chorale: MicrophoneStage,
   dance: PersonArmsSpread,
+  cybersecurite: ShieldCheck,
 };
 
 type ClubCardProps = {
