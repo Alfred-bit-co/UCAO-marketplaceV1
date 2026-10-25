@@ -31,6 +31,7 @@ import type { SubscriptionStatus } from "@/lib/subscriptions";
 import { PRODUCT_CATEGORIES } from "@/lib/types";
 import type { Product, ProductCategory, Profile, Stand } from "@/lib/types";
 import { getCurrentProfile } from "@/lib/users";
+import { useToast } from "@/components/toast-provider";
 function initials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "V";
 }
@@ -87,6 +88,7 @@ export default function DashboardPage() {
     const interval = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
     return () => window.clearInterval(interval);
   }, []);
+  const toast = useToast();
   async function handleProductSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!profile) return;
@@ -103,7 +105,7 @@ export default function DashboardPage() {
     const result = editingProduct ? await updateProduct(profile.id, String(editingProduct.id), payload) : await createProduct(profile.id, payload);
     setProductSubmitting(false);
     if (result.error) { setProductError(result.error); return; }
-    setEditingProduct(null); setProductImages([]); formElement.reset(); await refreshAll(profile.id);
+    setEditingProduct(null); setProductImages([]); formElement.reset(); toast.success(editingProduct ? "Produit modifié avec succès" : "Produit ajouté avec succès"); await refreshAll(profile.id);
   }
   async function handleDeleteProduct(productId: string) {
     if (!profile || !window.confirm("Supprimer définitivement ce produit ?")) return;
@@ -111,7 +113,7 @@ export default function DashboardPage() {
     const ok = await deleteProduct(profile.id, productId);
     if (!ok) { setDeleteError("Impossible de supprimer ce produit. Réessayez dans un instant ; si le problème continue, contactez l'équipe."); return; }
     if (String(editingProduct?.id) === productId) setEditingProduct(null);
-    await refreshAll(profile.id);
+    toast.success("Produit supprimé"); await refreshAll(profile.id);
   }
   async function handleStandSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,14 +124,14 @@ export default function DashboardPage() {
     const result = await createStand(profile.id, { name: String(form.get("name") || ""), description: String(form.get("description") || ""), banner_url: standBanner[0] || String(form.get("banner_url") || "") || undefined });
     setStandSubmitting(false);
     if (result.error) { setStandError(result.error); return; }
-    formElement.reset(); setStandBanner([]); await refreshAll(profile.id);
+    formElement.reset(); setStandBanner([]); toast.success("Stand créé", "Il apparaîtra dans le catalogue après validation par l'équipe."); await refreshAll(profile.id);
   }
   async function handleDeleteStand(standId: string) {
     if (!profile || !window.confirm("Supprimer définitivement ce stand ? Cette place sera de nouveau disponible.")) return;
     setStandError(null);
     const result = await deleteStand(profile.id, standId);
     if (result.error) { setStandError(result.error); return; }
-    await refreshAll(profile.id);
+    toast.success("Stand supprimé"); await refreshAll(profile.id);
   }
   function editProduct(product: Product) {
     setEditingProduct(product); setProductImages(product.images?.map((image) => image.url) ?? []); setProductError(null);
