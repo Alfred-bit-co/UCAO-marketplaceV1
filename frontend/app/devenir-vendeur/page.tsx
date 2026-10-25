@@ -9,7 +9,6 @@ import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscript
 import { TRIAL_DURATIONS, getTrialStatus, startTrial } from "@/lib/trial";
 import type { TrialStatus } from "@/lib/trial";
 import { cn } from "@/lib/utils";
-import { VIP_REQUESTS_SOON } from "@/lib/feature-flags";
 import { getCurrentProfile, updateProfile } from "@/lib/users";
 import type { Profile, SubscriptionTier } from "@/lib/types";
 
