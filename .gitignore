@@ -20,3 +20,20 @@ build/
 # Local databases
 *.db
 *.tsbuildinfo
+# Fichiers de travail (jamais a commiter)
+*.bak
+*.bak-*
+apply-*.mjs
+collect-pour-claude*.mjs
+pour-claude*.txt
+
+# Bases locales et variantes d'environnement
+*.sqlite
+*.sqlite3
+.env.*
+!.env.example
+!.env.local.example
+
+# Divers
+*.log
+.vercel/
