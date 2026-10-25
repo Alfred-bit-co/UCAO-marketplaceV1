@@ -122,3 +122,13 @@
     @apply bg-ucao-red-soft text-ucao-red dark:bg-[#3a171d] dark:text-[#ff9aa0];
   }
 }
+
+/* Notifications (toast) : apparition douce, désactivée pour les personnes qui réduisent les animations. */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.toast-enter { animation: toast-in 0.22s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter { animation: none; }
+}
