@@ -26,7 +26,7 @@ const FAQ_GROUPS = [
       },
       {
         question: "À quoi sert le cœur sur un produit ?",
-        answer: "À dire que vous aimez ce produit. Vous devez être connecté. Le nombre de cœurs est visible par tous, mais personne ne voit qui a aimé : vos « j'aime » restent privés. Vous ne pouvez pas aimer vos propres produits.",
+        answer: "À dire que vous aimez ce produit. Vous n'avez pas besoin de compte : un identifiant anonyme est enregistré dans votre navigateur pour retenir vos « j'aime ». Le nombre de cœurs est visible par tous, mais personne ne voit qui a aimé. Cliquez à nouveau sur le cœur pour retirer votre « j'aime ». Si vous effacez les données de votre navigateur, vous n'en retrouverez plus la trace. Un vendeur connecté ne peut pas aimer ses propres produits.",
       },
     ],
   },
