@@ -371,7 +371,8 @@ def _handle_approved_transaction(payment_id, transaction_id, raw_amount):
 
     if transaction_id in (None, "") or amount is None:
         current_app.logger.error(
-            "Webhook FedaPay approuvé mais incomplet (paiement=%s, transaction=%r, montant=%r) : revue manuelle nécessaire.",
+            "Webhook FedaPay approuvé mais incomplet (paiement=%s, transaction=%r, "
+            "montant=%r) : revue manuelle nécessaire.",
             payment_id,
             transaction_id,
             raw_amount,
