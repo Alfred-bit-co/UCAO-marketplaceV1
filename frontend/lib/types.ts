@@ -39,14 +39,37 @@ export type ProductImage = {
   position: number;
 };
 
+export type StandCategory =
+  | "alimentation"
+  | "mode-accessoires"
+  | "informatique"
+  | "services"
+  | "education"
+  | "sante-bien-etre"
+  | "autres";
+
+export type StandContactMode =
+  | "sur_place"
+  | "reservation"
+  | "livraison"
+  | "sur_commande"
+  | "en_ligne"
+  | "rendez_vous";
+
 export type Stand = {
   id: string | number;
   name: string;
   description: string;
   banner_url?: string | null;
+  logo_url?: string | null;
+  category?: StandCategory;
+  // Numéro WhatsApp du stand (format +22890123456), saisi volontairement par le vendeur : il est PUBLIC.
+  whatsapp_phone?: string | null;
+  contact_modes?: StandContactMode[];
   user_id?: string;
   seller?: Seller | null;
   seller_tier?: SubscriptionTier | null;
+  // Conservé uniquement pour les données de démonstration : un stand n'affiche plus de produits.
   products?: Product[];
   status?: "pending" | "approved" | "rejected";
   created_at?: string;
@@ -74,6 +97,8 @@ export type PaginatedResult<T> = {
   page: number;
   pages: number;
   total: number;
+  // true : la source de données est injoignable (l'affichage doit le dire, sans montrer de données de démonstration).
+  unavailable?: boolean;
 };
 
 export type Order = {
