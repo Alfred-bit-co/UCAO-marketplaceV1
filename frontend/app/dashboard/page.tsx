@@ -25,13 +25,15 @@ import { SubscriptionAlert } from "@/components/subscription-alert";
 import { PageShell } from "@/components/page-shell";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { createProduct, deleteProduct, getMyProducts, updateProduct } from "@/lib/products";
-import { createStand, deleteStand, getMyStands } from "@/lib/stands";
+import { createStand, deleteStand, getMyStands, updateMyStand, type StandPayload } from "@/lib/stands";
 import { daysUntilExpiry, formatSubscriptionDate, getMySubscriptionStatus, SUBSCRIPTION_PLANS } from "@/lib/subscriptions";
 import type { SubscriptionStatus } from "@/lib/subscriptions";
 import { PRODUCT_CATEGORIES } from "@/lib/types";
 import type { Product, ProductCategory, Profile, Stand } from "@/lib/types";
 import { getCurrentProfile } from "@/lib/users";
 import { useToast } from "@/components/toast-provider";
+import { StandForm } from "@/components/stand-form";
+import { getStandCategoryLabel } from "@/lib/stand-catalog";
 function initials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "V";
 }
@@ -66,9 +68,8 @@ export default function DashboardPage() {
   const [productSubmitting, setProductSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [standError, setStandError] = useState<string | null>(null);
-  const [standSubmitting, setStandSubmitting] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
-  const [standBanner, setStandBanner] = useState<string[]>([]);
+  const [editingStand, setEditingStand] = useState<Stand | null>(null);
   const [, setCurrentTime] = useState(Date.now());
   async function refreshAll(userId: string) {
     const [nextStatus, nextProducts, nextStands] = await Promise.all([getMySubscriptionStatus(), getMyProducts(userId), getMyStands(userId)]);
@@ -115,23 +116,25 @@ export default function DashboardPage() {
     if (String(editingProduct?.id) === productId) setEditingProduct(null);
     toast.success("Produit supprimé"); await refreshAll(profile.id);
   }
-  async function handleStandSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!profile) return;
-    setStandError(null); setStandSubmitting(true);
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    const result = await createStand(profile.id, { name: String(form.get("name") || ""), description: String(form.get("description") || ""), banner_url: standBanner[0] || String(form.get("banner_url") || "") || undefined });
-    setStandSubmitting(false);
-    if (result.error) { setStandError(result.error); return; }
-    formElement.reset(); setStandBanner([]); toast.success("Stand créé", "Il apparaîtra dans le catalogue après validation par l'équipe."); await refreshAll(profile.id);
+  async function handleStandSave(payload: StandPayload): Promise<{ error: string | null }> {
+    if (!profile) return { error: "Connectez-vous pour continuer." };
+    setStandError(null);
+    const result = editingStand
+      ? await updateMyStand(profile.id, String(editingStand.id), payload)
+      : await createStand(profile.id, payload);
+    if (result.error) return { error: result.error };
+    if (editingStand) toast.success("Stand modifié");
+    else toast.success("Stand créé", "Il apparaîtra dans le catalogue après validation par l’équipe.");
+    setEditingStand(null);
+    await refreshAll(profile.id);
+    return { error: null };
   }
   async function handleDeleteStand(standId: string) {
     if (!profile || !window.confirm("Supprimer définitivement ce stand ? Cette place sera de nouveau disponible.")) return;
     setStandError(null);
     const result = await deleteStand(profile.id, standId);
     if (result.error) { setStandError(result.error); return; }
-    toast.success("Stand supprimé"); await refreshAll(profile.id);
+    toast.success("Stand supprimé"); if (String(editingStand?.id) === standId) setEditingStand(null); await refreshAll(profile.id);
   }
   function editProduct(product: Product) {
     setEditingProduct(product); setProductImages(product.images?.map((image) => image.url) ?? []); setProductError(null);
@@ -224,8 +227,15 @@ export default function DashboardPage() {
             <div className="mb-5 flex items-start justify-between gap-3"><div><p className="eyebrow">Catalogue</p><h2 className="text-2xl font-bold">{editingProduct ? "Modifier le produit" : "Ajouter un produit"}</h2></div>{editingProduct && <button className="btn btn-ghost min-h-9 px-3 text-sm" type="button" onClick={() => { setEditingProduct(null); setProductImages([]); }}><X size={15} /> Annuler</button>}</div>
             <div className="grid gap-3"><input className="input-field" name="name" placeholder="Nom du produit" defaultValue={editingProduct?.name ?? ""} required /><select className="select-field" name="category" defaultValue={editingProduct?.category ?? ""} required><option value="" disabled>Catégorie</option>{PRODUCT_CATEGORIES.filter((category) => category.value !== "tous").map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}</select><input className="input-field" name="price" type="number" min="0" placeholder="Prix en FCFA" defaultValue={editingProduct?.price ?? ""} required /><ImageUpload folder="products" multiple maxFiles={5} label="Photos du produit" value={productImages} onChange={setProductImages} /><textarea className="textarea-field" name="description" placeholder="Description complète" defaultValue={editingProduct?.description ?? ""} required />{productError && <p className="notice notice-error flex items-center gap-2"><AlertTriangle size={16} /> {productError}</p>}{isSuspended && <p className="notice notice-error">Publication désactivée : votre compte est suspendu.</p>}{atProductLimit && <p className="notice">Limite atteinte. <a className="underline" href="/devenir-vendeur">Changer de palier</a></p>}<button className="btn btn-primary" type="submit" disabled={productSubmitting || atProductLimit || isSuspended}><CirclePlus size={18} /> {productSubmitting ? "Enregistrement..." : editingProduct ? "Enregistrer les modifications" : "Publier le produit"}</button></div>
           </form>
-          <div className="grid gap-5"><form className="panel p-5 sm:p-6" onSubmit={handleStandSubmit}><div className="mb-5 flex items-start justify-between gap-3"><div><p className="eyebrow">Vitrine</p><h2 className="text-2xl font-bold">Ouvrir un stand</h2></div><Store className="text-ucao-success" size={25} /></div><div className="grid gap-3"><input className="input-field" name="name" placeholder="Nom du stand" required /><ImageUpload folder="stands" label="Bannière du stand" value={standBanner} onChange={setStandBanner} compact /><input className="input-field" name="banner_url" type="url" placeholder="URL de bannière (optionnel)" /><textarea className="textarea-field" name="description" placeholder="Description du stand" required />{standError && <p className="notice notice-error flex items-center gap-2"><AlertTriangle size={16} /> {standError}</p>}{isSuspended && <p className="notice notice-error">Création désactivée : votre compte est suspendu.</p>}{atStandLimit && <p className="notice">Votre palier ne permet pas de créer un stand supplémentaire. <a className="underline" href="/devenir-vendeur">Changer de palier</a>.</p>}<button className="btn btn-primary" type="submit" disabled={standSubmitting || atStandLimit || isSuspended}><Store size={18} /> {standSubmitting ? "Création..." : "Créer le stand"}</button></div></form>
-            <article className="panel p-5 sm:p-6"><div className="flex items-center justify-between"><div><p className="eyebrow">Vos vitrines</p><h2 className="text-2xl font-bold">Stands actifs</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-success-soft text-ucao-success"><Store size={18} /></span></div>{stands.length ? <ul className="mt-4 space-y-3">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft px-3 py-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.status === "approved" ? "Visible dans le catalogue" : "En attente de validation"}</p></div><div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${stand.status === "approved" ? "bg-ucao-success-soft text-ucao-success" : "bg-ucao-red-soft text-ucao-red"}`}>{stand.status}</span><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => handleDeleteStand(String(stand.id))} aria-label={`Supprimer le stand ${stand.name}`} title="Supprimer le stand"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="mt-4 rounded-ucao bg-ucao-soft p-4 text-sm font-medium text-ucao-muted dark:bg-[#132238]">Aucun stand pour le moment.</p>}</article></div>
+          <div className="grid gap-5"><StandForm
+              key={editingStand ? String(editingStand.id) : "new"}
+              stand={editingStand}
+              suspended={isSuspended}
+              limitReached={atStandLimit}
+              onSubmit={handleStandSave}
+              onCancel={() => setEditingStand(null)}
+            />
+            <article className="panel p-5 sm:p-6"><div className="flex items-center justify-between"><div><p className="eyebrow">Vos vitrines</p><h2 className="text-2xl font-bold">Stands actifs</h2></div><span className="grid size-10 place-items-center rounded-full bg-ucao-success-soft text-ucao-success"><Store size={18} /></span></div>{standError && <p className="notice notice-error mt-4 flex items-center gap-2" role="alert"><AlertTriangle size={16} /> {standError}</p>}{stands.length ? <ul className="mt-4 space-y-3">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft px-3 py-3 dark:bg-[#132238]"><div className="min-w-0"><p className="truncate font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{getStandCategoryLabel(stand.category)} · {stand.status === "approved" ? "Visible dans le catalogue" : stand.status === "rejected" ? "Non validé" : "En attente de validation"}</p>{!stand.whatsapp_phone && <p className="text-xs text-ucao-muted">WhatsApp : non renseigné</p>}</div><div className="flex shrink-0 items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-xs font-bold " + (stand.status === "approved" ? "bg-ucao-success-soft text-ucao-success" : "bg-ucao-red-soft text-ucao-red")}>{stand.status === "approved" ? "Validé" : stand.status === "rejected" ? "Rejeté" : "En attente"}</span><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => { setEditingStand(stand); document.getElementById("stand-form")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} aria-label={"Modifier le stand " + stand.name} title="Modifier le stand"><Pencil size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => handleDeleteStand(String(stand.id))} aria-label={"Supprimer le stand " + stand.name} title="Supprimer le stand"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="mt-4 rounded-ucao bg-ucao-soft p-4 text-sm font-medium text-ucao-muted dark:bg-[#132238]">Aucun stand pour le moment.</p>}</article></div>
         </section>
         {products.length > 0 && <section className="container-ucao mt-5"><article className="panel p-5"><div className="mb-4 flex items-center justify-between"><div><p className="eyebrow">Gestion</p><h2 className="text-2xl font-bold">Tous vos produits</h2></div><span className="text-sm font-medium text-ucao-muted">{products.length} article{products.length > 1 ? "s" : ""}</span></div>{deleteError && <p className="notice notice-error mb-3 flex items-center gap-2"><AlertTriangle size={16} /> {deleteError}</p>}<ul className="grid gap-2 sm:grid-cols-2">{products.map((product) => <li key={product.id} className="flex items-center justify-between rounded-ucao border border-ucao-line p-3 dark:border-[#263d5c]"><div><p className="font-medium">{product.name}</p><p className="text-sm text-ucao-muted">{currency(product.price)}</p></div><div className="flex gap-1"><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => editProduct(product)} aria-label={`Modifier ${product.name}`}><Pencil size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => handleDeleteProduct(String(product.id))} aria-label={`Supprimer ${product.name}`}><Trash2 size={15} /></button></div></li>)}</ul></article></section>}
       </main>
