@@ -79,7 +79,7 @@ export default function ProfilPage() {
           <form id="profile-form" className="panel grid gap-5 p-6" onSubmit={handleSubmit}>
             <div>
               <h2 className="text-xl font-bold">Informations personnelles</h2>
-              <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">Votre nom sera affiché sur la marketplace.</p>
+              <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]"> ⚠️ Votre nom sera affiché sur la marketplace.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1.5 font-medium">Prénom<input className="input-field" name="first_name" defaultValue={splitFullName(profile.full_name).firstName} required minLength={2} /></label>
@@ -91,7 +91,7 @@ export default function ProfilPage() {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-ucao-muted" size={17} />
                 <input className="input-field bg-ucao-soft pl-10 opacity-70 dark:bg-[#172d48]" type="tel" value={profile.phone ?? "Non renseigné"} placeholder="+22892982926" readOnly aria-readonly="true" aria-invalid={!phoneIsValid} />
               </span>
-              <span className="text-xs font-normal text-ucao-muted dark:text-[#a8b8cc]">Ce numéro est associé à votre compte et ne peut pas être modifié depuis le profil. Le format attendu est +xxxxxxxxxxx, uniquement des chiffres après le + et sans espace.</span>
+              <span className="text-xs font-normal text-ucao-muted dark:text-[#a8b8cc]">Ce numéro est associé à votre compte et ne peut pas être modifié depuis le profil. Le format attendu est +xxxxxxxx, uniquement des chiffres après le + et sans espace.</span>
             </label>
             {error && <p className="notice notice-error">{error}</p>}
             {message && <p className="notice">{message}</p>}
