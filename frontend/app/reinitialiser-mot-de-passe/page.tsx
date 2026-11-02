@@ -88,7 +88,7 @@ export default function ReinitialiserMotDePassePage() {
         <section className="container-ucao max-w-md py-[54px] pb-[84px]">
           {!hasSession ? (
             <p className="notice notice-error">
-              Ce lien est invalide ou a expiré. Refaites une demande depuis la page « Mot de passe oublié ».
+              Ce lien est invalide ou a expiré. Veuillez faire une demande depuis la page « Mot de passe oublié ».
             </p>
           ) : status === "done" ? (
             <p className="notice flex items-center gap-2" role="status"><CheckCircle2 size={19} />Mot de passe mis à jour. Redirection vers la connexion...</p>

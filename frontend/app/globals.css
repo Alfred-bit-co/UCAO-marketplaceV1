@@ -24,20 +24,48 @@
   --radius-ucao: 8px;
   --shadow-ucao: 0 24px 60px rgba(30, 42, 110, 0.14);
   --shadow-card: 0 14px 32px rgba(30, 42, 110, 0.08);
+  /* Courbe d'animation commune : démarrage vif, arrivée douce. */
+  --ease-ucao: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Une ancre (#section) ne passe plus sous la navigation collante. */
+    scroll-padding-top: 96px;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     @apply bg-ucao-surface text-ucao-ink font-sans leading-relaxed antialiased;
   }
 
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: rgba(122, 30, 45, 0.18);
+  }
+
+  .dark ::selection {
+    background: rgba(255, 154, 160, 0.28);
+  }
+
   :focus-visible {
     outline: 3px solid #2e7d5b;
     outline-offset: 3px;
+  }
+
+  img {
+    -webkit-user-drag: none;
   }
 
   button:disabled,
@@ -51,6 +79,16 @@
   body.dark {
     @apply bg-[#071426] text-[#e8edf4];
   }
+
+  /* Barre de défilement discrète, aux couleurs du site. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(30, 42, 110, 0.28) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgba(205, 215, 229, 0.25) transparent;
+  }
 }
 
 @layer components {
@@ -59,19 +97,19 @@
   }
 
   .btn {
-    @apply inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-ucao border-0 px-5 font-semibold transition-all duration-200 hover:-translate-y-0.5 disabled:hover:translate-y-0;
+    @apply inline-flex min-h-[46px] cursor-pointer select-none items-center justify-center gap-2 rounded-ucao border-0 px-5 font-semibold transition-[translate,scale,background-color,box-shadow,color,opacity] duration-200 ease-ucao hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] active:duration-75 disabled:hover:translate-y-0 disabled:active:scale-100;
   }
 
   .btn-primary {
-    @apply bg-ucao-red text-white shadow-[0_14px_28px_rgba(122,30,45,0.28)] hover:bg-[#651724];
+    @apply bg-ucao-red text-white shadow-[0_14px_28px_rgba(122,30,45,0.28)] hover:bg-[#651724] hover:shadow-[0_18px_34px_rgba(122,30,45,0.34)];
   }
 
   .btn-light {
-    @apply bg-white text-ucao-navy shadow-[0_14px_28px_rgba(30,42,110,0.12)] dark:bg-[#142b4a] dark:text-white;
+    @apply bg-white text-ucao-navy shadow-[0_14px_28px_rgba(30,42,110,0.12)] hover:shadow-[0_18px_34px_rgba(30,42,110,0.18)] dark:bg-[#142b4a] dark:text-white;
   }
 
   .btn-ghost {
-    @apply bg-ucao-navy-soft text-ucao-navy dark:bg-[#142b4a] dark:text-[#dbe7f5];
+    @apply bg-ucao-navy-soft text-ucao-navy hover:bg-[#dde2f5] dark:bg-[#142b4a] dark:text-[#dbe7f5] dark:hover:bg-[#1a3558];
   }
 
   .eyebrow {
@@ -82,16 +120,24 @@
     @apply overflow-hidden rounded-ucao border border-ucao-line bg-white shadow-card dark:border-[#263d5c] dark:bg-[#10233b];
   }
 
-  .input-field {
-    @apply min-h-[46px] w-full rounded-ucao border border-ucao-line bg-white px-3.5 text-ucao-ink dark:border-[#263d5c] dark:bg-[#0b1c31] dark:text-[#e8edf4];
+  /* Champs de formulaire : survol et focus visibles, avec un halo doux plutôt qu'un contour brutal. */
+  .input-field,
+  .textarea-field,
+  .select-field {
+    @apply w-full rounded-ucao border border-ucao-line bg-white px-3.5 text-ucao-ink transition-[border-color,box-shadow,background-color] duration-200 ease-ucao placeholder:text-[#8a96a8] hover:border-[#cfd8e6] focus:border-ucao-navy focus:shadow-[0_0_0_4px_rgba(30,42,110,0.10)] focus:outline-none dark:border-[#263d5c] dark:bg-[#0b1c31] dark:text-[#e8edf4] dark:placeholder:text-[#6f819a] dark:hover:border-[#35507a] dark:focus:border-[#8ea2d8] dark:focus:shadow-[0_0_0_4px_rgba(142,162,216,0.16)];
+  }
+
+  .input-field,
+  .select-field {
+    @apply min-h-[46px];
   }
 
   .textarea-field {
-    @apply min-h-[120px] w-full resize-y rounded-ucao border border-ucao-line bg-white px-3.5 py-3 text-ucao-ink dark:border-[#263d5c] dark:bg-[#0b1c31] dark:text-[#e8edf4];
+    @apply min-h-[120px] resize-y py-3;
   }
 
-  .select-field {
-    @apply min-h-[46px] w-full rounded-ucao border border-ucao-line bg-white px-3.5 text-ucao-ink dark:border-[#263d5c] dark:bg-[#0b1c31] dark:text-[#e8edf4];
+  .input-field[aria-invalid="true"] {
+    @apply border-ucao-red/60 focus:shadow-[0_0_0_4px_rgba(122,30,45,0.12)];
   }
 
   .tag {
@@ -104,6 +150,7 @@
 
   .notice {
     @apply my-3 rounded-ucao bg-ucao-success-soft px-3.5 py-3 font-medium text-ucao-success dark:bg-[#123628] dark:text-[#7bd3ad];
+    animation: fade-up 0.3s var(--ease-ucao) both;
   }
 
   .notice-error {
@@ -121,14 +168,115 @@
   .role-badge-vip {
     @apply bg-ucao-red-soft text-ucao-red dark:bg-[#3a171d] dark:text-[#ff9aa0];
   }
+
+  /* Squelette de chargement : reflet qui glisse, plus doux qu'un clignotement. */
+  .skeleton {
+    background: linear-gradient(90deg, #eef1f8 0%, #f8f9fc 40%, #eef1f8 80%);
+    background-size: 220% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  .dark .skeleton {
+    background-image: linear-gradient(90deg, #132238 0%, #1b2f4c 40%, #132238 80%);
+  }
 }
 
-/* Notifications (toast) : apparition douce, désactivée pour les personnes qui réduisent les animations. */
+/* ===== Animations ===== */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Chaque nouvelle page apparaît en fondu léger (la navbar, elle, reste fixe). */
+main {
+  animation: fade-in 0.35s var(--ease-ucao) both;
+}
+
+/* Titres des bandeaux de page : montée douce, décalée pour le texte. */
+.hero-rise > * {
+  animation: fade-up 0.6s var(--ease-ucao) both;
+}
+.hero-rise > *:nth-child(2) { animation-delay: 0.06s; }
+.hero-rise > *:nth-child(3) { animation-delay: 0.12s; }
+
+.fade-in {
+  animation: fade-in 0.25s ease-out both;
+}
+
+@media (max-width: 1023px) {
+  .menu-enter {
+    animation: menu-in 0.22s var(--ease-ucao) both;
+  }
+}
+
+/* Changement de thème : transition des couleurs, posée seulement pendant le basculement. */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease, fill 0.2s ease !important;
+}
+
+/* Barre de progression de navigation */
+.nav-progress {
+  background: linear-gradient(90deg, #7a1e2d, #c2415a 55%, #1e2a6e);
+  box-shadow: 0 0 10px rgba(122, 30, 45, 0.45);
+  transform-origin: left;
+}
+
+.nav-progress-loading {
+  animation: nav-progress-grow 8s cubic-bezier(0.08, 0.82, 0.17, 1) both;
+}
+
+.nav-progress-done {
+  animation: nav-progress-finish 0.38s ease-out both;
+}
+
+@keyframes nav-progress-grow {
+  from { transform: scaleX(0.02); }
+  to { transform: scaleX(0.9); }
+}
+
+@keyframes nav-progress-finish {
+  0% { transform: scaleX(0.9); opacity: 1; }
+  60% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* Notifications (toast) : apparition douce. */
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(8px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .toast-enter { animation: toast-in 0.22s ease-out; }
+
+/* Les personnes qui ont demandé moins d'animations n'en ont (presque) aucune. */
 @media (prefers-reduced-motion: reduce) {
-  .toast-enter { animation: none; }
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
