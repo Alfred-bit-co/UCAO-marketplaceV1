@@ -5,7 +5,7 @@ import { useCallback, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isStandCategory, STAND_CATEGORY_FILTERS } from "@/lib/stand-catalog";
 import type { PaginatedResult, Stand } from "@/lib/types";
-import { ProductGridSkeleton } from "./skeletons";
+import { StandGridSkeleton } from "./skeletons";
 import { StandCard } from "./stand-card";
 import { StandCategoryIcon } from "./stand-category-icon";
 
@@ -95,7 +95,7 @@ export function StandsBrowser({
       </div>
 
       {pending ? (
-        <ProductGridSkeleton />
+        <StandGridSkeleton />
       ) : initialData.unavailable ? (
         <div className="notice flex flex-wrap items-center gap-4 p-6" role="alert">
           <AlertTriangle size={26} />

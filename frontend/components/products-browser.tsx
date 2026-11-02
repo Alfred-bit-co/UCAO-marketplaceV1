@@ -86,6 +86,7 @@ export function ProductsBrowser({
           <button
             key={item.value}
             type="button"
+            aria-pressed={category === item.value}
             onClick={() => updateParams({ category: item.value, page: "1" })}
             className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
               category === item.value
