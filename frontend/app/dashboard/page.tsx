@@ -214,6 +214,23 @@ export default function DashboardPage() {
             </div>
           </section>
         )}
+        {!profile.phone?.trim() && (
+          // Sans numéro, le bouton « Contacter » de tes produits ne mène nulle part (vente 100 % WhatsApp).
+          <section className="container-ucao mt-8">
+            <div
+              role="alert"
+              className="flex flex-wrap items-center gap-3 rounded-ucao border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100"
+            >
+              <AlertTriangle size={20} className="shrink-0" aria-hidden="true" />
+              <p className="min-w-0 flex-1 font-medium">
+                Ajoute ton numéro WhatsApp pour que les acheteurs puissent te contacter.
+              </p>
+              <a className="btn btn-primary min-h-10 px-4 text-sm" href="/devenir-vendeur">
+                Ajouter mon numéro
+              </a>
+            </div>
+          </section>
+        )}
         <SubscriptionAlert expiresAt={status?.expiresAt ?? null} isBlocked={Boolean(status?.isBlocked)} isTrial={Boolean(status?.isTrial)} onExpired={() => void refreshAll(profile.id)} />
         <section className="container-ucao mt-8 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
           <article className="panel p-5 sm:p-6">

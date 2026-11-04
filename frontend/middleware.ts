@@ -38,7 +38,11 @@ export async function middleware(request: NextRequest) {
 
   if (!user && isProtected) {
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
+    // Un visiteur qui veut devenir vendeur n'a en général pas encore de compte :
+    // on l'envoie sur l'inscription (qui propose « J'ai déjà un compte »).
+    const wantsToSell = pathname === "/devenir-vendeur" || pathname.startsWith("/devenir-vendeur/");
+    loginUrl.pathname = wantsToSell ? "/register" : "/login";
+    loginUrl.search = "";
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }

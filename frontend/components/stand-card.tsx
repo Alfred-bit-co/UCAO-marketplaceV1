@@ -74,7 +74,7 @@ export function StandCard({ stand }: { stand: Stand }) {
           </span>
         )}
 
-        <span className="btn btn-primary mt-auto w-full justify-center">
+        <span className="btn mt-auto w-full justify-center bg-ucao-green text-white shadow-[0_14px_28px_rgba(46,125,91,0.28)] hover:bg-ucao-green-dark">
           Voir le stand <ArrowRight size={16} />
         </span>
       </span>

@@ -60,7 +60,7 @@ export function StandsCta() {
       <p className="mt-1 text-sm text-white/85">{cta.text}</p>
       <Link
         href={cta.href}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-ucao bg-white px-4 py-2.5 text-sm font-bold text-ucao-red transition hover:bg-white/90"
+        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-ucao bg-ucao-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-ucao-green-dark"
       >
         {cta.label}
       </Link>

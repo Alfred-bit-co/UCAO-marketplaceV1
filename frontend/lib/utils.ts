@@ -26,13 +26,44 @@ export function isValidPhoneNumber(value: string): boolean {
   return /^\+\d{8,15}$/.test(value);
 }
 
+/**
+ * Normalise un numéro WhatsApp saisi par un vendeur.
+ * - Togo : « 92 98 29 26 », « 92982926 », « 228 92982926 », « 00228… » ou « +228… » → « +22892982926 »
+ *   (toujours exactement 8 chiffres après +228).
+ * - Autre pays : numéro international complet, « + » ou « 00 » puis 8 à 15 chiffres (ex. +22997000000).
+ * Renvoie null si le numéro n'est pas exploitable.
+ */
+export function normalizeWhatsAppNumber(input: string): string | null {
+  let value = input.trim().replace(/[\s.\-()/]/g, "");
+  if (value.startsWith("00")) value = "+" + value.slice(2);
+
+  if (/^\d{8}$/.test(value)) return `+228${value}`;
+  if (/^228\d{8}$/.test(value)) return `+${value}`;
+  if (value.startsWith("+228")) return /^\+228\d{8}$/.test(value) ? value : null;
+  return /^\+\d{8,15}$/.test(value) ? value : null;
+}
+
 /** Échappe les caractères spéciaux des requêtes ilike Supabase/Postgres. */
 export function escapeIlike(value: string): string {
   return value.replace(/[%_\\]/g, (char) => `\\${char}`);
 }
 
-export function getPostLoginRedirect(profile: Pick<Profile, "role" | "verification_status">): string {
+/**
+ * Valide le paramètre « next » d'une URL : seules les adresses internes au site
+ * sont acceptées (pas de « //site.com » ni de « https://… »), sinon null.
+ */
+export function getSafeNextPath(value: string | null | undefined): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+  // Les navigateurs suppriment tabulations et retours à la ligne et lisent « \ » comme « / » :
+  // « /\t/site.com » ou « /\site.com » deviendraient « //site.com ». On refuse ces caractères.
+  if (/[\\\s\u0000-\u001f\u007f]/.test(value)) return null;
+  return value;
+}
+
+export function getPostLoginRedirect(profile: Pick<Profile, "role" | "verification_status">, next?: string | null): string {
   if (profile.role === "ADMIN") return "/admin";
+  const safeNext = getSafeNextPath(next);
+  if (safeNext) return safeNext;
   if (profile.role === "VENDEUR") return "/dashboard";
   return "/products";
 }
