@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeIlike, formatPrice, getPostLoginRedirect, getProductLimit, getSafeNextPath, getStandLimit, isValidPhoneNumber, verificationLabel } from "@/lib/utils";
+import { escapeIlike, formatPrice, getGoogleLoginRedirect, getPostLoginRedirect, getProductLimit, safeNextPath, getStandLimit, isValidPhoneNumber, verificationLabel } from "@/lib/utils";
 
 describe("escapeIlike", () => {
   it("escapes wildcard characters", () => {
@@ -46,14 +46,47 @@ describe("getPostLoginRedirect", () => {
   });
 });
 
-describe("getSafeNextPath", () => {
+describe("safeNextPath", () => {
   it("accepts internal paths and rejects the rest", () => {
-    expect(getSafeNextPath("/devenir-vendeur")).toBe("/devenir-vendeur");
-    expect(getSafeNextPath("/\\evil.com")).toBeNull();
-    expect(getSafeNextPath("/\t/evil.com")).toBeNull();
-    expect(getSafeNextPath("/\n/evil.com")).toBeNull();
-    expect(getSafeNextPath("")).toBeNull();
-    expect(getSafeNextPath(null)).toBeNull();
+    expect(safeNextPath("/devenir-vendeur")).toBe("/devenir-vendeur");
+    expect(safeNextPath("/\\evil.com")).toBeNull();
+    expect(safeNextPath("/\t/evil.com")).toBeNull();
+    expect(safeNextPath("/\n/evil.com")).toBeNull();
+    expect(safeNextPath("")).toBeNull();
+    expect(safeNextPath(null)).toBeNull();
+    expect(safeNextPath("//evil.com")).toBeNull();
+    expect(safeNextPath("/redirect?to=https://evil.com")).toBeNull();
+    expect(safeNextPath("https://evil.com")).toBeNull();
+  });
+});
+
+describe("getGoogleLoginRedirect", () => {
+  const complete = { cgu_accepted_at: "2026-11-01T00:00:00Z", student_id_url: "cartes/abc.jpg" };
+
+  it("envoie l'admin sur /admin, même sans conditions ni carte", () => {
+    expect(getGoogleLoginRedirect({ role: "ADMIN", cgu_accepted_at: null, student_id_url: null })).toBe("/admin");
+  });
+
+  it("envoie vers l'onboarding si les conditions ne sont pas acceptées", () => {
+    expect(getGoogleLoginRedirect({ ...complete, role: "VENDEUR", cgu_accepted_at: null })).toBe("/verification-carte?oauth=google");
+  });
+
+  it("envoie vers l'onboarding si aucune carte n'a été envoyée", () => {
+    expect(getGoogleLoginRedirect({ ...complete, role: "VENDEUR", student_id_url: null })).toBe("/verification-carte?oauth=google");
+  });
+
+  it("envoie le vendeur complet sur /dashboard, même avec ?next=", () => {
+    expect(getGoogleLoginRedirect({ ...complete, role: "VENDEUR" }, "/stands")).toBe("/dashboard");
+  });
+
+  it("utilise ?next= s'il est sûr, sinon /products", () => {
+    expect(getGoogleLoginRedirect({ ...complete, role: "ACHETEUR" }, "/devenir-vendeur")).toBe("/devenir-vendeur");
+    expect(getGoogleLoginRedirect({ ...complete, role: "ACHETEUR" }, "//evil.com")).toBe("/products");
+    expect(getGoogleLoginRedirect({ ...complete, role: "ACHETEUR" })).toBe("/products");
+  });
+
+  it("garde le comportement actuel si le profil est illisible", () => {
+    expect(getGoogleLoginRedirect(null, "/devenir-vendeur")).toBe("/verification-carte?oauth=google");
   });
 });
 

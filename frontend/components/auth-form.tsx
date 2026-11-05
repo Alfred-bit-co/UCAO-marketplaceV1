@@ -4,11 +4,11 @@ import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { Brand } from "./navbar";
-import { GoogleIcon } from "./google-icon";
+import { GoogleSignInButton } from "./google-signin-button";
 import { TurnstileWidget } from "./turnstile-widget";
 import { ThemeProvider } from "./theme-provider";
 import { createClient } from "@/lib/supabase";
-import { getPostLoginRedirect, getSafeNextPath } from "@/lib/utils";
+import { getGoogleLoginRedirect, getPostLoginRedirect, safeNextPath } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { validateImageFile } from "@/lib/storage";
 import { submitStudentVerification } from "@/lib/verification";
@@ -135,30 +135,67 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
   // Page où renvoyer la personne après connexion (ex. « Devenir vendeur »).
   const [nextPath, setNextPath] = useState<string | null>(null);
 
+  // Change après chaque essai Google : nouveau nonce et bouton réinitialisé.
+  const [googleAttempt, setGoogleAttempt] = useState(0);
+
   useEffect(() => {
-    setNextPath(getSafeNextPath(new URLSearchParams(window.location.search).get("next")));
-  }, []);
+    const params = new URLSearchParams(window.location.search);
+    setNextPath(safeNextPath(params.get("next")));
+    // Échec du retour OAuth (auth/callback) : jusqu'ici ce message n'était affiché nulle part.
+    if (mode === "login" && params.get("error") === "oauth_callback") {
+      setError(true);
+      setMessage(friendlyAuthError({}, "oauth"));
+    }
+  }, [mode]);
 
   const switchHref = `${mode === "login" ? "/register" : "/login"}${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""}`;
 
-  async function signInWithGoogle() {
+  async function signInWithGoogleCredential(credential: string, rawNonce: string) {
     const supabase = createClient();
     if (!supabase) {
       setError(true);
       setMessage("Supabase n'est pas encore configuré. Ajoutez les clés dans frontend/.env.local.");
       return;
     }
+    if (CAPTCHA_ENABLED && !captchaToken) {
+      setError(true);
+      setMessage("Veuillez valider la vérification anti-robot avant de continuer.");
+      return;
+    }
 
     setSubmitting(true);
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+    setMessage("");
+    const { error: idTokenError } = await supabase.auth.signInWithIdToken({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?oauth=google` },
+      token: credential,
+      nonce: rawNonce,
+      options: { captchaToken: captchaToken ?? undefined },
     });
-    if (oauthError) {
+    // Un jeton Turnstile ne sert qu'une fois, et un nonce aussi : on renouvelle les deux.
+    if (CAPTCHA_ENABLED) {
+      setCaptchaToken(null);
+      setCaptchaReset((count) => count + 1);
+    }
+    setGoogleAttempt((count) => count + 1);
+
+    if (idTokenError) {
       setSubmitting(false);
       setError(true);
-      setMessage(friendlyAuthError(oauthError, "oauth"));
+      setMessage(friendlyAuthError(idTokenError, "oauth"));
+      return;
     }
+
+    const profile = await fetchProfileAfterLogin(supabase);
+    setError(false);
+    setMessage("Connexion réussie. Redirection...");
+    // submitting reste vrai pendant la redirection pour éviter un second clic.
+    window.location.href = getGoogleLoginRedirect(profile, nextPath);
+  }
+
+  function handleGoogleError() {
+    setError(true);
+    setMessage(friendlyAuthError({}, "oauth"));
+    setGoogleAttempt((count) => count + 1);
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -452,10 +489,14 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           {submitting ? "Veuillez patienter..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
         <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
-        <button className="btn btn-ghost w-full" type="button" onClick={signInWithGoogle} disabled={submitting}>
-          <GoogleIcon size={18} />
-          Continuer avec Google
-        </button>
+        <GoogleSignInButton
+          mode={mode}
+          ready={!submitting && (!CAPTCHA_ENABLED || Boolean(captchaToken))}
+          notReadyMessage={submitting ? "Veuillez patienter..." : "Valide d'abord la vérification anti-robot ci-dessus pour continuer avec Google."}
+          resetKey={googleAttempt}
+          onCredential={signInWithGoogleCredential}
+          onError={handleGoogleError}
+        />
         <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={switchHref}>
           {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
         </Link>

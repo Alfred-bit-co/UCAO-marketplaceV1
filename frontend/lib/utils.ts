@@ -52,8 +52,8 @@ export function escapeIlike(value: string): string {
  * Valide le paramètre « next » d'une URL : seules les adresses internes au site
  * sont acceptées (pas de « //site.com » ni de « https://… »), sinon null.
  */
-export function getSafeNextPath(value: string | null | undefined): string | null {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+export function safeNextPath(value: string | null | undefined): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("://")) return null;
   // Les navigateurs suppriment tabulations et retours à la ligne et lisent « \ » comme « / » :
   // « /\t/site.com » ou « /\site.com » deviendraient « //site.com ». On refuse ces caractères.
   if (/[\\\s\u0000-\u001f\u007f]/.test(value)) return null;
@@ -62,10 +62,32 @@ export function getSafeNextPath(value: string | null | undefined): string | null
 
 export function getPostLoginRedirect(profile: Pick<Profile, "role" | "verification_status">, next?: string | null): string {
   if (profile.role === "ADMIN") return "/admin";
-  const safeNext = getSafeNextPath(next);
+  const safeNext = safeNextPath(next);
   if (safeNext) return safeNext;
   if (profile.role === "VENDEUR") return "/dashboard";
   return "/products";
+}
+
+const GOOGLE_ONBOARDING_PATH = "/verification-carte?oauth=google";
+
+/**
+ * Destination après une connexion Google réussie (règles appliquées dans cet ordre) :
+ * admin → /admin ; conditions non acceptées ou carte d'étudiant jamais envoyée → onboarding ;
+ * vendeur → /dashboard ; sinon ?next= s'il est sûr, ou /products.
+ * Profil illisible (null) → onboarding, comme l'ancien flux.
+ * « Carte envoyée » = student_id_url renseigné (verification_status vaut « pending » par défaut,
+ * même sans carte, et ne prouve donc pas l'envoi).
+ */
+export function getGoogleLoginRedirect(
+  profile: Pick<Profile, "role" | "cgu_accepted_at" | "student_id_url"> | null,
+  next?: string | null,
+): string {
+  if (!profile) return GOOGLE_ONBOARDING_PATH;
+  if (profile.role === "ADMIN") return "/admin";
+  if (!profile.cgu_accepted_at) return GOOGLE_ONBOARDING_PATH;
+  if (!profile.student_id_url) return GOOGLE_ONBOARDING_PATH;
+  if (profile.role === "VENDEUR") return "/dashboard";
+  return safeNextPath(next) ?? "/products";
 }
 
 export function isVerified(profile: Pick<Profile, "role" | "verification_status">): boolean {
