@@ -69,7 +69,7 @@ export function StandForm({ stand, suspended, limitReached, onSubmit, onCancel }
       return;
     }
     if (needsPhone && !normalizedPhone) {
-      setError("Ajoutez un numéro WhatsApp pour proposer Commander, Réserver ou Rendez-vous.");
+      setError("Ajoute un numéro WhatsApp pour proposer Commander, Réserver ou Rendez-vous.");
       return;
     }
     setSubmitting(true);
@@ -156,7 +156,7 @@ export function StandForm({ stand, suspended, limitReached, onSubmit, onCancel }
         <ImageUpload folder="stands" label="Bannière du stand" value={banner} onChange={setBanner} compact />
 
         <fieldset className="grid gap-2">
-          <legend className="font-medium">Ce que propose votre stand</legend>
+          <legend className="font-medium">Ce que propose ton stand</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {STAND_CONTACT_MODES.map((mode) => {
               const checked = modes.includes(mode.value);
@@ -211,7 +211,7 @@ export function StandForm({ stand, suspended, limitReached, onSubmit, onCancel }
           >
             {phoneInvalid
               ? "Format attendu : +22890123456 (indicatif du pays puis numéro)."
-              : "Ce numéro sera visible par tous les visiteurs de votre stand. Utilisez un numéro que vous acceptez de rendre public."}
+              : "Ce numéro sera visible par tous les visiteurs de ton stand. Utilise un numéro que tu acceptes de rendre public."}
           </p>
         </div>
 
@@ -233,7 +233,7 @@ export function StandForm({ stand, suspended, limitReached, onSubmit, onCancel }
             </div>
           ) : (
             <p className="mt-2 text-sm text-ucao-muted dark:text-[#a8b8cc]">
-              Sans numéro WhatsApp valide, aucun bouton de contact n’est affiché sur votre stand.
+              Sans numéro WhatsApp valide, aucun bouton de contact n’est affiché sur ton stand.
             </p>
           )}
         </div>
@@ -243,10 +243,10 @@ export function StandForm({ stand, suspended, limitReached, onSubmit, onCancel }
             <AlertTriangle size={16} /> {error}
           </p>
         )}
-        {suspended && <p className="notice notice-error">Modification désactivée : votre compte est suspendu.</p>}
+        {suspended && <p className="notice notice-error">Modification désactivée : ton compte est suspendu.</p>}
         {!editing && limitReached && !suspended && (
           <p className="notice">
-            Votre palier ne permet pas de créer un stand supplémentaire.{" "}
+            Ton palier ne permet pas de créer un stand supplémentaire.{" "}
             <a className="underline" href="/devenir-vendeur">
               Changer de palier
             </a>

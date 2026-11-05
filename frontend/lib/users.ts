@@ -57,6 +57,11 @@ export async function updateProfile(
   const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
   if (error) {
     console.error("SUPABASE ERROR (updateProfile):", error);
+    // 23505 = violation d'unicité : ce numéro appartient déjà à un autre compte (index profiles_phone_unique).
+    const duplicate = `${error.message} ${error.details ?? ""}`.includes("profiles_phone_unique");
+    if (error.code === "23505" && duplicate) {
+      return { error: "Ce numéro est déjà utilisé par un autre compte." };
+    }
     return { error: error.message };
   }
   return { error: null };

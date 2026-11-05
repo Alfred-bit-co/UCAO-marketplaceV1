@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Clock3, Crown, Loader2, Save, Send, ShieldAlert, Star, UserPlus, X } from "@/lib/icons";
+import { AlertTriangle, CheckCircle2, Clock3, Crown, Loader2, MessageCircle, Save, Send, ShieldAlert, Star, UserPlus, X } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
@@ -8,11 +8,9 @@ import { PageSkeleton } from "@/components/skeletons";
 import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscriptions";
 import { TRIAL_DURATIONS, getTrialStatus, startTrial } from "@/lib/trial";
 import type { TrialStatus } from "@/lib/trial";
-import { cn } from "@/lib/utils";
+import { cn, normalizeWhatsAppNumber } from "@/lib/utils";
 import { getCurrentProfile, updateProfile } from "@/lib/users";
 import type { Profile, SubscriptionTier } from "@/lib/types";
-
-const PHONE_PATTERN = /^\+\d{8,15}$/;
 
 const TIER_STYLES: Record<SubscriptionTier, { Icon: typeof Send; iconBg: string; button: string }> = {
   STANDARD: {
@@ -80,17 +78,20 @@ export default function DevenirVendeurPage() {
     event.preventDefault();
     if (!profile) return;
     setPhoneMessage(null);
-    if (!PHONE_PATTERN.test(phone)) {
+    // « 92 98 29 26 », « 92982926 » ou « +228… » deviennent « +22892982926 » (autres pays : +indicatif complet).
+    const normalized = normalizeWhatsAppNumber(phone);
+    if (!normalized) {
       setPhoneStatus("error");
-      setPhoneMessage("Le numéro doit être au format +xxxxxxxxxxx (uniquement des chiffres après le +).");
+      setPhoneMessage("Numéro invalide. Saisis tes 8 chiffres (ex. 92 98 29 26), ou ton numéro complet avec l'indicatif de ton pays (ex. +229…).");
       return;
     }
+    setPhone(normalized);
     setPhoneStatus("saving");
-    const { error: saveError } = await updateProfile(profile.id, { phone });
+    const { error: saveError } = await updateProfile(profile.id, { phone: normalized });
     setPhoneStatus(saveError ? "error" : "idle");
     setPhoneMessage(saveError);
     if (!saveError) {
-      setProfile({ ...profile, phone });
+      setProfile({ ...profile, phone: normalized });
       setTrialStatus(await getTrialStatus());
       setState("ready");
     }
@@ -159,8 +160,8 @@ export default function DevenirVendeurPage() {
           <section className="container-ucao max-w-md py-[54px] pb-[84px] text-center">
             <p className="mb-6 text-ucao-muted dark:text-[#a8b8cc]">Vous devez d&apos;abord créer un compte (avec votre numéro de téléphone) avant de choisir un palier.</p>
             <div className="flex flex-wrap justify-center gap-3">
-              <a className="btn btn-primary" href="/register"><UserPlus size={18} /> Créer un compte vendeur</a>
-              <a className="btn btn-ghost" href="/login">J&apos;ai déjà un compte</a>
+              <a className="btn btn-primary" href="/register?next=%2Fdevenir-vendeur"><UserPlus size={18} /> Créer un compte vendeur</a>
+              <a className="btn btn-ghost" href="/login?next=%2Fdevenir-vendeur">J&apos;ai déjà un compte</a>
             </div>
           </section>
         </main>
@@ -172,12 +173,29 @@ export default function DevenirVendeurPage() {
     return (
       <PageShell>
         <main>
-          <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="Une dernière étape">Un numéro de téléphone est requis avant de choisir un palier.</PageHero>
+          <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="Une dernière étape">Ajoute ton numéro WhatsApp avant de choisir ton palier : c&apos;est par là que les acheteurs te contactent.</PageHero>
           <section className="container-ucao max-w-md py-[54px] pb-[84px]">
             <form className="panel grid gap-4 p-6" onSubmit={handleSavePhone}>
-              <label className="grid gap-1 text-sm">
-                Numéro de téléphone
-                <input className="input-field" type="tel" placeholder="+22892982926" pattern="\+\d{8,15}" value={phone} onChange={(event) => setPhone(event.target.value)} required />
+              <label className="grid gap-1.5 text-sm font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <MessageCircle size={16} aria-hidden="true" /> Numéro WhatsApp
+                </span>
+                {/* Pas d'attribut pattern : « 92 98 29 26 » doit être accepté, la normalisation se fait à l'envoi. */}
+                <input
+                  className="input-field"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="92 98 29 26"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  aria-describedby="whatsapp-help"
+                  required
+                />
+                <span id="whatsapp-help" className="text-xs font-normal text-ucao-muted dark:text-[#a8b8cc]">
+                  Numéro togolais : tes 8 chiffres suffisent, on ajoute +228. Autre pays : écris l&apos;indicatif (ex. +229…).
+                  Ce numéro sera visible sur tes produits.
+                </span>
               </label>
               {phoneMessage && <p className={"notice " + (phoneStatus === "error" ? "notice-error" : "")}>{phoneMessage}</p>}
               <button className="btn btn-primary" type="submit" disabled={phoneStatus === "saving"}>

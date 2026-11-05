@@ -63,7 +63,7 @@ function cleanPayload(payload: StandPayload) {
   }
   const modes = sanitizeContactModes(payload.contact_modes);
   if (modesNeedPhone(modes) && !phone) {
-    return { ok: false, error: "Ajoutez un numéro WhatsApp pour proposer les boutons Commander, Réserver ou Rendez-vous." } as const;
+    return { ok: false, error: "Ajoute un numéro WhatsApp pour proposer les boutons Commander, Réserver ou Rendez-vous." } as const;
   }
   return {
     ok: true,

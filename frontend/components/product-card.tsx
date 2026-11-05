@@ -163,9 +163,15 @@ export function ProductCard({
                 <MessageCircle size={14} aria-hidden="true" /> Contacter
               </a>
             ) : (
-              <Link className="btn btn-ghost mt-3 min-h-9 w-full px-3 text-xs sm:text-sm" href={href}>
-                Voir le produit
-              </Link>
+              // Vendeur sans numéro : aucun lien WhatsApp (ni vers un autre numéro, ni vers la plateforme).
+              <button
+                className="btn btn-ghost mt-3 min-h-9 w-full px-3 text-xs sm:text-sm"
+                type="button"
+                disabled
+                title="Ce vendeur n'a pas encore ajouté son numéro WhatsApp"
+              >
+                Contact indisponible
+              </button>
             ))}
         </div>
       </div>

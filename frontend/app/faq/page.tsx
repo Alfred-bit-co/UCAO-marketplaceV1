@@ -14,19 +14,19 @@ const FAQ_GROUPS = [
     items: [
       {
         question: "Comment acheter un produit ?",
-        answer: "Parcourez le catalogue, puis cliquez sur « Contacter » sur la carte du produit (ou sur « Discuter sur WhatsApp » depuis sa fiche) pour joindre directement le vendeur. WhatsApp s'ouvre avec un message déjà écrit.",
+        answer: "Parcours le catalogue, puis clique sur « Contacter » sur la carte du produit (ou sur « Discuter sur WhatsApp » depuis sa fiche) pour joindre directement le vendeur. WhatsApp s'ouvre avec un message déjà écrit.",
       },
       {
         question: "Peut-on payer sur le site ?",
-        answer: "Non. Le site met en relation : vous convenez du prix, de la remise et du paiement directement avec le vendeur.",
+        answer: "Non. Le site te met en relation : tu conviens du prix, de la remise et du paiement directement avec le vendeur.",
       },
       {
         question: "Où se déroulent les échanges (paiement, remise du produit) ?",
-        answer: "Toujours en personne, sur le campus de l'UCAO-UUT. La plateforme ne prend pas en charge les litiges liés à un échange effectué en dehors du campus ou à distance. Rencontrez-vous dans un lieu public et ne payez pas à l'avance un inconnu.",
+        answer: "Toujours en personne, sur le campus de l'UCAO-UUT. La plateforme ne prend pas en charge les litiges liés à un échange effectué en dehors du campus ou à distance. Donnez-vous rendez-vous dans un lieu public, et ne paie jamais à l'avance un inconnu.",
       },
       {
         question: "À quoi sert le cœur sur un produit ?",
-        answer: "À dire que vous aimez ce produit. Vous n'avez pas besoin de compte : un identifiant anonyme est enregistré dans votre navigateur pour retenir vos « j'aime ». Le nombre de cœurs est visible par tous, mais personne ne voit qui a aimé. Cliquez à nouveau sur le cœur pour retirer votre « j'aime ». Si vous effacez les données de votre navigateur, vous n'en retrouverez plus la trace. Un vendeur connecté ne peut pas aimer ses propres produits.",
+        answer: "À dire que tu aimes ce produit. Tu n'as pas besoin de compte : un identifiant anonyme est enregistré dans ton navigateur pour retenir tes « j'aime ». Le nombre de cœurs est visible par tous, mais personne ne voit qui a aimé. Clique à nouveau sur le cœur pour retirer ton « j'aime ». Si tu effaces les données de ton navigateur, tu n'en retrouveras plus la trace. Un vendeur connecté ne peut pas aimer ses propres produits.",
       },
     ],
   },
@@ -35,7 +35,7 @@ const FAQ_GROUPS = [
     items: [
       {
         question: "Comment devenir vendeur ?",
-        answer: "Cliquez sur « Devenir vendeur », choisissez un palier (STANDARD, PREMIUM ou VIP), puis payez l'abonnement via Mobile Money (TMoney, Flooz).",
+        answer: "Clique sur « Devenir vendeur », ajoute ton numéro WhatsApp (c'est par là que les acheteurs te contactent), choisis un palier (STANDARD, PREMIUM ou VIP), puis paie l'abonnement via Mobile Money (TMoney, Flooz).",
       },
       {
         question: "Quels sont les abonnements ?",
@@ -43,19 +43,19 @@ const FAQ_GROUPS = [
       },
       {
         question: "Le renouvellement est-il automatique ?",
-        answer: "Non. Le Mobile Money ne permet pas de prélèvement automatique. Vous devez vous-même relancer le paiement chaque mois depuis votre tableau de bord.",
+        answer: "Non. Le Mobile Money ne permet pas de prélèvement automatique. Tu dois toi-même relancer le paiement chaque mois depuis ton tableau de bord.",
       },
       {
         question: "Que se passe-t-il si je ne renouvelle pas à temps ?",
-        answer: "Vos produits et votre stand sont masqués publiquement jusqu'au renouvellement. Rien n'est supprimé : en renouvelant, tout réapparaît tout de suite. Vous êtes prévenu 7 jours, 3 jours et 30 minutes avant la fin de votre abonnement.",
+        answer: "Tes produits et ton stand sont masqués publiquement jusqu'au renouvellement. Rien n'est supprimé : en renouvelant, tout réapparaît tout de suite. Tu es prévenu 7 jours, 3 jours et 30 minutes avant la fin de ton abonnement.",
       },
       {
         question: "Pourquoi demandez-vous ma carte d'étudiant ?",
-        answer: "Pour vérifier que les vendeurs sont de vrais étudiants. Elle est conservée dans un espace privé, seuls vous et l'équipe pouvez la consulter, et elle est supprimée avec votre compte.",
+        answer: "Pour vérifier que les vendeurs sont de vrais étudiants. Elle est conservée dans un espace privé : seuls toi et l'équipe pouvez la consulter, et elle est supprimée avec ton compte.",
       },
       {
         question: "Mon numéro de téléphone est-il visible ?",
-        answer: "Oui : le numéro d'un vendeur est affiché avec ses produits, pour que les acheteurs puissent le contacter. Votre adresse e-mail, elle, n'est jamais publique.",
+        answer: "Oui : le numéro WhatsApp d'un vendeur est affiché avec ses produits, pour que les acheteurs puissent le contacter. Ton adresse e-mail, elle, n'est jamais publique.",
       },
     ],
   },
@@ -64,15 +64,15 @@ const FAQ_GROUPS = [
     items: [
       {
         question: "J'ai oublié mon mot de passe, que faire ?",
-        answer: "Rendez-vous sur la page de connexion et cliquez sur « Mot de passe oublié ? » pour recevoir un lien de réinitialisation par email. Si vous vous connectez avec Google, utilisez simplement « Continuer avec Google ».",
+        answer: "Va sur la page de connexion et clique sur « Mot de passe oublié ? » pour recevoir un lien de réinitialisation par e-mail. Si tu te connectes avec Google, utilise simplement « Continuer avec Google ».",
       },
       {
         question: "Comment supprimer mon compte et mes données ?",
-        answer: "Écrivez à ucaomarketplace2026@gmail.com avec l'objet « Exercice de mes droits ». Votre profil, vos produits, vos stands, vos avis, vos « j'aime » et vos fichiers (dont votre carte d'étudiant) sont supprimés.",
+        answer: "Écris à ucaomarketplace2026@gmail.com avec l'objet « Exercice de mes droits ». Ton profil, tes produits, tes stands, tes avis, tes « j'aime » et tes fichiers (dont ta carte d'étudiant) sont supprimés.",
       },
       {
         question: "Pourquoi mon compte est-il suspendu ?",
-        answer: "Un administrateur peut suspendre un compte en cas d'abus. Vous pouvez toujours vous connecter et naviguer, mais vous ne pouvez plus publier de produit ni de stand. Écrivez-nous pour comprendre la raison.",
+        answer: "Un administrateur peut suspendre un compte en cas d'abus. Tu peux toujours te connecter et naviguer, mais tu ne peux plus publier de produit ni de stand. Écris-nous pour comprendre la raison.",
       },
     ],
   },
@@ -81,7 +81,7 @@ const FAQ_GROUPS = [
     items: [
       {
         question: "Comment signaler un produit, un vendeur ou un abus ?",
-        answer: "Utilisez le lien « Signaler un abus » en bas de chaque page, ou écrivez à ucaomarketplace2026@gmail.com en indiquant le nom du produit ou du vendeur.",
+        answer: "Utilise le lien « Signaler un abus » en bas de chaque page, ou écris à ucaomarketplace2026@gmail.com en indiquant le nom du produit ou du vendeur.",
       },
       {
         question: "Mon avis est-il publié tout de suite ?",
@@ -113,9 +113,9 @@ export default function FaqPage() {
             </div>
           ))}
           <p className="mt-8 text-center text-sm text-ucao-muted dark:text-[#a8b8cc]">
-            Vous ne trouvez pas de réponse ?{" "}
+            Tu ne trouves pas de réponse ?{" "}
             <a className="font-medium text-ucao-red underline" href="mailto:ucaomarketplace2026@gmail.com">
-              Contactez-nous
+              Contacte-nous
             </a>
             .
           </p>

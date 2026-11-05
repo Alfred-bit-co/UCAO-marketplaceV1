@@ -61,10 +61,15 @@ export default async function ProductDetailPage({ params }: Props) {
             <p>Contact : {product.seller?.phone || "Non renseigné"}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {whatsapp && (
+            {whatsapp ? (
               <a className="btn btn-primary" href={whatsapp} target="_blank" rel="noopener noreferrer">
                 <MessageCircle size={18} /> Discuter sur WhatsApp
               </a>
+            ) : (
+              // Vendeur sans numéro : pas de lien WhatsApp de remplacement.
+              <button className="btn btn-ghost" type="button" disabled title="Ce vendeur n'a pas encore ajouté son numéro WhatsApp">
+                <MessageCircle size={18} /> Contact indisponible
+              </button>
             )}
             <Link className="btn btn-ghost" href="/products">
               <ArrowLeft size={18} /> Retour aux produits

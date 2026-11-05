@@ -46,10 +46,10 @@ export function TrialNotice() {
             <Clock3 size={24} strokeWidth={2.2} />
           </span>
           <div>
-            <h2 className="text-2xl font-medium">Essayez avant de payer</h2>
+            <h2 className="text-2xl font-medium">Essaie avant de payer</h2>
             <p className="mt-2 text-ucao-muted dark:text-[#a8b8cc]">
-              Choisissez le palier qui vous convient et testez-le gratuitement, sans aucun paiement. Un seul essai par personne.
-              À la fin de l&apos;essai, vos produits sont masqués au public mais conservés : ils redeviennent visibles dès que vous vous abonnez.
+              Choisis le palier qui te convient et teste-le gratuitement, sans aucun paiement. Un seul essai par personne.
+              À la fin de l&apos;essai, tes produits sont masqués au public mais conservés : ils redeviennent visibles dès que tu t&apos;abonnes.
             </p>
             <ul className="mt-4 flex flex-wrap gap-2">
               {TIERS.map((tier) => (

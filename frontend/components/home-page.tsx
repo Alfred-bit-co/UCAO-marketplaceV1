@@ -9,7 +9,7 @@ import {
   ChevronRight,
   ExternalLink,
   GraduationCap,
-  HandCoins,
+  MessageCircle,
   ShieldCheck,
   ShoppingBag,
   Store,
@@ -63,7 +63,7 @@ export function HomePage({
   const steps: { Icon: IconComponent; label: string }[] = [
     { Icon: ShoppingBag, label: "Acheter utile" },
     { Icon: Store, label: "Vendre vite" },
-    { Icon: HandCoins, label: "Payer Mobile Money" },
+    { Icon: MessageCircle, label: "Contact direct WhatsApp" },
   ];
 
   return (
@@ -140,7 +140,7 @@ export function HomePage({
             <div className="mt-5 rounded-ucao border border-white/35 bg-white/[0.64] p-5 text-ucao-navy shadow-[0_12px_30px_rgba(7,20,38,0.1)] backdrop-blur-xl">
               <span className="role-badge">Vendeur vérifié</span>
               <strong className="mt-3 block text-2xl">Stand actif en quelques minutes</strong>
-              <p className="mt-2 text-sm text-ucao-muted">Publie tes produits, reçois les commandes et garde le contact avec les acheteurs.</p>
+              <p className="mt-2 text-sm text-ucao-muted">Publie tes produits, reçois les demandes des acheteurs sur WhatsApp et garde le contact avec les acheteurs.</p>
             </div>
           </div>
         </div>
@@ -169,7 +169,7 @@ export function HomePage({
             Tout ce qu&apos;il faut pour vendre entre étudiants.
           </h2>
           <p className="max-w-xl text-ucao-muted dark:text-[#a8b8cc]">
-            Moins de bruit, plus d&apos;utile : produits, services, stands et paiements pensés pour la vie à l&apos;UCAO UUT.
+            Moins de bruit, plus d&apos;utile : produits, services et stands pensés pour la vie à l&apos;UCAO UUT.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">

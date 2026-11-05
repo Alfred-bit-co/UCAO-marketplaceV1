@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Brand } from "./navbar";
 import { GoogleIcon } from "./google-icon";
 import { TurnstileWidget } from "./turnstile-widget";
 import { ThemeProvider } from "./theme-provider";
 import { createClient } from "@/lib/supabase";
-import { getPostLoginRedirect } from "@/lib/utils";
+import { getPostLoginRedirect, getSafeNextPath } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { validateImageFile } from "@/lib/storage";
 import { submitStudentVerification } from "@/lib/verification";
@@ -132,6 +132,14 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
   const [submitting, setSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
+  // Page où renvoyer la personne après connexion (ex. « Devenir vendeur »).
+  const [nextPath, setNextPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNextPath(getSafeNextPath(new URLSearchParams(window.location.search).get("next")));
+  }, []);
+
+  const switchHref = `${mode === "login" ? "/register" : "/login"}${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""}`;
 
   async function signInWithGoogle() {
     const supabase = createClient();
@@ -239,7 +247,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           return;
         }
         const profile = await fetchProfileAfterLogin(supabase);
-        const destination = profile ? getPostLoginRedirect(profile) : "/profil";
+        const destination = profile ? getPostLoginRedirect(profile, nextPath) : nextPath ?? "/profil";
         setError(false);
         setMessage("Connexion réussie. Redirection...");
         window.setTimeout(() => {
@@ -448,7 +456,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           <GoogleIcon size={18} />
           Continuer avec Google
         </button>
-        <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={mode === "login" ? "/register" : "/login"}>
+        <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={switchHref}>
           {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
         </Link>
       </form>

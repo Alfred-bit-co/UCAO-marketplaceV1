@@ -21,7 +21,7 @@ import { TrialNotice } from "@/components/trial-notice";
 
 export const metadata: Metadata = {
   title: "Comment ça marche — UCAO Marketplace",
-  description: "Découvrez comment acheter et vendre entre étudiants sur UCAO Marketplace, et qui contacter en cas de problème.",
+  description: "Découvre comment acheter et vendre entre étudiants sur UCAO Marketplace, et qui contacter en cas de problème.",
 };
 
 const ICON_STROKE = 2.2;
@@ -36,41 +36,41 @@ type Step = { Icon: IconComponent; title: string; text: string };
 const buyerSteps: Step[] = [
   {
     Icon: Search,
-    title: "Parcourez les offres",
-    text: "Explorez les produits, services et stands du campus, et filtrez par catégorie pour trouver plus vite ce que vous cherchez.",
+    title: "Parcours les offres",
+    text: "Explore les produits, services et stands du campus, et filtre par catégorie pour trouver plus vite ce que tu cherches.",
   },
   {
     Icon: Eye,
-    title: "Consultez la fiche produit",
-    text: "Vérifiez le prix, les photos et les informations du vendeur. Le cœur permet de dire que vous aimez un produit, même sans compte : le nombre de cœurs est public, jamais l'identité de ceux qui aiment.",
+    title: "Consulte la fiche produit",
+    text: "Vérifie le prix, les photos et les informations du vendeur. Le cœur permet de dire que tu aimes un produit, même sans compte : le nombre de cœurs est public, jamais l'identité de ceux qui aiment.",
   },
   {
     Icon: MessageCircle,
-    title: "Contactez le vendeur sur WhatsApp",
-    text: "Convenez du prix, du lieu et de l'heure. Le paiement et la remise du produit se font toujours en personne, sur le campus.",
+    title: "Contacte le vendeur sur WhatsApp",
+    text: "Mettez-vous d'accord sur le prix, le lieu et l'heure. Le paiement et la remise du produit se font toujours en personne, sur le campus.",
   },
 ];
 
 const sellerSteps: Step[] = [
   {
     Icon: UserPlus,
-    title: "Créez votre compte vendeur",
-    text: "Inscrivez-vous avec votre numéro de téléphone et votre carte d'étudiant : c'est ce qui permet de vérifier que les vendeurs sont de vrais étudiants.",
+    title: "Crée ton compte vendeur",
+    text: "Inscris-toi avec ton numéro WhatsApp et ta carte d'étudiant : c'est ce qui permet de vérifier que les vendeurs sont de vrais étudiants, et aux acheteurs de te contacter.",
   },
   {
     Icon: Star,
-    title: "Choisissez votre palier",
+    title: "Choisis ton palier",
     text: "STANDARD, PREMIUM ou VIP : un abonnement mensuel payé par Mobile Money (TMoney, Flooz), sans renouvellement automatique.",
   },
   {
     Icon: PackagePlus,
-    title: "Publiez vos produits",
-    text: "Ajoutez des photos, un prix et une description claire. Les stands, vos vitrines personnalisées, sont disponibles à partir du palier PREMIUM.",
+    title: "Publie tes produits",
+    text: "Ajoute des photos, un prix et une description claire. Les stands, tes vitrines personnalisées, sont disponibles à partir du palier PREMIUM.",
   },
   {
     Icon: Handshake,
-    title: "Échangez avec les acheteurs",
-    text: "Répondez-leur sur WhatsApp et organisez la remise du produit en personne, sur le campus.",
+    title: "Échange avec les acheteurs",
+    text: "Réponds-leur sur WhatsApp et organise la remise du produit en personne, sur le campus.",
   },
 ];
 
@@ -83,12 +83,12 @@ const securityItems: Step[] = [
   {
     Icon: ShieldCheck,
     title: "Échanges sur le campus",
-    text: "Le paiement et la remise du produit se font toujours en personne, sur le campus. Vérifiez la marchandise avant de payer en espèces.",
+    text: "Le paiement et la remise du produit se font toujours en personne, sur le campus. Vérifie la marchandise avant de payer le vendeur.",
   },
   {
     Icon: AlertTriangle,
     title: "Signalement simple",
-    text: "Un produit ou un comportement vous semble abusif ? Utilisez le lien « Signaler un abus » en bas de chaque page.",
+    text: "Un produit ou un comportement te semble abusif ? Utilise le lien « Signaler un abus » en bas de chaque page.",
   },
 ];
 
@@ -111,8 +111,8 @@ export default function CommentCaMarchePage() {
         </section>
 
         <section className="container-ucao grid gap-8 py-16 lg:grid-cols-2 lg:items-start">
-          <StepGroup title="Acheter" intro="Trouvez rapidement ce dont vous avez besoin pour les cours, les projets ou la vie de campus." steps={buyerSteps} />
-          <StepGroup title="Vendre" intro="Transformez votre idée, votre service ou votre stock en une vitrine visible par toute la communauté." steps={sellerSteps} />
+          <StepGroup title="Acheter" intro="Trouve rapidement ce dont tu as besoin pour les cours, les projets ou la vie de campus." steps={buyerSteps} />
+          <StepGroup title="Vendre" intro="Transforme ton idée, ton service ou ton stock en une vitrine visible par toute la communauté." steps={sellerSteps} />
         </section>
 
         <TrialNotice />
@@ -154,10 +154,10 @@ export default function CommentCaMarchePage() {
                 <Headset size={24} strokeWidth={ICON_STROKE} />
               </span>
               <div>
-                <h2 className="text-2xl font-medium">Un problème ? Contactez-nous</h2>
+                <h2 className="text-2xl font-medium">Un problème ? Contacte-nous</h2>
                 <p className="mt-2 max-w-2xl text-ucao-muted dark:text-[#a8b8cc]">
-                  Un souci avec un vendeur, un abonnement ou votre compte ? L&apos;équipe de la plateforme est joignable par téléphone,
-                  sur WhatsApp et par e-mail. Vous trouverez aussi des réponses rapides dans la{" "}
+                  Un souci avec un vendeur, un abonnement ou ton compte ? L&apos;équipe de la plateforme est joignable par téléphone,
+                  sur WhatsApp et par e-mail. Tu trouveras aussi des réponses rapides dans la{" "}
                   <Link className="font-medium text-ucao-red underline" href="/faq">
                     FAQ
                   </Link>
