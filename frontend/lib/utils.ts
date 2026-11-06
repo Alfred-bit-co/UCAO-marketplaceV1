@@ -5,6 +5,14 @@ export function formatPrice(value: number | string | null | undefined): string {
   return `${Number(value ?? 0).toLocaleString("fr-FR")} ${CURRENCY}`;
 }
 
+/**
+ * Titre d'une page produit : « {nom} – {prix} FCFA ».
+ * Le modèle du layout ajoute ensuite « | UCAO Marketplace » (ne pas le répéter ici).
+ */
+export function productPageTitle(name: string, price: number | string | null | undefined): string {
+  return `${name.trim()} – ${formatPrice(price)}`;
+}
+
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
 }

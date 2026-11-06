@@ -124,5 +124,5 @@ export const HERO_IMAGES = [
 export const PAYMENT_API_URL =
   process.env.NEXT_PUBLIC_PAYMENT_API_URL || "http://127.0.0.1:5000/api";
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://ucaomarketplace.vercel.app";
+// Domaine officiel : sert aux adresses canoniques, au sitemap et aux données structurées.
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.ucaomarketplace.com").replace(/\/+$/, "");
