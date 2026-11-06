@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
+import { NavigationProgress } from "@/components/navigation-progress";
 import { ToastProvider } from "@/components/toast-provider";
 import { SITE_URL } from "@/lib/constants";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
@@ -37,6 +39,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#071426" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,7 +53,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        {/* Pose le thème sombre avant le premier affichage (pas de flash blanc). */}
+        {/* Fichier externe (public/theme-init.js) et non script en ligne : compatible avec la CSP. */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/theme-init.js" />
+      </head>
       <body className={poppins.variable}>
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
