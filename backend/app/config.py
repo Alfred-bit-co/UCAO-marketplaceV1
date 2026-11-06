@@ -16,13 +16,29 @@ def _non_negative_int(value: str | None, default: int = 0) -> int:
         return default
 
 
+LOCAL_DEV_ORIGINS = ("http://localhost:3000", "http://127.0.0.1:3000")
+
+
+def is_production(env=os.environ) -> bool:
+    """Vrai sur Render (qui définit RENDER=true) ou si APP_ENV=production."""
+    return env.get("RENDER", "").lower() == "true" or env.get("APP_ENV", "").lower() == "production"
+
+
+def build_cors_origins(env=os.environ) -> list[str]:
+    """Origines autorisées : celles de CORS_ORIGINS, plus localhost UNIQUEMENT hors production.
+
+    Avant, localhost était toujours ajouté : en production, n'importe quelle page servie
+    sur le port 3000 d'un ordinateur pouvait appeler l'API avec la session de l'utilisateur.
+    """
+    configured = [origin.strip().rstrip("/") for origin in env.get("CORS_ORIGINS", "").split(",") if origin.strip()]
+    if not is_production(env):
+        configured.extend(LOCAL_DEV_ORIGINS)
+    return list(dict.fromkeys(configured))
+
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY") or os.urandom(32)
-    CORS_ORIGINS = list(dict.fromkeys([
-        *[origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()],
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ]))
+    CORS_ORIGINS = build_cors_origins()
     MAX_CONTENT_LENGTH = 1 * 1024 * 1024
     SUPABASE_URL = os.getenv("SUPABASE_URL", "")
     SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")

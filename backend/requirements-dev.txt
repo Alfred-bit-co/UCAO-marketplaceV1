@@ -1,0 +1,5 @@
+# Outils de developpement et de CI (non installes sur Render).
+-r requirements.txt
+pytest==9.2.0
+flake8==7.5.0
+pip-audit==2.10.1

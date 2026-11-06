@@ -1,5 +1,3 @@
-Flask==3.0.3
-Flask-Cors==4.0.1
-python-dotenv==1.0.1
-requests==2.32.3
-gunicorn==22.0.0
+# Meme liste que backend/requirements.txt (source unique, versions sans faille connue).
+# Conserve tant qu'on n'a pas confirme que Render utilise bien backend/ comme dossier racine.
+-r backend/requirements.txt
