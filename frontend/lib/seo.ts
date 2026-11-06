@@ -36,6 +36,14 @@ export function buildHomeJsonLd() {
         name: SITE_NAME,
         url: `${SITE_URL}/`,
         logo: `${SITE_URL}/logo-ucao.png`,
+        // Image de partage 1200x630 générée par app/opengraph-image.tsx.
+        image: `${SITE_URL}/opengraph-image`,
+        // Ville et pays uniquement : pas de rue ni de campus (plateforme indépendante de l'université).
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Lomé",
+          addressCountry: "TG",
+        },
         email: CONTACT.email,
         telephone: CONTACT.telephone,
         sameAs: [CONTACT.instagram],

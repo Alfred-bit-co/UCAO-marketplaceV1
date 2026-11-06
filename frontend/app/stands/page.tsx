@@ -7,6 +7,7 @@ import { StandsBrowser } from "@/components/stands-browser";
 import { getLatestStands, getStands } from "@/lib/stands";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/stands" },
   title: "Stands — UCAO Marketplace",
   description: "Découvre les stands des vendeurs étudiants de l'UCAO-UUT.",
 };

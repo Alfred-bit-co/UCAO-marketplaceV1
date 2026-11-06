@@ -30,18 +30,21 @@ function initials(name: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const stand = await getStandById(id);
-  if (!stand) return { title: "Stand introuvable — UCAO Marketplace" };
+  // Le modèle du layout ajoute « | UCAO Marketplace » : on ne le répète pas ici.
+  if (!stand) return { title: "Stand introuvable" };
 
   const description = stand.description.slice(0, 160);
   const image = stand.banner_url || stand.logo_url;
+  const url = SITE_URL + "/stands/" + id;
   return {
-    title: stand.name + " — UCAO Marketplace",
+    title: stand.name,
     description,
+    alternates: { canonical: url },
     openGraph: {
       title: stand.name,
       description,
       type: "website",
-      url: SITE_URL + "/stands/" + id,
+      url,
       images: image ? [{ url: image, alt: stand.name }] : undefined,
     },
   };

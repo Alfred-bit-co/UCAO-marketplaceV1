@@ -4,6 +4,7 @@ import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/a-propos" },
   title: "À propos — UCAO Marketplace",
   description: "L'histoire et la mission d'UCAO Marketplace, projet étudiant indépendant.",
 };

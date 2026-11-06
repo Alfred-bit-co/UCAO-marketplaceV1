@@ -5,6 +5,7 @@ import { PageShell } from "@/components/page-shell";
 import { CLUBS } from "@/lib/club-catalog";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/clubs" },
   title: "Clubs — UCAO Marketplace",
   description: "Découvrez les clubs étudiants de l'UCAO-UUT et rejoignez celui qui te ressemble.",
 };
