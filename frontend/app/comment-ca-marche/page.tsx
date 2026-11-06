@@ -61,7 +61,7 @@ const sellerSteps: Step[] = [
   {
     Icon: Star,
     title: "Choisis ton palier",
-    text: "STANDARD, PREMIUM ou VIP : un abonnement mensuel payé par Mobile Money (TMoney, Flooz), sans renouvellement automatique.",
+    text: "STANDARD, PREMIUM ou VIP : un abonnement mensuel, sans renouvellement automatique. Paiement par Mobile Money, via un prestataire de paiement agréé (bientôt disponible).",
   },
   {
     Icon: PackagePlus,

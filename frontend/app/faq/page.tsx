@@ -36,7 +36,7 @@ const FAQ_GROUPS = [
     items: [
       {
         question: "Comment devenir vendeur ?",
-        answer: "Clique sur « Devenir vendeur », ajoute ton numéro WhatsApp (c'est par là que les acheteurs te contactent), choisis un palier (STANDARD, PREMIUM ou VIP), puis paie l'abonnement via Mobile Money (TMoney, Flooz).",
+        answer: "Clique sur « Devenir vendeur », ajoute ton numéro WhatsApp (c'est par là que les acheteurs te contactent), choisis un palier (STANDARD, PREMIUM ou VIP), puis paie l'abonnement. Paiement par Mobile Money, via un prestataire de paiement agréé (bientôt disponible).",
       },
       {
         question: "Quels sont les abonnements ?",
