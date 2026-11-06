@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth-form";
 
 export const metadata: Metadata = {
-  title: "Connexion — UCAO Marketplace",
+  title: "Connexion",
   description: "Connectez-vous à votre compte vendeur UCAO Marketplace.",
 };
 

@@ -6,7 +6,7 @@ import { CLUBS } from "@/lib/club-catalog";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/clubs" },
-  title: "Clubs — UCAO Marketplace",
+  title: "Clubs",
   description: "Découvrez les clubs étudiants de l'UCAO-UUT et rejoignez celui qui te ressemble.",
 };
 

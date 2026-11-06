@@ -3,7 +3,7 @@ import { PageShell } from "@/components/page-shell";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/politique-confidentialite" },
-  title: "Politique de confidentialité — UCAO Marketplace",
+  title: "Politique de confidentialité",
   description: "Découvrez les données traitées et vos droits sur UCAO Marketplace.",
 };
 

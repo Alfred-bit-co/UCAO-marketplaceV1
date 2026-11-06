@@ -5,7 +5,7 @@ import { PageShell } from "@/components/page-shell";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
-  title: "Questions fréquentes — UCAO Marketplace",
+  title: "Questions fréquentes",
   description: "Réponses aux questions les plus posées sur UCAO Marketplace.",
 };
 
