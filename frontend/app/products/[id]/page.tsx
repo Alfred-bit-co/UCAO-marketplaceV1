@@ -7,7 +7,7 @@ import { ProductGallery } from "@/components/product-gallery";
 import { RoleBadge } from "@/components/role-badge";
 import { SITE_URL } from "@/lib/constants";
 import { getProductById } from "@/lib/products";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, productPageTitle } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ id: string }> };
@@ -15,21 +15,27 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const product = await getProductById(id);
-  if (!product) return { title: "Produit introuvable — UCAO Marketplace" };
+  // Le modèle du layout ajoute « | UCAO Marketplace » : on ne le répète pas ici.
+  if (!product) return { title: "Produit introuvable" };
 
   const description = product.description?.slice(0, 160) || `${product.name} sur UCAO Marketplace`;
   const image = product.image_url || product.images?.[0]?.url;
+  const title = productPageTitle(product.name, product.price);
+  const url = `${SITE_URL}/products/${id}`;
 
   return {
-    title: `${product.name} — UCAO Marketplace`,
+    title,
     description,
+    alternates: { canonical: url },
     openGraph: {
-      title: product.name,
+      title,
       description,
       type: "website",
-      url: `${SITE_URL}/products/${id}`,
+      url,
       images: image ? [{ url: image, alt: product.name }] : undefined,
     },
+    // Sans photo, l'image de partage générique (app/twitter-image.tsx) reste utilisée.
+    twitter: image ? { card: "summary_large_image", title, description, images: [image] } : undefined,
   };
 }
 

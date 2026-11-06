@@ -108,6 +108,10 @@ export function HomePage({
               <BadgeCheck size={17} strokeWidth={ICON_STROKE} /> Campus vérifié
             </p>
             <h1 className="max-w-[760px] text-[clamp(44px,7vw,82px)] font-semibold leading-[.95]">
+              {/* Nom de la marque visible dans le titre principal (référencement sur « UCAO Marketplace »). */}
+              <span className="mb-3 block text-base font-bold uppercase leading-none tracking-[0.18em] text-white/90 sm:text-lg">
+                UCAO Marketplace
+              </span>
               Achète. Vends. Avance.
             </h1>
             <p className="my-6 max-w-[620px] text-lg font-medium text-white/88">
