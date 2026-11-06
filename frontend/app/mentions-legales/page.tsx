@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/mentions-legales" },
   title: "Mentions légales — UCAO Marketplace",
   description: "Informations légales, contacts et cadre juridique d'UCAO Marketplace.",
 };

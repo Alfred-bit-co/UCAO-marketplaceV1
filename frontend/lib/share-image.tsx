@@ -9,6 +9,8 @@ export const SHARE_IMAGE_ALT = `${SITE_NAME} — ${SITE_TAGLINE}`;
 export const SHARE_IMAGE_SIZE = { width: 1200, height: 630 };
 
 const BORDEAUX = "#7B1E2B";
+// Largeur utile : le carré central fait 630 px, on garde une marge de 35 px de chaque côté.
+const SAFE_WIDTH = 560;
 
 export async function renderShareImage() {
   const logo = await readFile(join(process.cwd(), "public", "logo-ucao.png"));
@@ -16,23 +18,26 @@ export async function renderShareImage() {
 
   return new ImageResponse(
     (
+      // WhatsApp affiche une vignette CARRÉE découpée au centre (630x630, de x=285 à x=915) :
+      // tout l'essentiel est centré et tient dans une colonne de SAFE_WIDTH px.
       <div
         style={{
           width: "100%",
           height: "100%",
           display: "flex",
           flexDirection: "column",
+          alignItems: "center",
           justifyContent: "center",
-          padding: "0 96px",
           background: BORDEAUX,
           color: "#ffffff",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoSrc} width={120} height={120} alt="" style={{ borderRadius: 24, background: "#ffffff" }} />
-        <div style={{ marginTop: 48, fontSize: 92, fontWeight: 700, lineHeight: 1, letterSpacing: -2 }}>{SITE_NAME}</div>
-        <div style={{ marginTop: 28, fontSize: 40, opacity: 0.9 }}>{SITE_TAGLINE}</div>
-        <div style={{ marginTop: 56, width: 160, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.55)" }} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: SAFE_WIDTH, textAlign: "center" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoSrc} width={250} height={250} alt="" style={{ borderRadius: 40, background: "#ffffff" }} />
+          <div style={{ marginTop: 34, fontSize: 56, fontWeight: 700, lineHeight: 1, letterSpacing: -1 }}>{SITE_NAME}</div>
+          <div style={{ marginTop: 18, fontSize: 26, lineHeight: 1.3, opacity: 0.9 }}>{SITE_TAGLINE}</div>
+        </div>
       </div>
     ),
     SHARE_IMAGE_SIZE,

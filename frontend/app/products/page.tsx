@@ -9,6 +9,7 @@ import { PRODUCTS_PER_PAGE } from "@/lib/constants";
 import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/products" },
   title: "Produits — UCAO Marketplace",
   description: "Parcourez les produits proposés par les vendeurs étudiants de l'UCAO-UUT.",
 };

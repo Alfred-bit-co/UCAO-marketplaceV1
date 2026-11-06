@@ -33,6 +33,15 @@ describe("buildHomeJsonLd", () => {
     expect(organization).not.toHaveProperty("parentOrganization");
   });
 
+  it("donne seulement la ville et le pays, et l'image de partage en adresse absolue", () => {
+    expect(organization).toMatchObject({
+      address: { "@type": "PostalAddress", addressLocality: "Lomé", addressCountry: "TG" },
+    });
+    const address = (organization as { address: Record<string, string> }).address;
+    expect(Object.keys(address).sort()).toEqual(["@type", "addressCountry", "addressLocality"]);
+    expect(String((organization as { image: string }).image)).toMatch(/^https:\/\/.+\/opengraph-image$/);
+  });
+
   it("ne permet pas de fermer la balise <script>", () => {
     expect(serializeJsonLd({ a: "</script><script>alert(1)</script>" })).not.toContain("</script>");
   });

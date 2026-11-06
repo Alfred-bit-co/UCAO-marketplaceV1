@@ -20,6 +20,7 @@ import { PageShell } from "@/components/page-shell";
 import { TrialNotice } from "@/components/trial-notice";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/comment-ca-marche" },
   title: "Comment ça marche — UCAO Marketplace",
   description: "Découvre comment acheter et vendre entre étudiants sur UCAO Marketplace, et qui contacter en cas de problème.",
 };
