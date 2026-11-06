@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Découvrez les données traitées et vos droits sur UCAO Marketplace.",
 };
 
-const LAST_UPDATE = "20 octobre 2026";
+const LAST_UPDATE = "6 novembre 2026";
 
 const sections = [
   {
@@ -100,10 +100,14 @@ const sections = [
   {
     title: "Prestataires",
     items: [
-      "Supabase : base de données, authentification et stockage des fichiers",
+      "Supabase (Irlande, Union européenne) : base de données, authentification et stockage des fichiers",
       "Vercel : hébergement du site",
-      "Google : connexion avec un compte Google, si vous la choisissez",
-      "FedaPay : paiement des abonnements, lorsque le paiement en ligne est activé",
+      "Render (Oregon, États-Unis) : serveur qui traite les paiements d'abonnement",
+      "Resend (Irlande, Union européenne) : envoi des e-mails liés à votre compte (confirmation d'inscription, réinitialisation du mot de passe), depuis l'adresse noreply@ucaomarketplace.com",
+      "Google (Google Identity Services) : connexion avec un compte Google, si vous la choisissez",
+      "Cloudflare (Turnstile) : vérification anti-robot sur l'inscription, la connexion et la demande de nouveau mot de passe, qui traite votre adresse IP et des informations sur votre navigateur",
+      "Un prestataire de paiement agréé (lorsque le paiement en ligne est activé) : paiement des abonnements",
+      "Certains de ces prestataires conservent des données hors du Togo, dans l'Union européenne ou aux États-Unis.",
       "Nous ne vendons pas vos données et nous ne les utilisons pas pour de la publicité.",
     ],
   },

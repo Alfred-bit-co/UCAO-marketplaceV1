@@ -13,11 +13,11 @@ const sections = [
     items: ["Nom de l'éditeur : AYITOU Alfred", "Adresse : Togo — Lomé", "Responsable de publication : Alfred AYITOU"],
   },
   {
-    title: "Hebergement",
+    title: "Hébergement",
     items: [
-      "Frontend : Vercel",
-      "Backend : Railway",
-      "Donnees et authentification : Supabase",
+      "Site : Vercel (www.ucaomarketplace.com)",
+      "Serveur des paiements d'abonnement : Render (Oregon, États-Unis)",
+      "Base de données, authentification et fichiers : Supabase (Irlande, Union européenne)",
     ],
   },
   {

@@ -62,7 +62,7 @@ export default function ConditionsGeneralesPage() {
               </table>
             </div>
             <p className="mt-4 text-ucao-muted dark:text-[#a8b8cc]">
-              Le paiement se fait via Mobile Money (TMoney, Flooz). <strong>Le renouvellement n&apos;est pas automatique</strong> : le Mobile Money ne permettant pas de prélèvement récurrent, chaque vendeur doit relancer lui-même son paiement chaque mois.
+              Paiement par Mobile Money, via un prestataire de paiement agréé (bientôt disponible). <strong>Le renouvellement n&apos;est pas automatique</strong> : le Mobile Money ne permettant pas de prélèvement récurrent, chaque vendeur doit relancer lui-même son paiement chaque mois.
             </p>
           </div>
 

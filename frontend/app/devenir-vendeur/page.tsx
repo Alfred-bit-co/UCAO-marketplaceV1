@@ -216,7 +216,7 @@ export default function DevenirVendeurPage() {
     <PageShell>
       <main>
         <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="Choisissez votre palier">
-          Chaque palier est un abonnement mensuel payé via Mobile Money (TMoney, Flooz). Aucun renouvellement automatique : pensez à renouveler chaque mois.
+          Chaque palier est un abonnement mensuel. Paiement par Mobile Money, via un prestataire de paiement agréé (bientôt disponible). Aucun renouvellement automatique : pensez à renouveler chaque mois.
         </PageHero>
 
         {canTrial && (

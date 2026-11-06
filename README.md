@@ -6,14 +6,15 @@ Marketplace étudiante UCAO-UUT — Next.js 15 + Supabase + micro-service Flask 
 
 ## Fonctionnalités
 
-- Inscription / connexion via **Supabase Auth**
+- Inscription / connexion via **Supabase Auth** (e-mail et mot de passe, ou Google via **Google Identity Services**)
+- E-mails d'authentification envoyés par **Resend** (expéditeur `noreply@ucaomarketplace.com`)
 - **Vérification carte d'étudiant** : upload obligatoire, validation admin avant accès complet
 - Rôles : `ACHETEUR`, `VENDEUR`, `ADMIN` — paliers vendeur : `STANDARD`, `PREMIUM`, `VIP`
 - Catalogue produits avec pagination serveur (12/page), recherche et filtres
 - Stands, dashboard vendeur, modération admin avec graphiques
 - Upload d'images via **Supabase Storage**
 - Paiements abonnement via **FedaPay** (backend Flask)
-- Protection anti-bot via Cloudflare Turnstile (en cours d'intégration)
+- Protection anti-bot via **Cloudflare Turnstile** (inscription, connexion, mot de passe oublié)
 - SEO : sitemap, robots, Open Graph
 
 ## Lancer en local
@@ -61,8 +62,9 @@ npm test
 
 ## Déploiement
 
-- **Frontend** : Vercel (root `frontend/`)
-- **Backend paiement** : Railway ou Render (root `backend/`)
-- **Base de données & auth** : Supabase PostgreSQL
+- **Frontend** : Vercel (root `frontend/`), domaine officiel https://www.ucaomarketplace.com
+- **Backend paiement** : Render, service `ucao-marketplace-api`, région Oregon (États-Unis), root `backend/`
+- **Base de données, auth et fichiers** : Supabase PostgreSQL, région `eu-west-1` (Irlande)
+- **E-mails d'authentification** : Resend, région Irlande, expéditeur `noreply@ucaomarketplace.com`
 
 Voir `SETUP.md` pour le schéma SQL complet et les migrations.
