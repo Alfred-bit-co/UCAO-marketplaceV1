@@ -218,6 +218,20 @@ export const CLUBS: ClubEntry[] = [
     accent: { main: "#eab308", light: "#fde047", buttonFrom: "#a16207", buttonTo: "#854d0e" },
     managerPhone: "+22891209262",
   },
+  {
+    slug: "anglais",
+    prefix: "Club d'",
+    name: "Anglais",
+    tagline: "Parle. Comprends. Ose.",
+    description:
+      "Le club d'anglais de l'UCAO t'aide à gagner en aisance à l'oral, dans une ambiance détendue : discussions, jeux, films et petits défis. Que tu sois débutant ou déjà à l'aise, viens pratiquer et prendre confiance en toi !",
+    sideTitle: ["Une nouvelle langue,", "de nouvelles portes."],
+    sideText:
+      "Le club d'anglais réunit des étudiants qui veulent progresser ensemble, à l'oral comme à l'écrit, pour leurs études, leurs stages et leurs voyages.",
+    image: "/images/clubs/odette.jpg",
+    accent: { main: "#84cc16", light: "#bef264", buttonFrom: "#4d7c0f", buttonTo: "#3f6212" },
+    managerPhone: "+22890383821",
+  },
 ];
 
 export function getClubFullName(club: ClubEntry): string {
