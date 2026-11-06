@@ -498,7 +498,7 @@ for delete using (
    - `FEDAPAY_PUBLIC_KEY`
    - `FEDAPAY_WEBHOOK_SECRET`
 3. Configure l’URL webhook FedaPay vers le backend Render (service `ucao-marketplace-api`) :
-   - `https://ucao-marketplace-api.onrender.com/api/payments/fedapay/webhook`
+   - `https://ucao-marketplace-api.onrender.com/api/subscriptions/webhook`
 
 ## 4. Développement local
 
