@@ -3,6 +3,11 @@ import { SITE_URL } from "@/lib/constants";
 import { getProducts } from "@/lib/products";
 import { getStands } from "@/lib/stands";
 
+// Régénéré au plus une fois par heure (ISR) : les produits et stands supprimés disparaissent,
+// les nouveaux apparaissent dans l'heure. Les requêtes utilisent la clé publique Supabase
+// (lib/supabase.ts, sans cookies ni en-têtes) : elles marchent pareil au build et à l'exécution.
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     "",
@@ -12,7 +17,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/a-propos",
     "/comment-ca-marche",
     "/faq",
-    "/devenir-vendeur",
     "/mentions-legales",
     "/conditions-generales",
     "/politique-confidentialite",
