@@ -21,11 +21,13 @@ const EXPECTED_PHONES: Record<string, string> = {
   chorale: "+22897549116",
   echecs: "+22873267889",
   orchestre: "+22891209262",
+  anglais: "+22890383821",
 };
 
 describe("catalogue des clubs", () => {
-  it("contient les 13 clubs, dont Échecs et Orchestre avec leurs images", () => {
-    expect(CLUBS).toHaveLength(13);
+  it("contient les 14 clubs, dont Échecs, Orchestre et Anglais avec leurs images", () => {
+    expect(CLUBS).toHaveLength(14);
+    expect(club("anglais").image).toBe("/images/clubs/odette.jpg");
     expect(club("echecs").image).toBe("/images/clubs/echecs.jpg");
     expect(club("orchestre").image).toBe("/images/clubs/orchestra.jpg");
     expect(new Set(CLUBS.map((entry) => entry.slug)).size).toBe(CLUBS.length);
@@ -34,6 +36,7 @@ describe("catalogue des clubs", () => {
   it("écrit « Club d'échecs » sans espace après l'apostrophe", () => {
     expect(getClubFullName(club("echecs"))).toBe("Club d'échecs");
     expect(getClubFullName(club("orchestre"))).toBe("Club d'orchestre");
+    expect(getClubFullName(club("anglais"))).toBe("Club d'anglais");
     expect(getClubFullName(club("basketball"))).toBe("Club de Basketball");
   });
 
@@ -46,6 +49,11 @@ describe("catalogue des clubs", () => {
   it("prépare le message « j'ai vu le club … sur UCAO Marketplace »", () => {
     const text = decodeURIComponent(getJoinLink(club("echecs"))!.split("?text=")[1]);
     expect(text).toBe("Bonjour, j'ai vu le club d'échecs sur UCAO Marketplace et je souhaiterais le rejoindre.");
+  });
+
+  it("prépare le même message pour le club d'anglais", () => {
+    const text = decodeURIComponent(getJoinLink(club("anglais"))!.split("?text=")[1]);
+    expect(text).toBe("Bonjour, j'ai vu le club d'anglais sur UCAO Marketplace et je souhaiterais le rejoindre.");
   });
 
   it("n'a aucun lien pour un club sans numéro (Jeux vidéo)", () => {

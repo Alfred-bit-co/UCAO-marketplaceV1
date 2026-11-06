@@ -13,6 +13,7 @@ import {
   Scales,
   ShieldCheck,
   SoccerBall,
+  Translate,
   Volleyball,
 } from "@phosphor-icons/react/ssr";
 import type { Icon } from "@phosphor-icons/react";
@@ -34,6 +35,7 @@ const CLUB_ICONS: Record<string, Icon> = {
   cybersecurite: ShieldCheck,
   echecs: Horse,
   orchestre: MusicNotes,
+  anglais: Translate,
 };
 
 type ClubCardProps = {
