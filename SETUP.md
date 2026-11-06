@@ -497,8 +497,8 @@ for delete using (
    - `FEDAPAY_SECRET_KEY`
    - `FEDAPAY_PUBLIC_KEY`
    - `FEDAPAY_WEBHOOK_SECRET`
-3. Configure l’URL webhook FedaPay vers Railway :
-   - `https://ton-backend.up.railway.app/api/payments/fedapay/webhook`
+3. Configure l’URL webhook FedaPay vers le backend Render (service `ucao-marketplace-api`) :
+   - `https://<adresse-du-service-render>/api/payments/fedapay/webhook`
 
 ## 4. Développement local
 
@@ -526,7 +526,7 @@ Vercel :
 2. Définis le root directory sur `frontend/`.
 3. Ajoute `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` et `NEXT_PUBLIC_PAYMENT_API_URL`.
 
-Railway :
+Render (service `ucao-marketplace-api`, région Oregon) :
 
 1. Connecte le même repo GitHub.
 2. Définis le root directory sur `backend/`.

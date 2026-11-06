@@ -14,7 +14,8 @@ const sections = [
       "Chiffrement des mots de passe et sessions via Supabase Auth",
       "Row Level Security activée sur toutes les tables",
       "HTTPS obligatoire",
-      "Verification de signature sur les webhooks de paiement",
+      "Vérification anti-robot (Cloudflare Turnstile) sur l'inscription, la connexion et la demande de nouveau mot de passe",
+      "Vérification de signature sur les webhooks de paiement",
     ],
   },
   {
