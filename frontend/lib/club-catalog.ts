@@ -6,7 +6,8 @@
  * Si l'icône du club n'existe pas encore, l'ajouter aussi dans CLUB_ICONS (components/club-card.tsx).
  *
  * Numéro du responsable : managerPhone, au format international (+22890123456).
- * Tant qu'il est vide, la carte affiche « Bientôt disponible » au lieu du bouton.
+ * Tant qu'il est vide, la carte affiche « Contact bientôt disponible » au lieu du bouton
+ * (jamais de lien vide ni le numéro de la plateforme).
  */
 
 export type ClubAccent = {
@@ -47,7 +48,7 @@ export const CLUBS: ClubEntry[] = [
       "Le club de basketball de l'UCAO rassemble des étudiants passionnés par le jeu, le dépassement de soi et l'esprit d'équipe.",
     image: "/images/clubs/basketball.jpg",
     accent: { main: "#1f8fff", light: "#4cc3ff", buttonFrom: "#1473e6", buttonTo: "#0b5fd6" },
-    managerPhone: "",
+    managerPhone: "+22891268956",
   },
   {
     slug: "theatre",
@@ -61,7 +62,7 @@ export const CLUBS: ClubEntry[] = [
       "Sur scène comme en coulisses, le club de théâtre de l'UCAO réunit des étudiants qui aiment raconter, jouer et créer ensemble.",
     image: "/images/clubs/theatre.jpg",
     accent: { main: "#a855f7", light: "#e879f9", buttonFrom: "#9333ea", buttonTo: "#7e22ce" },
-    managerPhone: "",
+    managerPhone: "+22890895459",
   },
   {
     slug: "jeux-video",
@@ -89,7 +90,7 @@ export const CLUBS: ClubEntry[] = [
       "Le club de football rassemble des étudiants qui aiment bouger, se dépasser et vibrer ensemble, du premier entraînement au dernier coup de sifflet.",
     image: "/images/clubs/football.jpg",
     accent: { main: "#22c55e", light: "#86efac", buttonFrom: "#15803d", buttonTo: "#166534" },
-    managerPhone: "",
+    managerPhone: "+22890593302",
   },
   {
     slug: "communication",
@@ -103,7 +104,7 @@ export const CLUBS: ClubEntry[] = [
       "Le club de communication réunit des étudiants qui aiment raconter, filmer, écrire et faire rayonner la vie du campus.",
     image: "/images/clubs/communication.jpg",
     accent: { main: "#f97316", light: "#fdba74", buttonFrom: "#c2410c", buttonTo: "#9a3412" },
-    managerPhone: "",
+    managerPhone: "+22892424746",
   },
   {
     slug: "juristes",
@@ -117,7 +118,7 @@ export const CLUBS: ClubEntry[] = [
       "Le club des juristes est un espace pour mieux comprendre les règles qui organisent notre société, et apprendre à les défendre avec des arguments solides.",
     image: "/images/clubs/juristes.jpg",
     accent: { main: "#d4a24c", light: "#fcd34d", buttonFrom: "#b45309", buttonTo: "#92400e" },
-    managerPhone: "",
+    managerPhone: "+22879760544",
   },
   {
     slug: "petanque",
@@ -131,7 +132,7 @@ export const CLUBS: ClubEntry[] = [
       "Le club de pétanque rassemble des étudiants qui aiment les parties conviviales, les défis amicaux et les bons moments sur le terrain.",
     image: "/images/clubs/petanque.jpg",
     accent: { main: "#f43f5e", light: "#fda4af", buttonFrom: "#e11d48", buttonTo: "#be123c" },
-    managerPhone: "",
+    managerPhone: "+22871840656",
   },
   {
     slug: "volley",
@@ -145,7 +146,7 @@ export const CLUBS: ClubEntry[] = [
       "Le club de volley réunit des étudiants qui aiment l'esprit d'équipe, la vitesse du jeu et les beaux échanges.",
     image: "/images/clubs/volley.jpg",
     accent: { main: "#14b8a6", light: "#5eead4", buttonFrom: "#0f766e", buttonTo: "#115e59" },
-    managerPhone: "",
+    managerPhone: "+22899547116",
   },
   {
     slug: "chorale",
@@ -159,7 +160,7 @@ export const CLUBS: ClubEntry[] = [
       "La chorale rassemble des étudiants qui aiment chanter ensemble, partager des émotions et faire résonner le campus.",
     image: "/images/clubs/chorale.jpg",
     accent: { main: "#ec4899", light: "#f9a8d4", buttonFrom: "#db2777", buttonTo: "#be185d" },
-    managerPhone: "",
+    managerPhone: "+22897549116",
   },
   {
     slug: "dance",
@@ -173,7 +174,7 @@ export const CLUBS: ClubEntry[] = [
       "Le club de danse rassemble des étudiants qui aiment la musique, le mouvement et les belles chorégraphies, dans une ambiance où chacun trouve sa place.",
     image: "/images/clubs/dance.jpg",
     accent: { main: "#6366f1", light: "#a5b4fc", buttonFrom: "#4f46e5", buttonTo: "#4338ca" },
-    managerPhone: "",
+    managerPhone: "+22897838098",
   },
   {
     slug: "cybersecurite",
@@ -187,11 +188,41 @@ export const CLUBS: ClubEntry[] = [
       "Le club de cybersécurité de l'UCAO rassemble des étudiants curieux de comprendre comment fonctionnent les attaques et comment s'en défendre, dans un cadre éthique et collaboratif.",
     image: "/images/clubs/cyber.jpg",
     accent: { main: "#10b981", light: "#6ee7b7", buttonFrom: "#047857", buttonTo: "#065f46" },
-    managerPhone: "",
+    managerPhone: "+22896548352",
+  },
+  {
+    slug: "echecs",
+    prefix: "Club d'",
+    name: "Échecs",
+    tagline: "Réfléchis. Anticipe. Gagne.",
+    description:
+      "Le club d'échecs de l'UCAO, c'est la stratégie, la concentration et le plaisir de la réflexion. Que tu connaisses à peine les règles ou que tu joues depuis des années, viens t'entraîner, affronter d'autres passionnés et progresser à chaque partie !",
+    sideTitle: ["Chaque coup", "compte."],
+    sideText:
+      "Le club d'échecs réunit des étudiants qui aiment réfléchir, anticiper et se mesurer dans le respect, autour de parties amicales et de petits tournois.",
+    image: "/images/clubs/echecs.jpg",
+    accent: { main: "#64748b", light: "#cbd5e1", buttonFrom: "#475569", buttonTo: "#334155" },
+    managerPhone: "+22873267889",
+  },
+  {
+    slug: "orchestre",
+    prefix: "Club d'",
+    name: "Orchestre",
+    tagline: "Joue. Accorde. Fais vibrer.",
+    description:
+      "Le club d'orchestre de l'UCAO rassemble des musiciens de tous niveaux autour d'un même projet : jouer ensemble. Instrument à vent, à cordes ou percussions, viens répéter, partager ta passion et faire vivre la musique sur le campus !",
+    sideTitle: ["Des instruments,", "une seule musique."],
+    sideText:
+      "Le club d'orchestre réunit des étudiants qui aiment la musique et le travail d'ensemble, des premières répétitions jusqu'aux concerts sur le campus.",
+    image: "/images/clubs/orchestra.jpg",
+    accent: { main: "#eab308", light: "#fde047", buttonFrom: "#a16207", buttonTo: "#854d0e" },
+    managerPhone: "+22891209262",
   },
 ];
 
 export function getClubFullName(club: ClubEntry): string {
+  // « Club d' » + « Échecs » → « Club d'échecs » (pas d'espace après l'apostrophe).
+  if (club.prefix.endsWith("'")) return club.prefix + club.name.charAt(0).toLocaleLowerCase("fr") + club.name.slice(1);
   return club.prefix + " " + club.name;
 }
 
@@ -203,10 +234,10 @@ export function getJoinLink(club: ClubEntry): string | null {
   const phone = club.managerPhone.replace(/[\s.-]/g, "");
   if (!PHONE_PATTERN.test(phone)) return null;
 
-  const message =
-    "Bonjour, je souhaite rejoindre le " +
-    getClubFullName(club) +
-    " de l'UCAO. J'ai découvert le club sur UCAO Marketplace. Pouvez-vous m'indiquer comment faire ?";
+  // « Club de Basketball » → « le club de Basketball » dans la phrase.
+  const fullName = getClubFullName(club);
+  const inSentence = fullName.charAt(0).toLocaleLowerCase("fr") + fullName.slice(1);
+  const message = "Bonjour, j'ai vu le " + inSentence + " sur UCAO Marketplace et je souhaiterais le rejoindre.";
 
   return "https://wa.me/" + phone.slice(1) + "?text=" + encodeURIComponent(message);
 }

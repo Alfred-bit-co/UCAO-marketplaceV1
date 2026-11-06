@@ -4,9 +4,11 @@ import {
   Basketball,
   BowlingBall,
   GameController,
+  Horse,
   MaskHappy,
   Megaphone,
   MicrophoneStage,
+  MusicNotes,
   PersonArmsSpread,
   Scales,
   ShieldCheck,
@@ -30,6 +32,8 @@ const CLUB_ICONS: Record<string, Icon> = {
   chorale: MicrophoneStage,
   dance: PersonArmsSpread,
   cybersecurite: ShieldCheck,
+  echecs: Horse,
+  orchestre: MusicNotes,
 };
 
 type ClubCardProps = {
@@ -116,7 +120,7 @@ export function ClubCard({ club, reverse, priority = false }: ClubCardProps) {
                   title="Le responsable du club sera bientôt joignable"
                   className="inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-white/15 px-5 py-2.5 text-sm font-semibold text-white/75 ring-1 ring-white/25"
                 >
-                  Bientôt disponible
+                  Contact bientôt disponible
                 </span>
               )}
             </div>
