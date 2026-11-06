@@ -3,7 +3,7 @@ import { PageShell } from "@/components/page-shell";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/politique-securite" },
-  title: "Politique de sécurité — UCAO Marketplace",
+  title: "Politique de sécurité",
   description: "Mesures de sécurité et procédure de signalement d'une faille.",
 };
 

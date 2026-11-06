@@ -3,7 +3,7 @@ import { PageShell } from "@/components/page-shell";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Devenir vendeur — UCAO Marketplace",
+  title: "Devenir vendeur",
   description: "Créez votre compte vendeur pour publier vos produits sur UCAO Marketplace.",
 };
 

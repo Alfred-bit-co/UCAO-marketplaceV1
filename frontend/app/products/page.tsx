@@ -10,7 +10,7 @@ import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/products" },
-  title: "Produits — UCAO Marketplace",
+  title: "Produits",
   description: "Parcourez les produits proposés par les vendeurs étudiants de l'UCAO-UUT.",
 };
 

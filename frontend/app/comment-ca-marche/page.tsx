@@ -21,7 +21,7 @@ import { TrialNotice } from "@/components/trial-notice";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/comment-ca-marche" },
-  title: "Comment ça marche — UCAO Marketplace",
+  title: "Comment ça marche",
   description: "Découvre comment acheter et vendre entre étudiants sur UCAO Marketplace, et qui contacter en cas de problème.",
 };
 

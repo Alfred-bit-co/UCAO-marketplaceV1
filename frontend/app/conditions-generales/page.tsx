@@ -5,7 +5,7 @@ import { PageShell } from "@/components/page-shell";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/conditions-generales" },
-  title: "Conditions générales d'utilisation — UCAO Marketplace",
+  title: "Conditions générales d'utilisation",
   description: "Règles d'utilisation et conditions des abonnements vendeur UCAO Marketplace.",
 };
 
