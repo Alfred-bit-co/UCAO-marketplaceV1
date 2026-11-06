@@ -31,6 +31,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Tests
+        run: npm test
+
+      - name: Audit des dépendances (production)
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Build
         run: npm run build
         env:
