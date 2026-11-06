@@ -79,18 +79,27 @@ export function Topbar() {
   );
 }
 
+// Rôle mémorisé entre deux pages : la navbar est remontée à chaque navigation, et sans ce cache
+// les liens « Connexion » / « Mon profil » clignotaient le temps de relire la session.
+// undefined = pas encore connu (premier chargement).
+let cachedRole: UserRole | null | undefined;
+
 export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [role, setRole] = useState<UserRole | null>(cachedRole ?? null);
+  const [roleKnown, setRoleKnown] = useState(cachedRole !== undefined);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     let active = true;
     const refreshRole = () =>
       getCurrentUserRole().then((currentRole) => {
-        if (active) setRole(currentRole);
+        cachedRole = currentRole;
+        if (!active) return;
+        setRole(currentRole);
+        setRoleKnown(true);
       });
     refreshRole();
     const supabase = createClient();
@@ -109,8 +118,19 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     setOpen(false);
   }, [pathname]);
 
+  // Menu mobile : fermeture avec la touche Échap.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   async function handleSignOut() {
     await signOut();
+    cachedRole = null;
     setRole(null);
     setOpen(false);
     router.push("/");
@@ -135,10 +155,12 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
   return (
-    <header className="relative z-20">
+    // Tout l'en-tête est collant : un `sticky` posé sur <nav> seul ne fonctionnait pas (son parent
+    // ne faisait que sa hauteur). Avec la barre du haut, seule la navigation reste visible.
+    <header className={cn("sticky top-0 z-40", showTopbar && "xl:-top-[38px]")}>
       {showTopbar && <Topbar />}
       <nav
-        className="sticky top-0 flex min-h-[72px] items-center border-b border-black/5 bg-white/95 px-4 shadow-[0_4px_20px_rgba(30,42,110,0.06)] backdrop-blur-sm dark:border-white/5 dark:bg-[#0b1c31]/95 sm:px-6 lg:min-h-[82px] lg:px-6"
+        className="relative flex min-h-[72px] items-center border-b border-black/5 bg-white/95 px-4 shadow-[0_4px_20px_rgba(30,42,110,0.06)] backdrop-blur-sm dark:border-white/5 dark:bg-[#0b1c31]/95 sm:px-6 lg:min-h-[82px] lg:px-6"
         aria-label="Navigation principale"
       >
         <div className="mx-auto flex w-full max-w-[1740px] items-center justify-between gap-4 lg:gap-5">
@@ -158,8 +180,8 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
           <div
             id="main-navigation"
             className={cn(
-              "absolute left-0 right-0 top-[72px] z-20 flex-col items-stretch gap-1 border-t border-black/5 bg-white px-4 py-4 text-[15px] font-medium shadow-[0_18px_28px_rgba(30,42,110,0.12)] dark:border-white/5 dark:bg-[#0b1c31] lg:static lg:top-auto lg:flex lg:flex-1 lg:flex-row lg:items-center lg:justify-center lg:gap-0 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
-              open ? "flex" : "hidden lg:flex",
+              "absolute left-0 right-0 top-[72px] z-20 max-h-[calc(100dvh-72px)] flex-col items-stretch gap-1 overflow-y-auto overscroll-contain border-t border-black/5 bg-white px-4 py-4 text-[15px] font-medium shadow-[0_18px_28px_rgba(30,42,110,0.12)] dark:border-white/5 dark:bg-[#0b1c31] lg:static lg:top-auto lg:flex lg:flex-1 lg:flex-row lg:items-center lg:justify-center lg:gap-0 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
+              open ? "menu-enter flex lg:animate-none" : "hidden lg:flex",
             )}
           >
             {navItems.map((item) => (
@@ -197,11 +219,14 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
               onClick={toggleTheme}
               className="flex w-full items-center gap-2 rounded-2xl px-4 py-2.5 text-left text-[#263a55] transition-colors hover:bg-ucao-soft dark:text-[#cdd7e5] dark:hover:bg-white/5 lg:hidden"
             >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-              {theme === "dark" ? "Mode clair" : "Mode sombre"}
+              {/* Icône et texte suivent la classe "dark" en CSS : aucun clignotement au chargement. */}
+              <Sun size={16} className="hidden dark:block" aria-hidden="true" />
+              <Moon size={16} className="dark:hidden" aria-hidden="true" />
+              <span className="dark:hidden">Mode sombre</span>
+              <span className="hidden dark:inline">Mode clair</span>
             </button>
 
-            {!role && (
+            {roleKnown && !role && (
               <Link
                 href="/login"
                 className="w-full rounded-2xl px-4 py-2.5 text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red lg:hidden dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]"
@@ -228,13 +253,14 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
               aria-label={theme === "dark" ? "Activer le mode clair" : "Activer le mode sombre"}
               title={theme === "dark" ? "Mode clair" : "Mode sombre"}
             >
-              {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
+              <Sun size={19} className="hidden dark:block" aria-hidden="true" />
+              <Moon size={19} className="dark:hidden" aria-hidden="true" />
             </button>
 
-          {!role && (
+          {roleKnown && !role && (
             <Link
               href="/login"
-              className="inline-flex min-h-11 items-center rounded-2xl px-4 font-medium text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]"
+              className="fade-in inline-flex min-h-11 items-center rounded-2xl px-4 font-medium text-[#263a55] transition-colors hover:bg-ucao-soft hover:text-ucao-red dark:text-[#cdd7e5] dark:hover:bg-white/5 dark:hover:text-[#ff9aa0]"
             >
               Connexion
             </Link>
@@ -242,7 +268,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
           {role && (
             <button
               type="button"
-              className="grid size-11 place-items-center rounded-2xl border border-ucao-line bg-white/70 text-ucao-ink transition-colors hover:border-ucao-navy-soft hover:bg-ucao-soft dark:border-[#263d5c] dark:bg-[#10233b] dark:text-white dark:hover:bg-white/10"
+              className="fade-in grid size-11 place-items-center rounded-2xl border border-ucao-line bg-white/70 text-ucao-ink transition-colors hover:border-ucao-navy-soft hover:bg-ucao-soft dark:border-[#263d5c] dark:bg-[#10233b] dark:text-white dark:hover:bg-white/10"
               onClick={handleSignOut}
               aria-label="Déconnexion"
               title="Déconnexion"

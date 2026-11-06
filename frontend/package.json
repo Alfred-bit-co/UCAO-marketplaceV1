@@ -14,11 +14,10 @@
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
-    "next": "^15.2.4",
+    "next": "^15.5.29",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^3.10.1",
-    "vitest": "^5.0.0"
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -27,8 +26,14 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "eslint": "^9.23.0",
-    "eslint-config-next": "^15.2.4",
+    "eslint-config-next": "^15.5.29",
     "tailwindcss": "^4.1.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.32",
+    "@typescript-eslint/eslint-plugin": "^8.64.0",
+    "@typescript-eslint/parser": "^8.64.0"
   }
 }

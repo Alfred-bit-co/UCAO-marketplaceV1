@@ -24,17 +24,14 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Installer les dépendances
-        run: pip install -r requirements.txt
+      - name: Installer les dépendances (production + outils)
+        run: pip install -r requirements-dev.txt
 
       - name: Vérifier le style (flake8)
-        run: pip install flake8 && flake8 . --max-line-length=120
+        run: flake8 . --max-line-length=120
 
       - name: Lancer les tests
-        run: |
-          pip install pytest
-          if find . -path "*/tests/*.py" -o -name "test_*.py" | grep -q .; then
-            pytest
-          else
-            echo "Aucun test pour le moment"
-          fi
+        run: pytest
+
+      - name: Audit des dépendances de production
+        run: pip-audit -r requirements.txt

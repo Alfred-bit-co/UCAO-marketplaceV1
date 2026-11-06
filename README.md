@@ -48,8 +48,8 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_PAYMENT_API_URL=
 NEXT_PUBLIC_SITE_URL=
-NEXT_PUBLIC_TURNSTILE_SITE_KEY= # optionnel, anti-bot Cloudflare Turnstile
-TURNSTILE_SECRET_KEY=           # secret serveur Turnstile, optionnel en développement
+NEXT_PUBLIC_TURNSTILE_SITE_KEY= # optionnel, anti-bot Cloudflare Turnstile (le secret est configuré dans Supabase Auth, qui vérifie le jeton)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=   # bouton Google Identity Services
 ```
 
 ## Tests

@@ -26,7 +26,7 @@ export function PageHero({
         backgroundImage: `linear-gradient(100deg, rgba(30, 42, 110, .84), rgba(30, 42, 110, .70) 58%, rgba(122, 30, 45, .54)), url("${backgroundImage}")`,
       }}
     >
-      <div className="container-ucao">
+      <div className="container-ucao hero-rise">
         <p className="eyebrow text-white/85">
           {Icon && <Icon size={16} />}
           {eyebrow}
