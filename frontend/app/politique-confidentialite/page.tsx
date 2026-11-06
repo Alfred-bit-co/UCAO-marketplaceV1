@@ -106,7 +106,7 @@ const sections = [
       "Resend (Irlande, Union européenne) : envoi des e-mails liés à votre compte (confirmation d'inscription, réinitialisation du mot de passe), depuis l'adresse noreply@ucaomarketplace.com",
       "Google (Google Identity Services) : connexion avec un compte Google, si vous la choisissez",
       "Cloudflare (Turnstile) : vérification anti-robot sur l'inscription, la connexion et la demande de nouveau mot de passe, qui traite votre adresse IP et des informations sur votre navigateur",
-      "FedaPay : paiement des abonnements, lorsque le paiement en ligne est activé",
+      "Un prestataire de paiement agréé (lorsque le paiement en ligne est activé) : paiement des abonnements",
       "Certains de ces prestataires conservent des données hors du Togo, dans l'Union européenne ou aux États-Unis.",
       "Nous ne vendons pas vos données et nous ne les utilisons pas pour de la publicité.",
     ],
