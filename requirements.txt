@@ -1,3 +1,0 @@
-# Meme liste que backend/requirements.txt (source unique, versions sans faille connue).
-# Conserve tant qu'on n'a pas confirme que Render utilise bien backend/ comme dossier racine.
--r backend/requirements.txt
