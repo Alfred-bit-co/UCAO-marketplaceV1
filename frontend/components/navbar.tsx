@@ -49,31 +49,40 @@ export function Brand({ footer = false }: { footer?: boolean }) {
   );
 }
 
+const TOPBAR_SOCIAL_LINK =
+  "grid size-5 shrink-0 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+const TOPBAR_CONTACT_LINK =
+  "items-center gap-1.5 whitespace-nowrap rounded-full transition-colors hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+
+/** Bandeau au-dessus de la navigation : réseaux à gauche, contacts à droite (une seule ligne, 30 px). */
 export function Topbar() {
   return (
-    <div className="hidden min-h-[38px] items-center justify-between gap-4 bg-[linear-gradient(90deg,#1E2A6E,#2C3A7A_45%,#4C2F4F_72%,#7A1E2D)] px-[max(16px,calc((100vw-1740px)/2))] py-1.5 text-[13px] font-medium text-white/95 xl:flex">
-      <div className="flex items-center gap-2.5" aria-label="Réseaux UCAO UUT">
-        <span>Suivez UCAO UUT</span>
-        <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="https://ucao-uut.tg" target="_blank" rel="noopener noreferrer" aria-label="Site UCAO UUT">
-          <Globe2 size={14} />
+    <div className="flex h-[30px] items-center justify-between gap-3 bg-[linear-gradient(90deg,#1E2A6E,#2C3A7A_45%,#4C2F4F_72%,#7A1E2D)] px-4 text-[11px] font-medium text-white/95 sm:px-6 sm:text-xs lg:px-[max(24px,calc((100vw-1740px)/2))]">
+      <div className="flex min-w-0 items-center gap-2" aria-label="Réseaux UCAO Marketplace">
+        <span className="whitespace-nowrap max-[359px]:hidden">
+          <span className="sm:hidden">Suivez-nous</span>
+          <span className="hidden sm:inline">Suivez UCAO Marketplace</span>
+        </span>
+        <a className={TOPBAR_SOCIAL_LINK} href="https://www.instagram.com/ucaomarketplace?igsi=MTFuZnQ5Y3JyM2FhcA==" target="_blank" rel="noopener noreferrer" aria-label="Instagram UCAO Marketplace">
+          <Instagram size={12} aria-hidden="true" />
         </a>
-        <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="https://www.instagram.com/ucaomarketplace?igsi=MTFuZnQ5Y3JyM2FhcA==" target="_blank" rel="noopener noreferrer" aria-label="Instagram UCAO Marketplace">
-          <Instagram size={14} />
+        <a className={TOPBAR_SOCIAL_LINK} href="https://wa.me/22892982926" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp UCAO Marketplace">
+          <MessageCircle size={12} aria-hidden="true" />
         </a>
-        <a className="grid size-6 place-items-center rounded-full bg-white/15 transition-colors hover:bg-white/25" href="https://wa.me/22892982926" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp UCAO Marketplace">
-          <MessageCircle size={14} />
+        <a className={TOPBAR_SOCIAL_LINK} href="https://ucao-uut.tg" target="_blank" rel="noopener noreferrer" aria-label="Site UCAO UUT">
+          <Globe2 size={12} aria-hidden="true" />
         </a>
       </div>
-      <div className="flex items-center gap-5">
-        <span className="flex items-center gap-2">
-          <MapPin size={14} /> Campus UCAO UUT
+      <div className="flex shrink-0 items-center gap-4 lg:gap-5">
+        <span className="hidden items-center gap-1.5 whitespace-nowrap lg:inline-flex">
+          <MapPin size={12} aria-hidden="true" /> Campus UCAO UUT
         </span>
-        <span className="flex items-center gap-2">
-          <Mail size={14} /> ucaomarketplace2026@gmail.com
-        </span>
-        <span className="flex items-center gap-2">
-          <Phone size={14} /> +228 92 98 29 26
-        </span>
+        <a className={cn(TOPBAR_CONTACT_LINK, "hidden md:inline-flex")} href="mailto:ucaomarketplace2026@gmail.com">
+          <Mail size={12} aria-hidden="true" /> ucaomarketplace2026@gmail.com
+        </a>
+        <a className={cn(TOPBAR_CONTACT_LINK, "inline-flex")} href="tel:+22892982926" aria-label="Appeler UCAO Marketplace au +228 92 98 29 26">
+          <Phone size={12} aria-hidden="true" /> +228 92 98 29 26
+        </a>
       </div>
     </div>
   );
@@ -157,7 +166,7 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   return (
     // Tout l'en-tête est collant : un `sticky` posé sur <nav> seul ne fonctionnait pas (son parent
     // ne faisait que sa hauteur). Avec la barre du haut, seule la navigation reste visible.
-    <header className={cn("sticky top-0 z-40", showTopbar && "xl:-top-[38px]")}>
+    <header className={cn("sticky top-0 z-40", showTopbar && "-top-[30px]")}>
       {showTopbar && <Topbar />}
       <nav
         className="relative flex min-h-[72px] items-center border-b border-black/5 bg-white/95 px-4 shadow-[0_4px_20px_rgba(30,42,110,0.06)] backdrop-blur-sm dark:border-white/5 dark:bg-[#0b1c31]/95 sm:px-6 lg:min-h-[82px] lg:px-6"
