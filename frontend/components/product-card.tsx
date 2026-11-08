@@ -119,12 +119,12 @@ export function ProductCard({
       </div>
 
       {/* Contenu */}
-      <div className="flex flex-1 flex-col p-3 pt-6">
-        <p className="text-base font-bold leading-tight text-ucao-red sm:text-lg dark:text-[#f0b429]">
+      <div className="flex flex-1 flex-col p-2.5 pt-5 sm:p-3 sm:pt-5">
+        <p className="text-[15px] font-bold leading-tight text-ucao-red sm:text-base dark:text-[#f0b429]">
           {formatPrice(product.price)} <span className="text-xs font-semibold">FCFA</span>
         </p>
 
-        <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-ucao-ink dark:text-white">
+        <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-ucao-ink dark:text-white">
           <Link href={href} className="hover:underline focus-visible:underline">
             {product.name}
           </Link>
@@ -133,12 +133,12 @@ export function ProductCard({
         <p className="mt-1 text-xs font-medium text-ucao-muted dark:text-[#a8b8cc]">{categoryLabel}</p>
 
         {showDescription && product.description && (
-          <p className="mt-2 line-clamp-2 hidden text-sm leading-6 text-ucao-muted sm:block dark:text-[#a8b8cc]">{product.description}</p>
+          <p className="mt-1.5 line-clamp-2 hidden text-[13px] leading-5 text-ucao-muted sm:block dark:text-[#a8b8cc]">{product.description}</p>
         )}
 
         <div className="mt-auto">
           {sellerName && (
-            <div className="mt-3 flex items-center gap-2 border-t border-ucao-line pt-2.5 dark:border-[#263d5c]">
+            <div className="mt-2.5 flex items-center gap-2 border-t border-ucao-line pt-2 dark:border-[#263d5c]">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-ucao-navy text-[10px] font-bold text-white" aria-hidden="true">
                 {initials(sellerName)}
               </span>
@@ -154,7 +154,7 @@ export function ProductCard({
           {showContact &&
             (contactUrl ? (
               <a
-                className="btn btn-primary mt-3 min-h-9 w-full gap-1.5 px-3 text-xs sm:text-sm"
+                className="btn btn-primary mt-2.5 min-h-9 w-full gap-1.5 px-3 text-xs sm:text-sm"
                 href={contactUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -165,7 +165,7 @@ export function ProductCard({
             ) : (
               // Vendeur sans numéro : aucun lien WhatsApp (ni vers un autre numéro, ni vers la plateforme).
               <button
-                className="btn btn-ghost mt-3 min-h-9 w-full px-3 text-xs sm:text-sm"
+                className="btn btn-ghost mt-2.5 min-h-9 w-full px-3 text-xs sm:text-sm"
                 type="button"
                 disabled
                 title="Ce vendeur n'a pas encore ajouté son numéro WhatsApp"
