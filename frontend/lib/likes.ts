@@ -68,6 +68,11 @@ function getVisitorId(create: boolean): string | null {
   return id;
 }
 
+/** Identifiant anonyme du visiteur, créé si besoin (partagé avec le compteur de contacts). */
+export function getOrCreateVisitorId(): string | null {
+  return getVisitorId(true);
+}
+
 function ensureAuthListener() {
   if (listening || typeof window === "undefined") return;
   const supabase = createClient();

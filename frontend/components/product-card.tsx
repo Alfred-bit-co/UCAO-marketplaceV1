@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock3, MessageCircle, Package } from "@/lib/icons";
+import { ContactLink } from "@/components/contact-link";
 import { LikeButton } from "@/components/like-button";
 import { PRODUCT_CATEGORIES } from "@/lib/types";
 import type { Product, SubscriptionTier } from "@/lib/types";
@@ -153,15 +154,14 @@ export function ProductCard({
 
           {showContact &&
             (contactUrl ? (
-              <a
+              <ContactLink
+                productId={id}
                 className="btn btn-primary mt-2.5 min-h-9 w-full gap-1.5 px-3 text-xs sm:text-sm"
                 href={contactUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Contacter le vendeur de ${product.name} sur WhatsApp`}
+                ariaLabel={`Contacter le vendeur de ${product.name} sur WhatsApp`}
               >
                 <MessageCircle size={14} aria-hidden="true" /> Contacter
-              </a>
+              </ContactLink>
             ) : (
               // Vendeur sans numéro : aucun lien WhatsApp (ni vers un autre numéro, ni vers la plateforme).
               <button
