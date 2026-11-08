@@ -8,6 +8,10 @@ import { SITE_NAME, buildHomeJsonLd, serializeJsonLd } from "@/lib/seo";
 const HOME_TITLE = "UCAO Marketplace — Achète, vends et échange entre étudiants UCAO UUT";
 const HOME_DESCRIPTION = "Le marché simple pour acheter, vendre et trouver des services entre étudiants de l'UCAO-UUT à Lomé.";
 
+// Page recalculée au plus toutes les 10 minutes : les produits en vedette (les plus aimés)
+// et les chiffres suivent les nouveaux likes sans attendre un redéploiement.
+export const revalidate = 600;
+
 export const metadata: Metadata = {
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
