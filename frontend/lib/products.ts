@@ -238,9 +238,95 @@ export async function getProductById(id: string): Promise<Product | null> {
   return (await mapProducts([data as ProductRow]))[0] ?? null;
 }
 
+type LikeStatRow = { product_id: string; like_count: number };
+type VisibleProductRow = { id: string; created_at: string };
+
+/**
+ * Classe les produits visibles par nombre de likes (du plus aimé au moins aimé),
+ * à égalité le plus récent d'abord. Les produits sans like ou non visibles sont écartés.
+ */
+export function rankMostLiked(
+  stats: LikeStatRow[],
+  visible: VisibleProductRow[],
+  limit: number,
+): string[] {
+  const createdAt = new Map(visible.map((row) => [row.id, row.created_at]));
+  return stats
+    .filter((row) => row.like_count > 0 && createdAt.has(row.product_id))
+    .sort(
+      (a, b) =>
+        b.like_count - a.like_count ||
+        (createdAt.get(b.product_id) ?? "").localeCompare(createdAt.get(a.product_id) ?? ""),
+    )
+    .slice(0, limit)
+    .map((row) => row.product_id);
+}
+
+/** Identifiants des produits visibles les plus aimés ; null en cas d'erreur. */
+async function getMostLikedProductIds(supabase: SupabaseClient, limit: number): Promise<string[] | null> {
+  // Marge : certains produits très aimés peuvent être masqués (vendeur suspendu, produit supprimé…).
+  const { data: stats, error } = await supabase
+    .from("product_stats")
+    .select("product_id, like_count")
+    .gt("like_count", 0)
+    .order("like_count", { ascending: false })
+    .limit(limit * 10);
+
+  if (error || !stats) {
+    console.error("SUPABASE ERROR (getMostLikedProductIds, compteurs):", error);
+    return null;
+  }
+  if (stats.length === 0) return [];
+
+  // Seulement les produits visibles dans le catalogue.
+  const { data: visible, error: visibleError } = await supabase
+    .from("catalog_products")
+    .select("id, created_at")
+    .in("id", (stats as LikeStatRow[]).map((row) => row.product_id));
+
+  if (visibleError || !visible) {
+    console.error("SUPABASE ERROR (getMostLikedProductIds, catalogue):", visibleError);
+    return null;
+  }
+
+  return rankMostLiked(stats as LikeStatRow[], visible as VisibleProductRow[], limit);
+}
+
+/**
+ * Produits en vedette de l'accueil : les plus aimés.
+ * S'il y a moins de `limit` produits aimés, on complète avec le haut du catalogue.
+ */
 export async function getFeaturedProducts(limit = 3): Promise<Product[]> {
-  const result = await getProducts({ page: 1, perPage: limit });
-  return result.items.slice(0, limit);
+  const fallback = async (exclude: string[] = []) => {
+    const result = await getProducts({ page: 1, perPage: limit + exclude.length });
+    return result.items.filter((product) => !exclude.includes(String(product.id)));
+  };
+
+  const supabase = isSupabaseConfigured() ? createClient() : null;
+  if (!supabase) return (await fallback()).slice(0, limit);
+
+  const ids = await getMostLikedProductIds(supabase, limit);
+  if (!ids || ids.length === 0) return (await fallback()).slice(0, limit);
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, product_images(url, position)")
+    .in("id", ids);
+
+  if (error || !data) {
+    console.error("SUPABASE ERROR (getFeaturedProducts):", error);
+    return (await fallback()).slice(0, limit);
+  }
+
+  const position = new Map(ids.map((id, index) => [id, index]));
+  const ordered = [...(data as ProductRow[])].sort(
+    (a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0),
+  );
+  const mostLiked = await mapProducts(ordered);
+  if (mostLiked.length >= limit) return mostLiked.slice(0, limit);
+
+  const extra = await fallback(mostLiked.map((product) => String(product.id)));
+  return [...mostLiked, ...extra].slice(0, limit);
 }
 
 export async function getMyProducts(userId: string): Promise<Product[]> {
