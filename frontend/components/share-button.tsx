@@ -9,14 +9,16 @@ type ShareButtonProps = {
   text: string;
   url: string;
   className?: string;
+  /** Icône seule (liste du tableau de bord) ; le texte reste lu par les lecteurs d'écran. */
+  iconOnly?: boolean;
 };
 
 /**
- * Bouton « Partager » :
+ * Bouton « Partager » (réservé au vendeur, dans son tableau de bord) :
  * - téléphone (et navigateurs compatibles) : menu de partage du système (WhatsApp, Instagram, SMS…) ;
  * - sinon : WhatsApp s'ouvre avec le texte et le lien prêts, on choisit le contact.
  */
-export function ShareButton({ title, text, url, className = "btn btn-ghost" }: ShareButtonProps) {
+export function ShareButton({ title, text, url, className = "btn btn-ghost", iconOnly = false }: ShareButtonProps) {
   const [shared, setShared] = useState(false);
 
   async function handleShare() {
@@ -34,9 +36,15 @@ export function ShareButton({ title, text, url, className = "btn btn-ghost" }: S
   }
 
   return (
-    <button type="button" className={className} onClick={handleShare}>
-      {shared ? <Check size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
-      {shared ? "Partagé" : "Partager"}
+    <button
+      type="button"
+      className={className}
+      onClick={handleShare}
+      aria-label={iconOnly ? `${shared ? "Partagé" : "Partager"} ${title}` : undefined}
+      title={iconOnly ? "Partager ce produit" : undefined}
+    >
+      {shared ? <Check size={iconOnly ? 15 : 18} aria-hidden="true" /> : <Share2 size={iconOnly ? 15 : 18} aria-hidden="true" />}
+      {!iconOnly && (shared ? "Partagé" : "Partager")}
     </button>
   );
 }
