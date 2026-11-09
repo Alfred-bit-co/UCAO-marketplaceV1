@@ -6,8 +6,10 @@ import { ContactLink } from "@/components/contact-link";
 import { PageShell } from "@/components/page-shell";
 import { ProductGallery } from "@/components/product-gallery";
 import { RoleBadge } from "@/components/role-badge";
+import { ShareButton } from "@/components/share-button";
 import { SITE_URL } from "@/lib/constants";
 import { getProductById } from "@/lib/products";
+import { productShareText } from "@/lib/share";
 import { formatPrice, productPageTitle } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
@@ -78,6 +80,11 @@ export default async function ProductDetailPage({ params }: Props) {
                 <MessageCircle size={18} /> Contact indisponible
               </button>
             )}
+            <ShareButton
+              title={product.name}
+              text={productShareText(product.name, product.price)}
+              url={`${SITE_URL}/products/${id}`}
+            />
             <Link className="btn btn-ghost" href="/products">
               <ArrowLeft size={18} /> Retour aux produits
             </Link>

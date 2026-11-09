@@ -54,6 +54,7 @@ import {
   Shield as PhosphorShield,
   SealCheck as PhosphorSealCheck,
   ShieldCheck as PhosphorShieldCheck,
+  ShareNetwork as PhosphorShareNetwork,
   ShieldWarning as PhosphorShieldWarning,
   ShoppingCart as PhosphorShoppingCart,
   SignIn as PhosphorSignIn,
@@ -158,6 +159,7 @@ export const Send = adapt(PhosphorPaperPlaneTilt);
 export const ShieldAlert = adapt(PhosphorShieldWarning);
 export const Shield = adapt(PhosphorShield);
 export const ShieldCheck = adapt(PhosphorShieldCheck);
+export const Share2 = adapt(PhosphorShareNetwork);
 export const Shirt = adapt(PhosphorTShirt);
 export const ShoppingBag = adapt(PhosphorHandbag);
 export const ShoppingBasket = adapt(PhosphorBasket);
