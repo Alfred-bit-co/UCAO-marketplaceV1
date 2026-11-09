@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MessageCircle } from "@/lib/icons";
+import { ContactLink } from "@/components/contact-link";
 import { PageShell } from "@/components/page-shell";
 import { ProductGallery } from "@/components/product-gallery";
 import { RoleBadge } from "@/components/role-badge";
@@ -68,9 +69,9 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
           <div className="flex flex-wrap gap-3">
             {whatsapp ? (
-              <a className="btn btn-primary" href={whatsapp} target="_blank" rel="noopener noreferrer">
+              <ContactLink productId={id} className="btn btn-primary" href={whatsapp}>
                 <MessageCircle size={18} /> Discuter sur WhatsApp
-              </a>
+              </ContactLink>
             ) : (
               // Vendeur sans numéro : pas de lien WhatsApp de remplacement.
               <button className="btn btn-ghost" type="button" disabled title="Ce vendeur n'a pas encore ajouté son numéro WhatsApp">
