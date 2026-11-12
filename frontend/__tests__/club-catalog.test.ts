@@ -22,11 +22,14 @@ const EXPECTED_PHONES: Record<string, string> = {
   echecs: "+22873267889",
   orchestre: "+22891209262",
   anglais: "+22890383821",
+  // Fourni le 12/11/2026.
+  robotique: "+22891295950",
 };
 
 describe("catalogue des clubs", () => {
-  it("contient les 14 clubs, dont Échecs, Orchestre et Anglais avec leurs images", () => {
-    expect(CLUBS).toHaveLength(14);
+  it("contient les 15 clubs, dont Échecs, Orchestre, Anglais et Robotique avec leurs images", () => {
+    expect(CLUBS).toHaveLength(15);
+    expect(club("robotique").image).toBe("/images/clubs/robot.jpg");
     expect(club("anglais").image).toBe("/images/clubs/odette.jpg");
     expect(club("echecs").image).toBe("/images/clubs/echecs.jpg");
     expect(club("orchestre").image).toBe("/images/clubs/orchestra.jpg");
@@ -38,6 +41,7 @@ describe("catalogue des clubs", () => {
     expect(getClubFullName(club("orchestre"))).toBe("Club d'orchestre");
     expect(getClubFullName(club("anglais"))).toBe("Club d'anglais");
     expect(getClubFullName(club("basketball"))).toBe("Club de Basketball");
+    expect(getClubFullName(club("robotique"))).toBe("Club de Robotique");
   });
 
   it.each(Object.entries(EXPECTED_PHONES))("%s : lien wa.me vers le bon responsable", (slug, phone) => {

@@ -10,6 +10,7 @@ import {
   MicrophoneStage,
   MusicNotes,
   PersonArmsSpread,
+  Robot,
   Scales,
   ShieldCheck,
   SoccerBall,
@@ -36,6 +37,7 @@ const CLUB_ICONS: Record<string, Icon> = {
   echecs: Horse,
   orchestre: MusicNotes,
   anglais: Translate,
+  robotique: Robot,
 };
 
 type ClubCardProps = {
