@@ -17,6 +17,7 @@ import {
   X,
 } from "@/lib/icons";
 import { useEffect, useMemo, useState } from "react";
+import { amIClubManager } from "@/lib/clubs";
 import { createClient } from "@/lib/supabase";
 import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,8 @@ export function Topbar() {
 // les liens « Connexion » / « Mon profil » clignotaient le temps de relire la session.
 // undefined = pas encore connu (premier chargement).
 let cachedRole: UserRole | null | undefined;
+// Même principe pour le droit « gestionnaire des clubs » (fonction am_i_club_manager, vraie aussi pour l'admin).
+let cachedClubManager: boolean | undefined;
 
 export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const pathname = usePathname();
@@ -99,16 +102,20 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<UserRole | null>(cachedRole ?? null);
   const [roleKnown, setRoleKnown] = useState(cachedRole !== undefined);
+  const [clubManager, setClubManager] = useState(cachedClubManager ?? false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     let active = true;
     const refreshRole = () =>
-      getCurrentUserRole().then((currentRole) => {
+      getCurrentUserRole().then(async (currentRole) => {
         cachedRole = currentRole;
         if (!active) return;
         setRole(currentRole);
         setRoleKnown(true);
+        const manager = currentRole ? await amIClubManager() : false;
+        cachedClubManager = manager;
+        if (active) setClubManager(manager);
       });
     refreshRole();
     const supabase = createClient();
@@ -140,7 +147,9 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   async function handleSignOut() {
     await signOut();
     cachedRole = null;
+    cachedClubManager = false;
     setRole(null);
+    setClubManager(false);
     setOpen(false);
     router.push("/");
     router.refresh();
@@ -157,8 +166,12 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     if (role === "ADMIN") {
       links.push({ href: "/admin", label: "Administration" });
     }
+    // Réservé au représentant des clubs (et à l'admin) : jamais dans la navigation publique.
+    if (role && clubManager) {
+      links.push({ href: "/espace-clubs", label: "Espace clubs" });
+    }
     return links;
-  }, [role]);
+  }, [role, clubManager]);
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
