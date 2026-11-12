@@ -9,9 +9,11 @@ import {
   Shield,
   ShieldCheck,
   Trash2,
+  UsersRound,
   X,
 } from "@/lib/icons";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminCharts } from "@/components/admin-charts";
 import { PageShell } from "@/components/page-shell";
@@ -139,7 +141,7 @@ export default function AdminPage() {
         <Image src="/images/admin-hero.jpg" alt="" fill priority sizes="100vw" className="-z-20 object-cover" />
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(7,20,38,0.72)_0%,rgba(7,20,38,0.5)_60%,rgba(7,20,38,0.68)_100%)]" />
         <div className="container-ucao relative">
-          <div className="flex flex-wrap items-start justify-between gap-6"><div><p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/65"><Shield size={15} /> Centre de pilotage</p><h1 className="text-[clamp(32px,5vw,52px)] font-bold tracking-tight">Bonjour, {me.full_name.split(" ")[0]}.</h1><p className="mt-2 max-w-xl text-white/72">Suivez la croissance de la marketplace et traitez les actions prioritaires.</p></div><div className="flex items-center gap-3"><span className="hidden items-center gap-2 rounded-ucao border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium sm:inline-flex"><CalendarDays size={16} /> Vue du jour</span><span className="grid size-12 place-items-center rounded-full bg-white text-sm font-bold text-ucao-navy shadow-lg">{initials(me.full_name)}</span></div></div>
+          <div className="flex flex-wrap items-start justify-between gap-6"><div><p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/65"><Shield size={15} /> Centre de pilotage</p><h1 className="text-[clamp(32px,5vw,52px)] font-bold tracking-tight">Bonjour, {me.full_name.split(" ")[0]}.</h1><p className="mt-2 max-w-xl text-white/72">Suivez la croissance de la marketplace et traitez les actions prioritaires.</p></div><div className="flex items-center gap-3"><Link href="/espace-clubs" className="btn btn-light min-h-11 px-4 text-sm"><UsersRound size={16} aria-hidden="true" /> Gérer les clubs</Link><span className="hidden items-center gap-2 rounded-ucao border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium sm:inline-flex"><CalendarDays size={16} /> Vue du jour</span><span className="grid size-12 place-items-center rounded-full bg-white text-sm font-bold text-ucao-navy shadow-lg">{initials(me.full_name)}</span></div></div>
           <div className="mt-9 flex flex-wrap items-center justify-between gap-4 rounded-ucao border border-white/15 bg-white/10 p-5 backdrop-blur-sm"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-white/60">État de la plateforme</p><p className="mt-1 text-2xl font-bold">Tout est sous contrôle</p></div><span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-ucao-success"><ShieldCheck size={15} /> Accès administrateur actif</span></div>
         </div>
       </section>
