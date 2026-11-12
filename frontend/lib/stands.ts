@@ -1,4 +1,5 @@
 import { DEMO_STANDS } from "./constants";
+import { trustedMediaUrl } from "./media";
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { getPublicProfiles, toSeller, type PublicProfile } from "./public-profiles";
 import { isStandCategory, modesNeedPhone, normalizeWhatsAppPhone, sanitizeContactModes } from "./stand-catalog";
@@ -40,8 +41,9 @@ function mapStand(row: StandRow, profile?: PublicProfile): Stand {
     id: row.id,
     name: row.name,
     description: row.description,
-    banner_url: row.banner_url,
-    logo_url: row.logo_url,
+    // Seules les images de notre stockage sont affichées (l'adresse est du texte libre en base).
+    banner_url: trustedMediaUrl(row.banner_url),
+    logo_url: trustedMediaUrl(row.logo_url),
     category: isStandCategory(row.category) ? row.category : "autres",
     whatsapp_phone: row.whatsapp_phone,
     contact_modes: sanitizeContactModes(row.contact_modes),

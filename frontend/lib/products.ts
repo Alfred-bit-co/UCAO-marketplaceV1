@@ -1,6 +1,7 @@
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { getPublicProfiles, toSeller, type PublicProfile } from "./public-profiles";
 import { PRODUCTS_PER_PAGE, DEMO_PRODUCTS } from "./constants";
+import { isTrustedMediaUrl } from "./media";
 import { escapeIlike } from "./utils";
 import type { PaginatedResult, Product, ProductCategory, ProductImage } from "./types";
 import { TIER_PRIORITY } from "./types";
@@ -30,7 +31,8 @@ type CatalogFilters = {
 };
 
 function sortImages(images?: ProductImageRow[] | null): ProductImage[] {
-  return [...(images ?? [])].sort((a, b) => a.position - b.position);
+  // Seules les images de notre stockage sont affichées (l'adresse est du texte libre en base).
+  return [...(images ?? [])].filter((image) => isTrustedMediaUrl(image.url)).sort((a, b) => a.position - b.position);
 }
 
 function mapProduct(row: ProductRow, profile?: PublicProfile): Product {
