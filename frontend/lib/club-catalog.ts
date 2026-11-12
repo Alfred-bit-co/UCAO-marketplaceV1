@@ -232,6 +232,20 @@ export const CLUBS: ClubEntry[] = [
     accent: { main: "#84cc16", light: "#bef264", buttonFrom: "#4d7c0f", buttonTo: "#3f6212" },
     managerPhone: "+22890383821",
   },
+  {
+    slug: "robotique",
+    prefix: "Club de",
+    name: "Robotique",
+    tagline: "Imagine. Construis. Programme.",
+    description:
+      "Le club de robotique de l'UCAO t'invite à concevoir, assembler et programmer des robots en équipe. Électronique, mécanique et code : que tu sois débutant curieux ou déjà bricoleur, viens apprendre en pratiquant !",
+    sideTitle: ["Des idées,", "des robots."],
+    sideText:
+      "Le club de robotique réunit des étudiants qui aiment comprendre comment les machines fonctionnent et donner vie à leurs propres projets.",
+    image: "/images/clubs/robot.jpg",
+    accent: { main: "#06b6d4", light: "#67e8f9", buttonFrom: "#0e7490", buttonTo: "#155e75" },
+    managerPhone: "+22891295950",
+  },
 ];
 
 export function getClubFullName(club: ClubEntry): string {
