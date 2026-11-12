@@ -9,7 +9,6 @@ import {
   Shield,
   ShieldCheck,
   Trash2,
-  UsersRound,
   X,
 } from "@/lib/icons";
 import Image from "next/image";
@@ -30,12 +29,12 @@ import {
   setUserSuspension,
 } from "@/lib/admin";
 import type { AdminStats } from "@/lib/admin";
-import { createClub, deleteClub, getClubs } from "@/lib/clubs";
+import { AdminClubs } from "@/components/admin-clubs";
 import { deleteReviewForAdmin, getAllReviewsForAdmin, getReviewStats, updateReviewStatus } from "@/lib/reviews";
 import type { PlatformReview } from "@/lib/reviews";
 import { deleteStandForAdmin, getAllStandsForAdmin, updateStandStatus } from "@/lib/stands";
 import { getPendingVerifications, getStudentIdSignedUrl, setVerificationStatus } from "@/lib/verification";
-import type { Club, Profile, Stand } from "@/lib/types";
+import type { Profile, Stand } from "@/lib/types";
 import { roleLabel } from "@/lib/utils";
 import { getCurrentProfile } from "@/lib/users";
 import { AdminVerifications } from "@/components/admin-verifications";
@@ -62,7 +61,6 @@ export default function AdminPage() {
   const [verifications, setVerifications] = useState<Profile[]>([]);
   const [duplicateFlags, setDuplicateFlags] = useState<Record<string, DuplicateFlag>>({});
   const [reviews, setReviews] = useState<PlatformReview[]>([]);
-  const [clubs, setClubs] = useState<Club[]>([]);
   const [reviewStats, setReviewStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [search, setSearch] = useState("");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -76,8 +74,8 @@ export default function AdminPage() {
       failed.push(label);
       return fallback;
     }
-    const [statsR, signupsR, productsR, userSignupsR, rolesR, tiersR, standsR, usersR, verificationsR, reviewsR, reviewStatsR, clubsR, flagsR] = await Promise.allSettled([
-      getAdminStats(), getVendorSignupsByMonth(), getProductPublishByMonth(), getMonthlyUserSignups(), getUsersByRole(), getSubscriptionTierDistribution(), getAllStandsForAdmin(), searchProfiles(""), getPendingVerifications(), getAllReviewsForAdmin(), getReviewStats(), getClubs(), getDuplicateFlags(),
+    const [statsR, signupsR, productsR, userSignupsR, rolesR, tiersR, standsR, usersR, verificationsR, reviewsR, reviewStatsR, flagsR] = await Promise.allSettled([
+      getAdminStats(), getVendorSignupsByMonth(), getProductPublishByMonth(), getMonthlyUserSignups(), getUsersByRole(), getSubscriptionTierDistribution(), getAllStandsForAdmin(), searchProfiles(""), getPendingVerifications(), getAllReviewsForAdmin(), getReviewStats(), getDuplicateFlags(),
     ]);
     setStats(pick<AdminStats | null>(statsR, "statistiques", null));
     setSignups(pick(signupsR, "inscriptions vendeurs", []));
@@ -91,7 +89,6 @@ export default function AdminPage() {
     const reviewsResult = pick(reviewsR, "avis", { reviews: [] as PlatformReview[], error: "chargement impossible" });
     setReviews(reviewsResult.reviews);
     setReviewStats(pick(reviewStatsR, "statistiques des avis", { total: 0, approved: 0, pending: 0, rejected: 0 }));
-    setClubs(pick(clubsR, "clubs", []));
     setDuplicateFlags(pick(flagsR, "doublons", {}));
     if (failed.length > 0) setActionMessage(`Certaines données n'ont pas pu être chargées : ${failed.join(", ")}.`);
     else if (reviewsResult.error) setActionMessage(`Avis : ${reviewsResult.error}`);
@@ -133,8 +130,6 @@ export default function AdminPage() {
   }
   function removeUser(id: string, _name?: string) { void _name; const user = users.find((item) => item.id === id); if (user) { setActionMessage(null); setAccountPendingDeletion(user); } }
   async function confirmUserDeletion() { if (!accountPendingDeletion) return; setActionMessage(null); setDeletingUserId(accountPendingDeletion.id); const result = await deleteUserAccount(accountPendingDeletion.id); setDeletingUserId(null); if (!result.ok) { setActionMessage(result.message || "Impossible de supprimer ce compte."); return; } const deletedName = accountPendingDeletion.full_name; setUsers((items) => items.filter((item) => item.id !== accountPendingDeletion.id)); setStats((current) => current ? { ...current, totalUsers: Math.max(current.totalUsers - 1, 0) } : current); setAccountPendingDeletion(null); setActionMessage(`Le compte de ${deletedName} a été supprimé.`); }
-  async function addClub(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); const formElement = event.currentTarget; const form = new FormData(formElement); const result = await createClub({ name: String(form.get("name") || ""), banner_url: String(form.get("banner_url") || ""), external_url: String(form.get("external_url") || ""), short_description: String(form.get("short_description") || "") }); if (!result.ok) { setActionMessage(result.error || "Impossible de créer le club."); return; } formElement.reset(); setClubs(await getClubs()); }
-  async function removeClub(id: string) { if (!window.confirm("Supprimer ce club ?")) return; if (!await deleteClub(id)) { setActionMessage("Impossible de supprimer ce club."); return; } setClubs((items) => items.filter((item) => item.id !== id)); }
   if (loading) return <PageShell><AdminSkeleton /></PageShell>;
   if (!me || me.role !== "ADMIN") return <PageShell><main className="container-ucao py-24 text-center"><p className="text-xl font-medium">Accès réservé aux administrateurs.</p></main></PageShell>;
   const pendingStands = stands.filter((stand) => stand.status === "pending");
@@ -169,7 +164,7 @@ export default function AdminPage() {
         <article className="panel p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Modération</p><h2 className="text-2xl font-bold">Stands à traiter</h2></div><span className="text-3xl font-bold text-ucao-red">{pendingStands.length}</span></div>{pendingStands.length ? <ul className="space-y-3">{pendingStands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div><p className="font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name}</p></div><div className="flex gap-1"><button className="btn btn-primary min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "approved")} aria-label="Valider"><Check size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0" type="button" onClick={() => decideStand(String(stand.id), "rejected")} aria-label="Rejeter"><X size={15} /></button><button className="btn btn-ghost min-h-9 size-9 p-0 text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)} aria-label={`Supprimer le stand ${stand.name}`} title="Supprimer définitivement"><Trash2 size={15} /></button></div></li>)}</ul> : <p className="rounded-ucao bg-ucao-success-soft p-5 font-medium text-ucao-success">Aucun stand à traiter.</p>}</article>
       </section>
       <section className="container-ucao mt-5"><article className="panel p-5 sm:p-6"><div className="mb-4 flex items-center justify-between"><div><p className="eyebrow">Catalogue</p><h2 className="text-2xl font-bold">Gestion des stands</h2></div><span className="text-sm font-medium text-ucao-muted">{stands.length} stand{stands.length > 1 ? "s" : ""}</span></div>{stands.length ? <ul className="max-h-80 space-y-2 overflow-auto pr-1">{stands.map((stand) => <li key={stand.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><div className="min-w-0"><p className="truncate font-medium">{stand.name}</p><p className="text-xs text-ucao-muted">{stand.seller?.name || "Vendeur UCAO"} · {stand.status === "approved" ? "Validé" : stand.status === "rejected" ? "Rejeté" : "En attente"}</p></div><button className="btn btn-ghost min-h-9 px-3 text-xs text-ucao-red" type="button" onClick={() => removeStandForAdmin(stand)}><Trash2 size={14} /> Supprimer</button></li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 text-sm text-ucao-muted dark:bg-[#132238]">Aucun stand enregistré.</p>}</article></section>
-      <section className="container-ucao mt-5 grid gap-5 xl:grid-cols-2">
+      <section className="container-ucao mt-5">
         <article className="panel overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-ucao-line p-5 dark:border-[#263d5c]"><div><p className="eyebrow">Comptes</p><h2 className="text-2xl font-bold">Utilisateurs</h2></div><label className="relative min-w-[230px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ucao-muted" size={16} /><span className="sr-only">Rechercher</span><input className="input-field min-h-10 py-2 pl-9 text-sm" type="search" placeholder="Nom ou email" value={search} onChange={(event) => setSearch(event.target.value)} /></label></div><div className="max-h-[430px] overflow-auto p-3"><ul className="space-y-2">{users.map((user) => (
             <li key={user.id} className="flex items-center gap-3 rounded-ucao p-3 transition hover:bg-ucao-soft dark:hover:bg-[#132238]">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-ucao-navy text-xs font-bold text-white">{initials(user.full_name)}</span>
@@ -199,8 +194,8 @@ export default function AdminPage() {
               )}
             </li>
           ))}</ul>{users.length === 0 && <p className="p-4 text-sm font-medium text-ucao-muted">Aucun utilisateur trouvé.</p>}</div></article>
-        <article className="panel p-5"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Clubs</p><h2 className="text-2xl font-bold">Gestion des clubs</h2></div><UsersRound className="text-ucao-success" size={23} /></div><form className="grid gap-2.5" onSubmit={addClub}><input className="input-field" name="name" placeholder="Nom du club" required /><input className="input-field" name="banner_url" type="url" placeholder="URL de bannière" required /><input className="input-field" name="external_url" type="url" placeholder="Lien externe" required /><input className="input-field" name="short_description" placeholder="Description courte (optionnel)" /><button className="btn btn-primary w-fit" type="submit">Créer le club</button></form><ul className="mt-5 space-y-2">{clubs.map((club) => <li key={club.id} className="flex items-center justify-between gap-3 rounded-ucao bg-ucao-soft p-3 dark:bg-[#132238]"><span className="font-medium">{club.name}</span><button className="btn btn-ghost min-h-9 px-3 text-xs text-ucao-red" type="button" onClick={() => removeClub(club.id)}><Trash2 size={14} /> Supprimer</button></li>)}</ul></article>
       </section>
+      <AdminClubs />
       <section className="container-ucao mt-5"><article className="panel p-5"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Avis</p><h2 className="text-2xl font-bold">Modération récente</h2></div><span className="text-sm font-medium text-ucao-muted">{reviewStats.pending} en attente</span></div>{reviews.length ? <ul className="grid gap-3 md:grid-cols-2">{reviews.slice(0, 6).map((review) => <li key={review.id} className="rounded-ucao border border-ucao-line p-4 dark:border-[#263d5c]"><div className="flex items-start justify-between gap-3"><div><Stars rating={review.rating} /><p className="mt-2 line-clamp-2 text-sm text-ucao-muted">«{review.comment}»</p></div><button className="grid size-9 place-items-center rounded-ucao text-ucao-red hover:bg-ucao-red-soft" type="button" onClick={() => removeReview(review.id)} aria-label="Supprimer l'avis"><Trash2 size={15} /></button></div>{review.status === "pending" && <div className="mt-3 flex gap-2"><button className="btn btn-primary min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "approved")}><Check size={14} /> Valider</button><button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "rejected")}><X size={14} /> Rejeter</button></div>}</li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 font-medium text-ucao-muted dark:bg-[#132238]">Aucun avis enregistré.</p>}</article></section>
     </main>
   </PageShell>;

@@ -1,7 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/devenir-vendeur", "/profil", "/verification", "/verification-carte"];
+// /espace-clubs demande seulement d'être connecté : le représentant des clubs est un ACHETEUR sans palier,
+// et aucune des redirections ci-dessous (carte d'étudiant, devenir vendeur…) ne s'applique à cette page.
+const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/devenir-vendeur", "/espace-clubs", "/profil", "/verification", "/verification-carte"];
 const AUTH_PAGES = ["/login", "/register", "/devenir-vendeur"];
 
 export async function middleware(request: NextRequest) {
@@ -105,6 +107,7 @@ export const config = {
     "/admin/:path*",
     "/dashboard/:path*",
     "/devenir-vendeur/:path*",
+    "/espace-clubs/:path*",
     "/profil/:path*",
     "/verification/:path*",
     "/verification-carte/:path*",
