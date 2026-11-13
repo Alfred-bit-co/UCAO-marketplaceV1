@@ -25,7 +25,7 @@ export default async function ClubsPage() {
   const clubById = new Map(clubs.map((club) => [club.id, club]));
 
   const clubsPanel = (
-    <section className="grid gap-8 py-8 pb-[84px] lg:gap-10" aria-label="Liste des clubs">
+    <section className="grid gap-10 py-8 pb-[84px] lg:gap-16" aria-label="Liste des clubs">
       {clubs.length ? (
         clubs.map((club, index) => <ClubCard key={club.id} club={club} reverse={index % 2 === 1} priority={index === 0} />)
       ) : (
