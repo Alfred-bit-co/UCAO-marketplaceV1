@@ -9,14 +9,14 @@ import { AnnouncementForm } from "@/components/clubs/announcement-form";
 import { ClubForm } from "@/components/clubs/club-form";
 import { ClubWeekCalendar } from "@/components/clubs/club-week-calendar";
 import { ConfirmDialog } from "@/components/clubs/confirm-dialog";
-import { SessionForm } from "@/components/clubs/session-form";
+import { SessionForm, type SessionDefaults } from "@/components/clubs/session-form";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { useToast } from "@/components/toast-provider";
 import { amIClubManager, deleteClub, deleteClubAnnouncement, getClubAnnouncements, getClubSessions, getClubs, setClubActive } from "@/lib/clubs";
 import { readableTextColor } from "@/lib/club-colors";
-import { sortAnnouncements, type PeriodKey } from "@/lib/club-schedule";
+import { sortAnnouncements } from "@/lib/club-schedule";
 import { CONTACT } from "@/lib/seo";
 import type { Club, ClubAnnouncement, ClubSession, Profile } from "@/lib/types";
 import { getCurrentProfile } from "@/lib/users";
@@ -43,7 +43,7 @@ export default function EspaceClubsPage() {
 
   const [clubForm, setClubForm] = useState<{ open: boolean; club: Club | null }>({ open: false, club: null });
   const [clubToDelete, setClubToDelete] = useState<Club | null>(null);
-  const [sessionForm, setSessionForm] = useState<{ open: boolean; session: ClubSession | null; defaults: { day: number; period: PeriodKey } | null }>({ open: false, session: null, defaults: null });
+  const [sessionForm, setSessionForm] = useState<{ open: boolean; session: ClubSession | null; defaults: SessionDefaults | null }>({ open: false, session: null, defaults: null });
   const [announcementForm, setAnnouncementForm] = useState<{ open: boolean; announcement: ClubAnnouncement | null }>({ open: false, announcement: null });
   const [announcementToDelete, setAnnouncementToDelete] = useState<ClubAnnouncement | null>(null);
   const [busy, setBusy] = useState(false);
@@ -114,10 +114,11 @@ export default function EspaceClubsPage() {
   }
 
   // ===== Séances =====
-  function onSessionSaved(session: ClubSession, created: boolean) {
-    setSessions((items) => (created ? [...items, session] : items.map((item) => (item.id === session.id ? session : item))));
-    setSessionForm({ open: false, session: null, defaults: null });
-    toast.success(created ? "Séance ajoutée" : "Séance modifiée");
+  // Le formulaire se ferme lui-même (onCancel) : en création, plusieurs séances peuvent arriver d'un coup.
+  function onSessionSaved(saved: ClubSession[], created: boolean) {
+    const byId = new Map(saved.map((item) => [item.id, item]));
+    setSessions((items) => (created ? [...items, ...saved] : items.map((item) => byId.get(item.id) ?? item)));
+    toast.success(created ? (saved.length > 1 ? `${saved.length} séances ajoutées` : "Séance ajoutée") : "Séance modifiée");
   }
 
   function onSessionDeleted(id: string) {
@@ -294,7 +295,7 @@ export default function EspaceClubsPage() {
                 <div>
                   <p className="eyebrow">Programme</p>
                   <h2 className="text-2xl font-bold">La semaine des clubs</h2>
-                  <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">Touchez une case vide pour ajouter une séance, ou une séance pour la modifier.</p>
+                  <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">Touchez une case pour y ajouter un ou plusieurs clubs. Une case peut réunir plusieurs clubs : elle prend alors toutes leurs couleurs.</p>
                 </div>
                 <button className="btn btn-primary" type="button" onClick={() => setSessionForm({ open: true, session: null, defaults: null })} disabled={clubs.length === 0}>
                   <Plus size={16} aria-hidden="true" /> Ajouter une séance
@@ -304,7 +305,7 @@ export default function EspaceClubsPage() {
                 clubs={clubs}
                 sessions={sessions}
                 mode="edit"
-                onCreate={(day, period) => setSessionForm({ open: true, session: null, defaults: { day, period } })}
+                onCreate={(day, period, like) => setSessionForm({ open: true, session: null, defaults: { day, period, like: like ?? null } })}
                 onEdit={(session) => setSessionForm({ open: true, session, defaults: null })}
               />
             </article>

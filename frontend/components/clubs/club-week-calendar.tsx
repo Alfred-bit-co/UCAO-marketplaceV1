@@ -34,11 +34,12 @@ type ClubWeekCalendarProps = {
   clubs: Club[];
   sessions: ClubSession[];
   mode?: "read" | "edit";
-  onCreate?: (day: number, period: PeriodKey) => void;
+  /** `like` : une séance déjà dans la case, pour ajouter d'autres clubs au même créneau. */
+  onCreate?: (day: number, period: PeriodKey, like?: ClubSession) => void;
   onEdit?: (session: ClubSession) => void;
 };
 
-type OpenCell = { day: number; period: PeriodKey; left: number; top: number };
+type OpenCell = { day: number; period: PeriodKey; left: number; top: number; maxHeight: number };
 
 const MAX_BANDS = 3;
 const PANEL_WIDTH = 340;
@@ -90,8 +91,11 @@ export function ClubWeekCalendar({ clubs, sessions, mode = "read", onCreate, onE
     const rect = event.currentTarget.getBoundingClientRect();
     const maxLeft = Math.max(window.innerWidth - PANEL_WIDTH - 16, 0);
     const left = Math.min(Math.max(rect.left, 16), maxLeft);
-    const top = Math.min(rect.bottom + 8, window.innerHeight - 120);
-    setOpenCell({ day, period, left, top });
+    // La fenêtre doit tenir entièrement à l'écran : sous la case s'il y a la place, sinon remontée.
+    const count = entriesOf(day, period).length;
+    const wanted = Math.min(110 + count * 150 + (editing ? 70 : 0), Math.round(window.innerHeight * 0.8));
+    const top = Math.max(16, Math.min(rect.bottom + 8, window.innerHeight - wanted - 16));
+    setOpenCell({ day, period, left, top, maxHeight: window.innerHeight - top - 16 });
   }
 
   function handleCellClick(event: React.MouseEvent<HTMLElement>, day: number, period: PeriodKey) {
@@ -272,8 +276,8 @@ export function ClubWeekCalendar({ clubs, sessions, mode = "read", onCreate, onE
                 role="dialog"
                 aria-modal="true"
                 aria-label={cellAriaLabel(openCell.day, openCell.period, openEntries)}
-                className="panel fixed inset-x-0 bottom-0 z-50 max-h-[75dvh] overflow-y-auto rounded-b-none p-4 shadow-2xl md:inset-auto md:max-h-[60vh] md:w-[340px] md:rounded-ucao"
-                style={desktop ? { left: openCell.left, top: openCell.top } : undefined}
+                className="panel fixed inset-x-0 bottom-0 z-50 max-h-[75dvh] overflow-y-auto rounded-b-none p-4 shadow-2xl md:inset-auto md:w-[340px] md:rounded-ucao"
+                style={desktop ? { left: openCell.left, top: openCell.top, maxHeight: openCell.maxHeight } : undefined}
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <p className="font-bold">
@@ -283,6 +287,18 @@ export function ClubWeekCalendar({ clubs, sessions, mode = "read", onCreate, onE
                     <X size={16} />
                   </button>
                 </div>
+                <p className="mb-3 text-xs text-ucao-muted">
+                  {openEntries.length} club{openEntries.length > 1 ? "s" : ""} à ce moment de la journée
+                </p>
+                {editing && (
+                  <button
+                    type="button"
+                    className="btn btn-primary mb-3 w-full text-sm"
+                    onClick={() => { const cell = openCell; const like = openEntries[0]; setOpenCell(null); onCreate?.(cell.day, cell.period, like); }}
+                  >
+                    <Plus size={15} aria-hidden="true" /> Ajouter d&apos;autres clubs à ce créneau
+                  </button>
+                )}
                 <ul className="grid gap-3">
                   {openEntries.map((entry) => {
                     const joinLink = getClubJoinLink(entry.club);
@@ -318,11 +334,6 @@ export function ClubWeekCalendar({ clubs, sessions, mode = "read", onCreate, onE
                     );
                   })}
                 </ul>
-                {editing && (
-                  <button type="button" className="btn btn-ghost mt-3 w-full text-sm" onClick={() => { const cell = openCell; setOpenCell(null); onCreate?.(cell.day, cell.period); }}>
-                    <Plus size={15} aria-hidden="true" /> Ajouter une séance ici
-                  </button>
-                )}
               </div>
             </>
           )}
