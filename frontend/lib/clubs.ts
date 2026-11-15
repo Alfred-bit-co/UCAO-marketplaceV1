@@ -1,4 +1,6 @@
 import { STORAGE_BUCKET } from "./constants";
+import { isHexColor } from "./club-colors";
+import { SUPABASE_HOST } from "./security-headers";
 import { createClient, isSupabaseConfigured } from "./supabase";
 import type { Club, ClubAnnouncement, ClubManager, ClubSession, DeletedClub } from "./types";
 import { isValidPhoneNumber, normalizeWhatsAppNumber } from "./utils";
@@ -57,6 +59,31 @@ export function friendlyClubError(error: SupabaseErrorLike): string {
   return "Impossible d'enregistrer pour le moment. Réessayez dans quelques instants.";
 }
 
+// ===== Garde-fous d'affichage =====
+// La base n'encadre pas ces deux champs : on n'affiche que ce qui est sûr.
+
+const CLUB_LOCAL_IMAGE = /^\/images\/clubs\/[A-Za-z0-9._-]+$/;
+const CLUB_STORAGE_PREFIX = `https://${SUPABASE_HOST}/storage/v1/object/public/${STORAGE_BUCKET}/clubs/`;
+
+/** Image d'un club : fichier local du site ou image envoyée dans notre stockage, sinon rien. */
+export function safeClubImageUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  if (CLUB_LOCAL_IMAGE.test(value)) return value;
+  if (value.startsWith(CLUB_STORAGE_PREFIX) && !value.includes("..") && !/[\s\\]/.test(value)) return value;
+  return null;
+}
+
+/** Lien externe : seulement http(s) (jamais javascript:, data:…). */
+export function safeExternalUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 // ===== Lectures =====
 
 function mapClub(row: Record<string, unknown>): Club {
@@ -64,9 +91,9 @@ function mapClub(row: Record<string, unknown>): Club {
     id: String(row.id),
     name: String(row.name ?? ""),
     short_description: (row.short_description as string | null) ?? null,
-    banner_url: (row.banner_url as string | null) ?? null,
-    external_url: (row.external_url as string | null) ?? null,
-    color: String(row.color ?? "#546E7A"),
+    banner_url: safeClubImageUrl(row.banner_url),
+    external_url: safeExternalUrl(row.external_url),
+    color: isHexColor(String(row.color ?? "")) ? String(row.color) : "#546E7A",
     whatsapp: (row.whatsapp as string | null) ?? null,
     sort_order: Number(row.sort_order ?? 0),
     is_active: row.is_active !== false,

@@ -35,3 +35,20 @@ describe("palette des clubs", () => {
     expect(colorLabel("#123456")).toBe("#123456");
   });
 });
+
+describe("garde-fous d'affichage des clubs", async () => {
+  const { safeClubImageUrl, safeExternalUrl } = await import("@/lib/clubs");
+
+  it("n'accepte que les images locales ou de notre stockage", () => {
+    expect(safeClubImageUrl("/images/clubs/robot.jpg")).toBe("/images/clubs/robot.jpg");
+    expect(safeClubImageUrl("https://kodlozakvjuegwtetewm.supabase.co/storage/v1/object/public/marketplace-media/clubs/u/c-1.jpg")).not.toBeNull();
+    expect(safeClubImageUrl("https://evil.example/x.jpg")).toBeNull();
+    expect(safeClubImageUrl("/images/clubs/../../secret")).toBeNull();
+  });
+
+  it("refuse les liens javascript: et data:", () => {
+    expect(safeExternalUrl("javascript:alert(1)")).toBeNull();
+    expect(safeExternalUrl("data:text/html,x")).toBeNull();
+    expect(safeExternalUrl("https://ucao-uut.tg")).toBe("https://ucao-uut.tg/");
+  });
+});
