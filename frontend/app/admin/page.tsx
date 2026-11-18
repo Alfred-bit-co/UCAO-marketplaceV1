@@ -32,6 +32,8 @@ import {
 } from "@/lib/admin";
 import type { AdminStats } from "@/lib/admin";
 import { AdminClubs } from "@/components/admin-clubs";
+import { AdminTeam } from "@/components/admin-team";
+import { amIAdmin } from "@/lib/admin-team";
 import { deleteReviewForAdmin, getAllReviewsForAdmin, getReviewStats, updateReviewStatus } from "@/lib/reviews";
 import type { PlatformReview } from "@/lib/reviews";
 import { deleteStandForAdmin, getAllStandsForAdmin, updateStandStatus } from "@/lib/stands";
@@ -51,6 +53,8 @@ function Kpi({ label, value, hint, tone }: { label: string; value: number; hint:
 }
 export default function AdminPage() {
   const [me, setMe] = useState<Profile | null>(null);
+  // Propriétaire (rôle ADMIN) ou administrateur nommé (permission donnée par la base).
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [signups, setSignups] = useState<Awaited<ReturnType<typeof getVendorSignupsByMonth>>>([]);
@@ -101,7 +105,9 @@ export default function AdminPage() {
       try {
         const profile = await getCurrentProfile();
         setMe(profile);
-        if (profile?.role === "ADMIN") await refreshAll();
+        const allowed = profile?.role === "ADMIN" || (profile ? await amIAdmin() : false);
+        setHasAdminAccess(allowed);
+        if (allowed) await refreshAll();
       } catch (error) {
         console.error("ADMIN LOAD ERROR (session):", error);
         setActionMessage("Impossible de charger le centre de pilotage. Actualisez la page.");
@@ -111,9 +117,9 @@ export default function AdminPage() {
     })();
   }, []);
   useEffect(() => {
-    const timer = window.setTimeout(() => { if (me?.role === "ADMIN") void searchProfiles(search).then(setUsers); }, 300);
+    const timer = window.setTimeout(() => { if (hasAdminAccess) void searchProfiles(search).then(setUsers); }, 300);
     return () => window.clearTimeout(timer);
-  }, [search, me]);
+  }, [search, hasAdminAccess]);
   async function decideStand(id: string, status: "approved" | "rejected") { setActionMessage(null); if (!await updateStandStatus(id, status)) { setActionMessage("Impossible de mettre à jour ce stand."); return; } await refreshAll(); }
   async function removeStandForAdmin(stand: Stand) { if (!window.confirm(`Supprimer définitivement le stand « ${stand.name} » ?`)) return; setActionMessage(null); const result = await deleteStandForAdmin(String(stand.id)); if (result.error) { setActionMessage(result.error); return; } await refreshAll(); }
   async function decideVerification(id: string, status: "approved" | "rejected", note?: string) { setActionMessage(null); if (!await setVerificationStatus(id, status, note)) { setActionMessage("Impossible de mettre à jour cette vérification."); return; } await refreshAll(); }
@@ -133,7 +139,7 @@ export default function AdminPage() {
   function removeUser(id: string, _name?: string) { void _name; const user = users.find((item) => item.id === id); if (user) { setActionMessage(null); setAccountPendingDeletion(user); } }
   async function confirmUserDeletion() { if (!accountPendingDeletion) return; setActionMessage(null); setDeletingUserId(accountPendingDeletion.id); const result = await deleteUserAccount(accountPendingDeletion.id); setDeletingUserId(null); if (!result.ok) { setActionMessage(result.message || "Impossible de supprimer ce compte."); return; } const deletedName = accountPendingDeletion.full_name; setUsers((items) => items.filter((item) => item.id !== accountPendingDeletion.id)); setStats((current) => current ? { ...current, totalUsers: Math.max(current.totalUsers - 1, 0) } : current); setAccountPendingDeletion(null); setActionMessage(`Le compte de ${deletedName} a été supprimé.`); }
   if (loading) return <PageShell><AdminSkeleton /></PageShell>;
-  if (!me || me.role !== "ADMIN") return <PageShell><main className="container-ucao py-24 text-center"><p className="text-xl font-medium">Accès réservé aux administrateurs.</p></main></PageShell>;
+  if (!me || !hasAdminAccess) return <PageShell><main className="container-ucao py-24 text-center"><p className="text-xl font-medium">Accès réservé aux administrateurs.</p></main></PageShell>;
   const pendingStands = stands.filter((stand) => stand.status === "pending");
   return <PageShell>
     <main className="min-h-screen bg-[#f5f7fb] pb-20 dark:bg-[#071426]">
@@ -197,6 +203,7 @@ export default function AdminPage() {
             </li>
           ))}</ul>{users.length === 0 && <p className="p-4 text-sm font-medium text-ucao-muted">Aucun utilisateur trouvé.</p>}</div></article>
       </section>
+      {me.role === "ADMIN" && <AdminTeam />}
       <AdminClubs />
       <section className="container-ucao mt-5"><article className="panel p-5"><div className="mb-5 flex items-center justify-between"><div><p className="eyebrow">Avis</p><h2 className="text-2xl font-bold">Modération récente</h2></div><span className="text-sm font-medium text-ucao-muted">{reviewStats.pending} en attente</span></div>{reviews.length ? <ul className="grid gap-3 md:grid-cols-2">{reviews.slice(0, 6).map((review) => <li key={review.id} className="rounded-ucao border border-ucao-line p-4 dark:border-[#263d5c]"><div className="flex items-start justify-between gap-3"><div><Stars rating={review.rating} /><p className="mt-2 line-clamp-2 text-sm text-ucao-muted">«{review.comment}»</p></div><button className="grid size-9 place-items-center rounded-ucao text-ucao-red hover:bg-ucao-red-soft" type="button" onClick={() => removeReview(review.id)} aria-label="Supprimer l'avis"><Trash2 size={15} /></button></div>{review.status === "pending" && <div className="mt-3 flex gap-2"><button className="btn btn-primary min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "approved")}><Check size={14} /> Valider</button><button className="btn btn-ghost min-h-9 px-3 text-xs" type="button" onClick={() => decideReview(review.id, "rejected")}><X size={14} /> Rejeter</button></div>}</li>)}</ul> : <p className="rounded-ucao bg-ucao-soft p-5 font-medium text-ucao-muted dark:bg-[#132238]">Aucun avis enregistré.</p>}</article></section>
     </main>

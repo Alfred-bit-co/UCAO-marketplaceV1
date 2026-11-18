@@ -67,9 +67,13 @@ export async function middleware(request: NextRequest) {
     }
 
     if (pathname.startsWith("/admin") && role !== "ADMIN") {
-      const destination = request.nextUrl.clone();
-      destination.pathname = "/";
-      return NextResponse.redirect(destination);
+      // Un admin nommé garde son rôle (acheteur ou vendeur) : c'est la base qui décide.
+      const { data: allowed } = await supabase.rpc("am_i_admin");
+      if (allowed !== true) {
+        const destination = request.nextUrl.clone();
+        destination.pathname = "/";
+        return NextResponse.redirect(destination);
+      }
     }
 
     // Un administrateur n'a pas d'espace vendeur : on l'envoie directement au centre de pilotage.
