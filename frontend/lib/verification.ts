@@ -14,6 +14,8 @@ const VERIFICATION_ERRORS: Record<string, string> = {
   "Filiere et niveau requis": "La filière et le niveau d'étude sont obligatoires.",
   "Telephone invalide": "Numéro invalide. Utilisez le format international, par exemple +22890000000.",
   "Compte deja verifie": "Votre compte est déjà vérifié.",
+  "Profession invalide": "Indiquez votre profession (2 à 80 caractères).",
+  "Carte deja envoyee": "Vous avez déjà envoyé une carte d'étudiant : contactez l'administration pour changer de type de compte.",
 };
 
 function verificationErrorMessage(message: string): string {
@@ -44,17 +46,38 @@ export async function submitStudentVerification(
   return { error: null };
 }
 
+/** Personnel de l'UCAO : la profession remplace la carte. Vérifiée ensuite par un administrateur. */
+export async function submitStaffVerification(profession: string, phone?: string): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured()) return { error: "Supabase non configuré." };
+  const supabase = createClient();
+  if (!supabase) return { error: "Supabase non configuré." };
+
+  const { error } = await supabase.rpc("submit_staff_verification", { p_profession: profession, p_phone: phone || null });
+  if (error) {
+    console.error("SUPABASE ERROR (submitStaffVerification):", error);
+    if (error.code === "PGRST202" || error.code === "42883") {
+      return { error: "Cette option n'est pas encore disponible. Réessayez un peu plus tard." };
+    }
+    return { error: verificationErrorMessage(error.message) };
+  }
+  return { error: null };
+}
+
+/** Comptes en attente : carte d'étudiant envoyée, ou profession indiquée (personnel de l'UCAO). */
 export async function getPendingVerifications(): Promise<Profile[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = createClient();
   if (!supabase) return [];
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("verification_status", "pending")
-    .not("student_id_url", "is", null)
+  const base = () => supabase.from("profiles").select("*").eq("verification_status", "pending");
+  let { data, error } = await base()
+    .or("student_id_url.not.is.null,profession.not.is.null")
     .order("created_at", { ascending: false });
+
+  // Colonne « profession » absente (SQL pas encore lancé) : cartes seulement, comme avant.
+  if (error) {
+    ({ data, error } = await base().not("student_id_url", "is", null).order("created_at", { ascending: false }));
+  }
 
   if (error || !data) {
     console.error("SUPABASE ERROR (getPendingVerifications):", error);

@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isAdminSignup } from "@/lib/utils";
+import { isStaffSignup } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.clone();
@@ -30,10 +30,10 @@ export async function GET(request: NextRequest) {
     loginUrl.searchParams.set("error", "oauth_callback");
     return NextResponse.redirect(loginUrl);
   }
-  // Inscription administrateur : pas de carte d'étudiant à demander.
-  if (isAdminSignup(data.user?.user_metadata)) {
+  // Personnel de l'UCAO : pas de carte d'étudiant à demander.
+  if (isStaffSignup(data.user?.user_metadata)) {
     const accountUrl = request.nextUrl.clone();
-    accountUrl.pathname = "/compte-admin";
+    accountUrl.pathname = "/compte-personnel";
     accountUrl.search = "";
     response.headers.set("Location", accountUrl.toString());
   }

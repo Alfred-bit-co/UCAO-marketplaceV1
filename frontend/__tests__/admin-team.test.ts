@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { friendlyAdminTeamError, isAdminTeamUnavailable } from "@/lib/admin-team";
-import { isAdminSignup } from "@/lib/utils";
+import { isStaffSignup } from "@/lib/utils";
 
 describe("équipe d'administration", () => {
   it("traduit chaque refus de la base", () => {
@@ -23,20 +23,42 @@ describe("équipe d'administration", () => {
   });
 });
 
-describe("inscription administrateur sans carte", () => {
-  it("reconnaît uniquement la marque prévue", () => {
-    expect(isAdminSignup({ signup_kind: "admin" })).toBe(true);
-    expect(isAdminSignup({ signup_kind: "ADMIN" })).toBe(false);
-    expect(isAdminSignup({ role: "admin" })).toBe(false);
-    expect(isAdminSignup(null)).toBe(false);
-    expect(isAdminSignup(undefined)).toBe(false);
+describe("inscription du personnel sans carte", () => {
+  it("reconnaît uniquement les marques prévues", () => {
+    expect(isStaffSignup({ account_type: "personnel" })).toBe(true);
+    expect(isStaffSignup({ signup_kind: "admin" })).toBe(true);
+    expect(isStaffSignup({ account_type: "etudiant" })).toBe(false);
+    expect(isStaffSignup({ account_type: "PERSONNEL" })).toBe(false);
+    expect(isStaffSignup({ role: "admin" })).toBe(false);
+    expect(isStaffSignup(null)).toBe(false);
+    expect(isStaffSignup(undefined)).toBe(false);
   });
 
   it("n'accorde aucun droit à partir de cette marque", () => {
     const sources = ["middleware.ts", "lib/admin-team.ts", "components/navbar.tsx", "app/admin/page.tsx"];
     for (const file of sources) {
-      expect(readFileSync(join(__dirname, "..", file), "utf8"), file).not.toMatch(/signup_kind|isAdminSignup/);
+      expect(readFileSync(join(__dirname, "..", file), "utf8"), file).not.toMatch(/signup_kind|isStaffSignup|user_metadata/);
     }
+  });
+});
+
+describe("SQL du compte personnel", () => {
+  const sql = readFileSync(join(__dirname, "..", "..", "supabase", "migrations", "PROPOSITION_20261119_compte_personnel.sql"), "utf8");
+  const active = sql.split(/\r?\n/).filter((line) => !line.trim().startsWith("--")).join("\n");
+
+  it("ne modifie pas handle_new_user", () => {
+    expect(active).not.toMatch(/function\s+public\.handle_new_user/i);
+  });
+
+  it("n'ouvre l'envoi de la profession qu'aux comptes connectés", () => {
+    expect(active).toContain("revoke execute on function public.submit_staff_verification(text, text) from public, anon;");
+    expect(active).toContain("raise exception 'Non authentifie'");
+    expect(active).toContain("verification_status = 'pending'");
+  });
+
+  it("empêche de changer soi-même de type de compte ou de profession", () => {
+    expect(active).toContain("create trigger trg_guard_account_type");
+    expect(active).toContain("current_setting('app.account_rpc', true)");
   });
 });
 

@@ -1,17 +1,6 @@
-import type { Metadata } from "next";
-import { AuthForm } from "@/components/auth-form";
-import { PageShell } from "@/components/page-shell";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Créer un compte administrateur",
-  description: "Création du compte d'un futur administrateur de la plateforme.",
-  robots: { index: false, follow: false },
-};
-
+// Ancienne adresse : l'inscription du personnel se fait maintenant par le choix « Personnel de l'UCAO ».
 export default function AdminSignupPage() {
-  return (
-    <PageShell>
-      <AuthForm mode="register" embedded adminSignup />
-    </PageShell>
-  );
+  redirect("/register?profil=personnel");
 }

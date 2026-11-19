@@ -68,15 +68,19 @@ export function safeNextPath(value: string | null | undefined): string | null {
   return value;
 }
 
-/**
- * Compte créé depuis /inscription-admin (sans carte d'étudiant). Cette marque, écrite par le
- * navigateur, ne sert qu'à choisir la page affichée après la confirmation de l'e-mail :
- * elle ne donne AUCUN droit (seul le propriétaire du site nomme un administrateur).
- */
-export const ADMIN_SIGNUP_KIND = "admin";
+/** Type de compte choisi à l'inscription : étudiant (carte d'étudiant) ou personnel de l'UCAO (profession). */
+export type AccountType = "etudiant" | "personnel";
+export const STAFF_ACCOUNT_TYPE: AccountType = "personnel";
 
-export function isAdminSignup(metadata: unknown): boolean {
-  return (metadata as { signup_kind?: unknown } | null | undefined)?.signup_kind === ADMIN_SIGNUP_KIND;
+/**
+ * Compte créé avec le choix « Personnel de l'UCAO » (ou l'ancienne page /inscription-admin).
+ * Cette marque, écrite par le navigateur, ne sert qu'à choisir la page affichée après la
+ * confirmation de l'e-mail : elle ne donne AUCUN droit (la profession est vérifiée par un admin,
+ * et seul le propriétaire du site nomme un administrateur).
+ */
+export function isStaffSignup(metadata: unknown): boolean {
+  const data = metadata as { account_type?: unknown; signup_kind?: unknown } | null | undefined;
+  return data?.account_type === STAFF_ACCOUNT_TYPE || data?.signup_kind === "admin";
 }
 
 export function getPostLoginRedirect(profile: Pick<Profile, "role" | "verification_status">, next?: string | null): string {

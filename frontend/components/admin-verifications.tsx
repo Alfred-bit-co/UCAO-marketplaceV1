@@ -50,7 +50,7 @@ export function AdminVerifications({ verifications, flags, onViewCard, onDecide 
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
           <p className="eyebrow">Priorité</p>
-          <h2 className="text-2xl font-bold">Vérifications étudiantes</h2>
+          <h2 className="text-2xl font-bold">Vérifications des comptes</h2>
           {flaggedCount > 0 && (
             <p className="mt-1 text-sm font-medium text-ucao-red">
               {flaggedCount} compte{flaggedCount > 1 ? "s" : ""} à examiner de près (doublon possible)
@@ -78,8 +78,16 @@ export function AdminVerifications({ verifications, flags, onViewCard, onDecide 
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-bold">{user.full_name}</p>
+                    <p className="flex flex-wrap items-center gap-2 font-bold">
+                      {user.full_name}
+                      {user.account_type === "personnel" && (
+                        <span className="rounded-full bg-ucao-navy-soft px-2 py-0.5 text-[10px] font-bold uppercase text-ucao-navy dark:bg-[#142b4a] dark:text-[#dbe7f5]">Personnel UCAO</span>
+                      )}
+                    </p>
                     <p className="truncate text-sm text-ucao-muted">{user.email}</p>
+                    {user.account_type === "personnel" && user.profession && (
+                      <p className="mt-1 text-sm">Profession déclarée : <strong>{user.profession}</strong></p>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {user.student_id_url && (
