@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // /espace-clubs demande seulement d'être connecté : le représentant des clubs est un ACHETEUR sans palier,
 // et aucune des redirections ci-dessous (carte d'étudiant, devenir vendeur…) ne s'applique à cette page.
 const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/devenir-vendeur", "/espace-clubs", "/profil", "/verification", "/verification-carte"];
-const AUTH_PAGES = ["/login", "/register", "/devenir-vendeur"];
+const AUTH_PAGES = ["/login", "/register", "/inscription-admin", "/devenir-vendeur"];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -61,7 +61,9 @@ export async function middleware(request: NextRequest) {
 
     if (isAuthPage && pathname !== "/devenir-vendeur") {
       const destination = request.nextUrl.clone();
-      destination.pathname = isAdmin ? "/admin" : role === "VENDEUR" ? "/dashboard" : "/products";
+      destination.pathname = pathname.startsWith("/inscription-admin")
+        ? "/compte-admin"
+        : isAdmin ? "/admin" : role === "VENDEUR" ? "/dashboard" : "/products";
       destination.search = "";
       return NextResponse.redirect(destination);
     }
@@ -96,10 +98,14 @@ export async function middleware(request: NextRequest) {
     // et les admins ne sont pas concernés.
     const isBecomingVendor = pathname === "/devenir-vendeur" || pathname.startsWith("/devenir-vendeur/");
     if (isBecomingVendor && role === "ACHETEUR" && !profile?.student_id_url) {
-      const destination = request.nextUrl.clone();
-      destination.pathname = "/verification-carte";
-      destination.search = "";
-      return NextResponse.redirect(destination);
+      // Un administrateur nommé (un enseignant par exemple) n'a pas de carte d'étudiant à fournir.
+      const { data: namedAdmin } = await supabase.rpc("am_i_admin");
+      if (namedAdmin !== true) {
+        const destination = request.nextUrl.clone();
+        destination.pathname = "/verification-carte";
+        destination.search = "";
+        return NextResponse.redirect(destination);
+      }
     }
   }
 
@@ -117,5 +123,6 @@ export const config = {
     "/verification-carte/:path*",
     "/login",
     "/register",
+    "/inscription-admin",
   ],
 };

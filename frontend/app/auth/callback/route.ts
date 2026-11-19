@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminSignup } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.clone();
@@ -22,12 +23,19 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("error", "oauth_callback");
     return NextResponse.redirect(loginUrl);
+  }
+  // Inscription administrateur : pas de carte d'étudiant à demander.
+  if (isAdminSignup(data.user?.user_metadata)) {
+    const accountUrl = request.nextUrl.clone();
+    accountUrl.pathname = "/compte-admin";
+    accountUrl.search = "";
+    response.headers.set("Location", accountUrl.toString());
   }
   return response;
 }

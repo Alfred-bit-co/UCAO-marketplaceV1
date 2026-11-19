@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, UserPlus, X } from "@/lib/icons";
 import { ConfirmDialog } from "@/components/clubs/confirm-dialog";
 import { useToast } from "@/components/toast-provider";
+import { SITE_URL } from "@/lib/constants";
 import { listAdminAudit, listPlatformAdmins, setPlatformAdmin, type AdminAuditEntry, type PlatformAdmin } from "@/lib/admin-team";
 
 function formatDate(iso: string): string {
@@ -98,7 +99,7 @@ export function AdminTeam() {
                 <UserPlus size={16} aria-hidden="true" /> Nommer administrateur
               </button>
             </form>
-            <p className="mt-2 text-xs text-ucao-muted">La personne crée d&apos;abord un compte normal et confirme son e-mail. Si elle vend sur le site, elle garde son espace vendeur.</p>
+            <p className="mt-2 text-xs text-ucao-muted">La personne crée d&apos;abord son compte et confirme son e-mail. Lien à lui envoyer (aucune carte d&apos;étudiant demandée) : <span className="break-all font-medium">{SITE_URL}/inscription-admin</span>. Si elle vend déjà sur le site, elle garde son espace vendeur.</p>
 
             {loadError && <p className="notice notice-error text-sm" role="alert">{loadError}</p>}
 

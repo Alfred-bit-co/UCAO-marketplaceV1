@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { friendlyAdminTeamError, isAdminTeamUnavailable } from "@/lib/admin-team";
+import { isAdminSignup } from "@/lib/utils";
 
 describe("équipe d'administration", () => {
   it("traduit chaque refus de la base", () => {
@@ -19,6 +20,23 @@ describe("équipe d'administration", () => {
   it("reconnaît une base où le SQL n'a pas encore été lancé", () => {
     expect(isAdminTeamUnavailable({ code: "PGRST202" })).toBe(true);
     expect(isAdminTeamUnavailable({ code: "42501" })).toBe(false);
+  });
+});
+
+describe("inscription administrateur sans carte", () => {
+  it("reconnaît uniquement la marque prévue", () => {
+    expect(isAdminSignup({ signup_kind: "admin" })).toBe(true);
+    expect(isAdminSignup({ signup_kind: "ADMIN" })).toBe(false);
+    expect(isAdminSignup({ role: "admin" })).toBe(false);
+    expect(isAdminSignup(null)).toBe(false);
+    expect(isAdminSignup(undefined)).toBe(false);
+  });
+
+  it("n'accorde aucun droit à partir de cette marque", () => {
+    const sources = ["middleware.ts", "lib/admin-team.ts", "components/navbar.tsx", "app/admin/page.tsx"];
+    for (const file of sources) {
+      expect(readFileSync(join(__dirname, "..", file), "utf8"), file).not.toMatch(/signup_kind|isAdminSignup/);
+    }
   });
 });
 
