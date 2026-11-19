@@ -48,3 +48,5 @@ class Config:
     FEDAPAY_WEBHOOK_SECRET = os.getenv("FEDAPAY_WEBHOOK_SECRET", "")
     FEDAPAY_API_BASE_URL = os.getenv("FEDAPAY_API_BASE_URL", "https://api.fedapay.com/v1")
     TRUSTED_PROXY_HOPS = _non_negative_int(os.getenv("TRUSTED_PROXY_HOPS"))
+    # Adresse publique du site : FedaPay y renvoie le vendeur après le paiement.
+    SITE_URL = (os.getenv("SITE_URL") or "https://www.ucaomarketplace.com").rstrip("/")
