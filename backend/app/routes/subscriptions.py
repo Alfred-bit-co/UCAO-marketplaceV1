@@ -248,6 +248,9 @@ def initiate_subscription():
                 "currency": {"iso": "XOF"},
                 "customer": {"email": user["email"]},
                 "merchant_reference": payment_row["id"],
+                # Page où FedaPay renvoie le vendeur (avec ?id=...&status=...). Affichage seulement :
+                # l’activation reste faite par le webhook signé.
+                "callback_url": f"{current_app.config['SITE_URL']}/paiement/retour",
                 "custom_metadata": {
                     "user_id": user["id"],
                     "tier": tier,
