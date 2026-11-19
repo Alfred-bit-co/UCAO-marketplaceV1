@@ -35,6 +35,8 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     student_id_url: data.student_id_url,
     verification_note: data.verification_note,
     cgu_accepted_at: data.cgu_accepted_at,
+    account_type: data.account_type === "personnel" ? "personnel" : "etudiant",
+    profession: data.profession ?? null,
     is_active: data.is_active,
     trial_ends_at: data.trial_ends_at,
     created_at: data.created_at,

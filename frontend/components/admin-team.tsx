@@ -99,7 +99,7 @@ export function AdminTeam() {
                 <UserPlus size={16} aria-hidden="true" /> Nommer administrateur
               </button>
             </form>
-            <p className="mt-2 text-xs text-ucao-muted">La personne crée d&apos;abord son compte et confirme son e-mail. Lien à lui envoyer (aucune carte d&apos;étudiant demandée) : <span className="break-all font-medium">{SITE_URL}/inscription-admin</span>. Si elle vend déjà sur le site, elle garde son espace vendeur.</p>
+            <p className="mt-2 text-xs text-ucao-muted">La personne crée d&apos;abord son compte et confirme son e-mail. Pour un membre du personnel (aucune carte d&apos;étudiant demandée), lien à envoyer : <span className="break-all font-medium">{SITE_URL}/register?profil=personnel</span>. Si elle vend déjà sur le site, elle garde son espace vendeur.</p>
 
             {loadError && <p className="notice notice-error text-sm" role="alert">{loadError}</p>}
 

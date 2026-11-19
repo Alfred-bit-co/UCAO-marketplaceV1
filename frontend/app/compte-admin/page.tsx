@@ -1,17 +1,6 @@
-import type { Metadata } from "next";
-import { AdminAccountStatus } from "@/components/admin-account-status";
-import { PageShell } from "@/components/page-shell";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Compte administrateur",
-  description: "État de l'accès à l'administration de la plateforme.",
-  robots: { index: false, follow: false },
-};
-
+// Ancienne adresse, remplacée par /compte-personnel.
 export default function AdminAccountPage() {
-  return (
-    <PageShell>
-      <AdminAccountStatus />
-    </PageShell>
-  );
+  redirect("/compte-personnel");
 }

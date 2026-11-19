@@ -193,6 +193,9 @@ export type Profile = {
   student_id_url?: string | null;
   verification_note?: string | null;
   cgu_accepted_at?: string | null;
+  // Choisi à l'inscription. « personnel » : profession vérifiée par un admin à la place de la carte.
+  account_type?: "etudiant" | "personnel";
+  profession?: string | null;
   // false = compte suspendu par un administrateur (ne bloque ni connexion ni navigation,
   // seulement les nouvelles publications). Absent/true = compte normal.
   is_active?: boolean;
