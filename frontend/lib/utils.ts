@@ -68,6 +68,17 @@ export function safeNextPath(value: string | null | undefined): string | null {
   return value;
 }
 
+/**
+ * Compte créé depuis /inscription-admin (sans carte d'étudiant). Cette marque, écrite par le
+ * navigateur, ne sert qu'à choisir la page affichée après la confirmation de l'e-mail :
+ * elle ne donne AUCUN droit (seul le propriétaire du site nomme un administrateur).
+ */
+export const ADMIN_SIGNUP_KIND = "admin";
+
+export function isAdminSignup(metadata: unknown): boolean {
+  return (metadata as { signup_kind?: unknown } | null | undefined)?.signup_kind === ADMIN_SIGNUP_KIND;
+}
+
 export function getPostLoginRedirect(profile: Pick<Profile, "role" | "verification_status">, next?: string | null): string {
   if (profile.role === "ADMIN") return "/admin";
   const safeNext = safeNextPath(next);

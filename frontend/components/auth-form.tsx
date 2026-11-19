@@ -7,8 +7,9 @@ import { Brand } from "./navbar";
 import { GoogleSignInButton } from "./google-signin-button";
 import { TurnstileWidget } from "./turnstile-widget";
 import { ThemeProvider } from "./theme-provider";
+import { amIAdmin } from "@/lib/admin-team";
 import { createClient } from "@/lib/supabase";
-import { getGoogleLoginRedirect, getPostLoginRedirect, safeNextPath } from "@/lib/utils";
+import { ADMIN_SIGNUP_KIND, getGoogleLoginRedirect, getPostLoginRedirect, safeNextPath } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { validateImageFile } from "@/lib/storage";
 import { submitStudentVerification } from "@/lib/verification";
@@ -122,7 +123,12 @@ async function fetchProfileAfterLogin(supabase: NonNullable<ReturnType<typeof cr
   };
 }
 
-export function AuthForm({ mode, embedded = false }: { mode: "login" | "register"; embedded?: boolean }) {
+/**
+ * `adminSignup` : inscription d'un futur administrateur (un enseignant par exemple), sans carte
+ * d'étudiant, filière ni niveau. Le compte créé est un compte ordinaire : il n'a aucun droit
+ * d'administration tant que le propriétaire du site ne l'a pas nommé.
+ */
+export function AuthForm({ mode, embedded = false, adminSignup = false }: { mode: "login" | "register"; embedded?: boolean; adminSignup?: boolean }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -148,7 +154,12 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     }
   }, [mode]);
 
-  const switchHref = `${mode === "login" ? "/register" : "/login"}${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""}`;
+  const adminEntry = mode === "login" && nextPath === "/admin";
+  const switchHref = adminSignup
+    ? "/login?next=%2Fadmin"
+    : adminEntry
+      ? "/inscription-admin"
+      : `${mode === "login" ? "/register" : "/login"}${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""}`;
 
   async function signInWithGoogleCredential(credential: string, rawNonce: string) {
     const supabase = createClient();
@@ -188,8 +199,10 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const profile = await fetchProfileAfterLogin(supabase);
     setError(false);
     setMessage("Connexion réussie. Redirection...");
+    // Un administrateur nommé n'a pas forcément de carte d'étudiant : pas d'étape « carte » pour lui.
+    const namedAdmin = await amIAdmin();
     // submitting reste vrai pendant la redirection pour éviter un second clic.
-    window.location.href = getGoogleLoginRedirect(profile, nextPath);
+    window.location.href = namedAdmin ? "/admin" : getGoogleLoginRedirect(profile, nextPath);
   }
 
   function handleGoogleError() {
@@ -231,21 +244,23 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         setMessage("Le numéro de téléphone doit être au format +xxxxxxxxxxx (uniquement des chiffres après le +, sans espace).");
         return;
       }
-      if (!fieldOfStudy || !studyLevel) {
-        setError(true);
-        setMessage("Veuillez renseigner votre filière et votre niveau d'étude.");
-        return;
-      }
-      if (!(studentCard instanceof File) || !studentCard.size) {
-        setError(true);
-        setMessage("La photo de votre carte d'étudiant est obligatoire.");
-        return;
-      }
-      const imageError = validateImageFile(studentCard);
-      if (imageError) {
-        setError(true);
-        setMessage(imageError);
-        return;
+      if (!adminSignup) {
+        if (!fieldOfStudy || !studyLevel) {
+          setError(true);
+          setMessage("Veuillez renseigner votre filière et votre niveau d'étude.");
+          return;
+        }
+        if (!(studentCard instanceof File) || !studentCard.size) {
+          setError(true);
+          setMessage("La photo de votre carte d'étudiant est obligatoire.");
+          return;
+        }
+        const imageError = validateImageFile(studentCard);
+        if (imageError) {
+          setError(true);
+          setMessage(imageError);
+          return;
+        }
       }
       if (!accepted) {
         setError(true);
@@ -299,14 +314,20 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           captchaToken: captchaToken ?? undefined,
-          data: {
-            full_name: name,
-            phone,
-            field_of_study: fieldOfStudy,
-            study_level: studyLevel,
-          },
+          data: adminSignup
+            ? { full_name: name, phone, signup_kind: ADMIN_SIGNUP_KIND }
+            : {
+                full_name: name,
+                phone,
+                field_of_study: fieldOfStudy,
+                study_level: studyLevel,
+              },
         },
       });
+      if (!signUpError && signUpData.session && adminSignup) {
+        window.location.href = "/compte-admin";
+        return;
+      }
       if (!signUpError && signUpData.session) {
         const verification = await submitStudentVerification(studentCard as File, { phone, fieldOfStudy, studyLevel });
         if (verification.error) {
@@ -322,7 +343,9 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       setMessage(
         signUpError
           ? friendlyAuthError(signUpError, "signup")
-          : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
+          : adminSignup
+            ? "Compte créé. Ouvrez le lien reçu par e-mail pour le confirmer, puis communiquez cette adresse au propriétaire du site."
+            : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
       );
     } catch {
       setError(true);
@@ -376,9 +399,11 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           <ArrowLeft size={20} />
         </Link>
         <Brand />
-        <h1 className="mt-7 text-3xl font-medium">{mode === "login" ? "Connexion" : "Créer un compte étudiant"}</h1>
+        <h1 className="mt-7 text-3xl font-medium">{mode === "login" ? "Connexion" : adminSignup ? "Créer un compte administrateur" : "Créer un compte étudiant"}</h1>
         <p className="mb-5 text-ucao-muted dark:text-[#a8b8cc]">
-          {mode === "login"
+          {adminSignup
+            ? "Aucune carte d'étudiant n'est demandée. L'accès à l'administration s'ouvre une fois que le propriétaire du site vous a nommé."
+            : mode === "login"
             ? "Accédez à votre espace après validation de votre carte d'étudiant."
             : "Réservé aux étudiants UCAO-UUT. La photo de votre carte d'étudiant est obligatoire après la confirmation de l'email pour activer le compte."}
         </p>
@@ -408,15 +433,19 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
                 Format obligatoire : +suivi uniquement de chiffres, sans espace (ex : +22892982926).
               </span>
             </label>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-1">Filière<input className="input-field" name="field_of_study" required placeholder="Ex. Informatique" /></label>
-              <label className="grid gap-1">Niveau d&apos;étude<input className="input-field" name="study_level" required placeholder="Ex. Licence 2" /></label>
-            </div>
-            <label className="mt-4 grid gap-1">
-              Photo de la carte d&apos;étudiant
-              <input className="input-field py-2" name="student_card" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required />
-              <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">Photo nette, recto visible. JPG, PNG, WebP ou AVIF, 5 Mo maximum.</span>
-            </label>
+            {!adminSignup && (
+              <>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-1">Filière<input className="input-field" name="field_of_study" required placeholder="Ex. Informatique" /></label>
+                  <label className="grid gap-1">Niveau d&apos;étude<input className="input-field" name="study_level" required placeholder="Ex. Licence 2" /></label>
+                </div>
+                <label className="mt-4 grid gap-1">
+                  Photo de la carte d&apos;étudiant
+                  <input className="input-field py-2" name="student_card" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required />
+                  <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">Photo nette, recto visible. JPG, PNG, WebP ou AVIF, 5 Mo maximum.</span>
+                </label>
+              </>
+            )}
           </>
         )}
         {mode === "login" && (
@@ -488,17 +517,22 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
           {submitting ? "Veuillez patienter..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
-        <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
-        <GoogleSignInButton
-          mode={mode}
-          ready={!submitting && (!CAPTCHA_ENABLED || Boolean(captchaToken))}
-          notReadyMessage={submitting ? "Veuillez patienter..." : "Valide d'abord la vérification anti-robot ci-dessus pour continuer avec Google."}
-          resetKey={googleAttempt}
-          onCredential={signInWithGoogleCredential}
-          onError={handleGoogleError}
-        />
+        {/* Une première connexion Google passe par l'étape « carte d'étudiant » : pas ici. */}
+        {!adminSignup && (
+          <>
+            <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
+            <GoogleSignInButton
+              mode={mode}
+              ready={!submitting && (!CAPTCHA_ENABLED || Boolean(captchaToken))}
+              notReadyMessage={submitting ? "Veuillez patienter..." : "Valide d'abord la vérification anti-robot ci-dessus pour continuer avec Google."}
+              resetKey={googleAttempt}
+              onCredential={signInWithGoogleCredential}
+              onError={handleGoogleError}
+            />
+          </>
+        )}
         <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={switchHref}>
-          {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
+          {adminEntry ? "Créer un compte administrateur" : mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
         </Link>
       </form>
     </main>
