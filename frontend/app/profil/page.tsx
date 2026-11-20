@@ -82,8 +82,8 @@ export default function ProfilPage() {
               <p className="mt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">Votre nom sera affiché sur la marketplace.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-1.5 font-medium">Prénom<input className="input-field" name="first_name" defaultValue={splitFullName(profile.full_name).firstName} required minLength={2} /></label>
-              <label className="grid gap-1.5 font-medium">Nom<input className="input-field" name="last_name" defaultValue={splitFullName(profile.full_name).lastName} required minLength={2} /></label>
+              <label className="grid gap-1.5 font-medium">Prénom<input className="input-field" name="first_name" defaultValue={splitFullName(profile.full_name).firstName} required minLength={2} maxLength={50} /></label>
+              <label className="grid gap-1.5 font-medium">Nom<input className="input-field" name="last_name" defaultValue={splitFullName(profile.full_name).lastName} required minLength={2} maxLength={50} /></label>
             </div>
             <label className="grid gap-1.5 font-medium">Email<input className="input-field opacity-70" value={profile.email} readOnly aria-readonly="true" /></label>
             <label className="grid gap-1.5 font-medium">Numéro de téléphone

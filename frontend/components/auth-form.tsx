@@ -440,7 +440,10 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
 
   const formContent = (
     <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
-      <form className="panel w-[min(520px,100%)] p-8" onSubmit={submit} noValidate>
+      {/* method="post" : si l'on clique avant la fin du chargement de la page (connexion lente), le navigateur
+          envoie le formulaire lui-même. En GET (valeur par défaut), l'e-mail et le mot de passe partiraient
+          dans l'adresse, donc dans l'historique et les journaux. En POST, ils restent dans le corps chiffré. */}
+      <form className="panel w-[min(520px,100%)] p-8" method="post" onSubmit={submit} noValidate>
         <Link
           className="mb-5 inline-flex size-10 items-center justify-center rounded-ucao text-ucao-ink transition-colors hover:bg-ucao-soft dark:text-white dark:hover:bg-white/10"
           href="/"
@@ -468,7 +471,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1">
                 Nom complet
-                <input className="input-field" name="name" required minLength={2} />
+                <input className="input-field" name="name" required minLength={2} maxLength={100} />
               </label>
               <label className="grid gap-1">
                 Email

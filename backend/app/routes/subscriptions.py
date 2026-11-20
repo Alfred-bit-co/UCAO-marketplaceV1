@@ -158,7 +158,74 @@ def _get_authenticated_user(req):
         return None
 
     data = response.json()
-    return {"id": data.get("id"), "email": data.get("email")}
+    return {"id": data.get("id"), "email": data.get("email"), "token": access_token}
+
+
+def payment_refusal(profile, is_named_admin=False):
+    """Mêmes règles que le site avant un paiement (le site seul ne suffit pas : l'API est appelable directement).
+
+    Renvoie un message à afficher si le compte ne peut pas payer, sinon None.
+    - compte suspendu : refusé ;
+    - numéro WhatsApp obligatoire (les acheteurs contactent le vendeur par là) ;
+    - vendeur ou propriétaire : renouvellement libre ;
+    - sinon : carte d'étudiant envoyée, profession du personnel validée, ou administrateur nommé.
+    """
+    if not isinstance(profile, dict) or not profile:
+        return "Profil introuvable. Reconnectez-vous, puis réessayez."
+    if profile.get("is_active") is False:
+        return (
+            "Votre compte est suspendu : le paiement est impossible. "
+            "Contactez l'équipe : ucaomarketplace2026@gmail.com."
+        )
+    if not str(profile.get("phone") or "").strip():
+        return "Ajoutez votre numéro WhatsApp sur la page « Devenir vendeur » avant de payer."
+    if profile.get("role") in ("VENDEUR", "ADMIN"):
+        return None
+    if profile.get("student_id_url"):
+        return None
+    if profile.get("account_type") == "personnel" and profile.get("verification_status") == "approved":
+        return None
+    if is_named_admin:
+        return None
+    if profile.get("account_type") == "personnel":
+        return "Votre profession doit d'abord être validée par l'équipe avant de pouvoir vendre."
+    return "Envoyez d'abord votre carte d'étudiant (page « Vérification ») avant de choisir un palier."
+
+
+def _load_payer_profile(user_id):
+    """Lit le profil avec la clé service_role. None si la lecture est impossible (panne)."""
+    response = requests.get(
+        f"{current_app.config['SUPABASE_URL']}/rest/v1/profiles",
+        headers=_supabase_headers(),
+        params={
+            "id": f"eq.{user_id}",
+            "select": "role,is_active,phone,student_id_url,account_type,verification_status",
+        },
+        timeout=10,
+    )
+    if response.status_code >= 400:
+        current_app.logger.error("Lecture du profil payeur refusée : %s %s", response.status_code, response.text)
+        return None
+    rows = response.json()
+    return rows[0] if isinstance(rows, list) and rows else {}
+
+
+def _is_named_admin(access_token):
+    """Administrateur nommé (fonction am_i_admin, appelée avec la session de l'utilisateur)."""
+    try:
+        response = requests.post(
+            f"{current_app.config['SUPABASE_URL']}/rest/v1/rpc/am_i_admin",
+            headers={
+                "apikey": current_app.config["SUPABASE_ANON_KEY"],
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            json={},
+            timeout=10,
+        )
+    except requests.RequestException:
+        return False
+    return response.status_code == 200 and response.json() is True
 
 
 @subscriptions_bp.post("/subscriptions/initiate")
@@ -197,6 +264,37 @@ def initiate_subscription():
 
     if tier not in TIER_PRICES:
         return jsonify({"error": "Palier invalide."}), 400
+
+    # Limite par compte, en plus de la limite par adresse : derrière un proxy, plusieurs
+    # étudiants peuvent partager la même adresse (Wi-Fi du campus).
+    user_limiter = check_rate_limit(f"subscription:init:user:{user['id']}", limit=5, window_seconds=900)
+    if not user_limiter.allowed:
+        return jsonify({"error": "Trop de tentatives. Réessayez plus tard."}), 429, {
+            "Retry-After": str(user_limiter.retry_after)
+        }
+
+    try:
+        payer_profile = _load_payer_profile(user["id"])
+    except (requests.RequestException, ValueError):
+        current_app.logger.exception("Impossible de lire le profil du payeur.")
+        payer_profile = None
+    if payer_profile is None:
+        return jsonify({"error": "Le service de paiement est temporairement indisponible."}), 502
+
+    needs_admin_check = (
+        payer_profile.get("role") not in ("VENDEUR", "ADMIN")
+        and not payer_profile.get("student_id_url")
+        and not (
+            payer_profile.get("account_type") == "personnel"
+            and payer_profile.get("verification_status") == "approved"
+        )
+    )
+    refusal = payment_refusal(
+        payer_profile,
+        is_named_admin=needs_admin_check and _is_named_admin(user["token"]),
+    )
+    if refusal:
+        return jsonify({"error": refusal}), 403
 
     amount = TIER_PRICES[tier]
 
