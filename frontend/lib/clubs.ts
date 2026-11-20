@@ -15,7 +15,7 @@ type Result<T> = { data: T; error: null } | { data: null; error: string };
 
 type SupabaseErrorLike = { message?: string | null; code?: string | null; details?: string | null; hint?: string | null } | null | undefined;
 
-const NOT_CONFIGURED = "Supabase n'est pas configuré.";
+const NOT_CONFIGURED = "Le service est momentanément indisponible. Réessayez dans quelques minutes.";
 
 /** Traduit une erreur Supabase (RPC, RLS, contraintes) en français simple. */
 export function friendlyClubError(error: SupabaseErrorLike): string {

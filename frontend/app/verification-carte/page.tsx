@@ -13,6 +13,7 @@ import { getCurrentProfile } from "@/lib/users";
 import type { Profile } from "@/lib/types";
 import { validateImageFile } from "@/lib/storage";
 import { createClient } from "@/lib/supabase";
+import { friendlyError } from "@/lib/errors";
 import { StaffVerificationForm } from "@/components/staff-verification-form";
 
 function StudentOnboarding() {
@@ -33,7 +34,7 @@ function StudentOnboarding() {
   useEffect(() => { getCurrentProfile().then((current) => { setProfile(current); setKind(current?.account_type === "personnel" ? "personnel" : "etudiant"); setPhone(current?.phone ?? ""); setFieldOfStudy(current?.field_of_study ?? ""); setStudyLevel(current?.study_level ?? ""); setLoading(false); }); }, []);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   function selectStudentCard(file: File | null) { if (!file) return; const validationError = validateImageFile(file); if (validationError) { setStudentCard(null); setError(validationError); return; } setError(null); setStudentCard(file); setPreview((current) => { if (current) URL.revokeObjectURL(current); return URL.createObjectURL(file); }); }
-  async function acceptGoogleTerms() { const supabase = createClient(); if (!profile || !supabase) { setError("Supabase n'est pas configuré."); return; } setAcceptingTerms(true); const { error: updateError } = await supabase.from("profiles").update({ cgu_accepted_at: new Date().toISOString() }).eq("id", profile.id); setAcceptingTerms(false); if (updateError) { setError(updateError.message); return; } setProfile({ ...profile, cgu_accepted_at: new Date().toISOString() }); }
+  async function acceptGoogleTerms() { const supabase = createClient(); if (!profile || !supabase) { setError("Le service est momentanément indisponible. Réessayez dans quelques minutes."); return; } setAcceptingTerms(true); const { error: updateError } = await supabase.from("profiles").update({ cgu_accepted_at: new Date().toISOString() }).eq("id", profile.id); setAcceptingTerms(false); if (updateError) { setError(friendlyError(updateError, "Impossible d'enregistrer votre acceptation des conditions. Réessayez dans quelques instants.")); return; } setProfile({ ...profile, cgu_accepted_at: new Date().toISOString() }); }
   async function handleSubmit(event: React.FormEvent) { event.preventDefault(); if (!studentCard) { setError("La photo de votre carte d'étudiant est obligatoire."); return; } if (!fieldOfStudy.trim() || !studyLevel.trim()) { setError("La filière et le niveau d'étude sont obligatoires."); return; } setSubmitting(true); setError(null); const result = await submitStudentVerification(studentCard, { phone: phone.trim() || undefined, fieldOfStudy: fieldOfStudy.trim(), studyLevel: studyLevel.trim() }); setSubmitting(false); if (result.error) { setError(result.error); return; } window.location.href = "/devenir-vendeur"; }
   if (loading) return <PageShell><PageSkeleton /></PageShell>;
   if (!profile) return <PageShell><main className="container-ucao py-[84px] text-center"><p className="mb-4 text-xl font-medium">Connectez-vous pour continuer.</p><Link className="btn btn-primary" href="/login">Se connecter</Link></main></PageShell>;

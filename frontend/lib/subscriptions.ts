@@ -1,3 +1,4 @@
+import { SESSION_EXPIRED } from "./errors";
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { PAYMENT_API_URL } from "./constants";
 import { SUBSCRIPTION_PLANS } from "./types";
@@ -75,7 +76,7 @@ export type InitiatePaymentResult =
 export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promise<InitiatePaymentResult> {
   const supabase = createClient();
   if (!supabase) {
-    return { ok: false, reason: "server_error", message: "Supabase non configuré." };
+    return { ok: false, reason: "server_error", message: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   }
 
   const {
@@ -84,7 +85,7 @@ export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promi
 
   if (!session) {
     console.error("SUBSCRIPTION ERROR: aucune session Supabase active.");
-    return { ok: false, reason: "not_authenticated", message: "Vous devez être connecté." };
+    return { ok: false, reason: "not_authenticated", message: "Vous devez être connecté pour payer. Reconnectez-vous, puis réessayez." };
   }
 
   try {
@@ -101,16 +102,12 @@ export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promi
 
     if (!response.ok) {
       console.error("SUBSCRIPTION ERROR: réponse serveur non OK", response.status, data);
-      return {
-        ok: false,
-        reason: "server_error",
-        message: data?.error || `Erreur serveur (code ${response.status}).`,
-      };
+      return { ok: false, reason: response.status === 401 ? "not_authenticated" : "server_error", message: paymentErrorMessage(response.status, data?.error) };
     }
 
     if (!data?.payment_url) {
       console.error("SUBSCRIPTION ERROR: pas d'URL de paiement dans la réponse", data);
-      return { ok: false, reason: "server_error", message: "Réponse serveur incomplète." };
+      return { ok: false, reason: "server_error", message: "Le lien de paiement n'a pas pu être créé. Réessayez dans quelques minutes : vous n'avez pas été débité." };
     }
 
     return { ok: true, paymentUrl: data.payment_url };
@@ -119,9 +116,23 @@ export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promi
     return {
       ok: false,
       reason: "network_error",
-      message: "Impossible de joindre le serveur de paiement. Vérifiez qu'il est bien démarré.",
+      message: "Impossible de joindre le service de paiement. Vérifiez votre connexion internet, puis réessayez.",
     };
   }
+}
+
+/** Message clair pour un refus du serveur de paiement (le texte du serveur n'est gardé que s'il est destiné au public). */
+function paymentErrorMessage(status: number, serverMessage: unknown): string {
+  if (status === 401) return SESSION_EXPIRED;
+  if (status === 429) return "Trop de tentatives de paiement en peu de temps. Patientez quelques minutes avant de réessayer.";
+  if (status === 400) return "Le palier choisi n'est pas valide. Rechargez la page, puis réessayez.";
+  if (status >= 500) {
+    // 502/503 : FedaPay ou le service est indisponible. Les messages de configuration ne sont pas pour le public.
+    return "Le service de paiement est momentanément indisponible. Réessayez dans quelques minutes : vous n'avez pas été débité.";
+  }
+  return typeof serverMessage === "string" && serverMessage.trim()
+    ? serverMessage
+    : "Impossible de lancer le paiement pour le moment. Rechargez la page, puis réessayez.";
 }
 
 export function daysUntilExpiry(expiresAt: string | null): number | null {

@@ -26,9 +26,9 @@ export async function submitStudentVerification(
   file: File,
   details: { phone?: string; fieldOfStudy: string; studyLevel: string },
 ): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured()) return { error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { error: "Supabase non configuré." };
+  if (!supabase) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const uploaded = await uploadStudentIdCard(file);
   if (uploaded.error || !uploaded.path) return { error: uploaded.error ?? "Impossible d'envoyer la carte." };
@@ -48,9 +48,9 @@ export async function submitStudentVerification(
 
 /** Personnel de l'UCAO : la profession remplace la carte. Vérifiée ensuite par un administrateur. */
 export async function submitStaffVerification(profession: string, phone?: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured()) return { error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { error: "Supabase non configuré." };
+  if (!supabase) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const { error } = await supabase.rpc("submit_staff_verification", { p_profession: profession, p_phone: phone || null });
   if (error) {
@@ -111,8 +111,8 @@ export async function setVerificationStatus(
 /** Lien temporaire (5 min) vers une carte du bucket privé, réservé à l'admin. */
 export async function getStudentIdSignedUrl(path: string): Promise<{ url: string | null; error: string | null }> {
   const supabase = createClient();
-  if (!supabase) return { url: null, error: "Supabase non configuré." };
+  if (!supabase) return { url: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const { data, error } = await supabase.storage.from("student-ids").createSignedUrl(path, 300);
-  if (error || !data?.signedUrl) return { url: null, error: error?.message ?? "Impossible d'ouvrir la carte." };
+  if (error || !data?.signedUrl) return { url: null, error: "Impossible d'ouvrir la carte pour le moment. Rechargez la page, puis réessayez." };
   return { url: data.signedUrl, error: null };
 }
