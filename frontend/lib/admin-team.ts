@@ -59,7 +59,7 @@ export async function amIAdmin(): Promise<boolean> {
 
 export async function listPlatformAdmins(): Promise<{ admins: PlatformAdmin[]; error: string | null; unavailable: boolean }> {
   const supabase = createClient();
-  if (!supabase) return { admins: [], error: "Supabase n'est pas configuré.", unavailable: false };
+  if (!supabase) return { admins: [], error: "Le service est momentanément indisponible. Réessayez dans quelques minutes.", unavailable: false };
   const { data, error } = await supabase.rpc("owner_list_admins");
   if (error) return { admins: [], error: friendlyAdminTeamError(error), unavailable: isAdminTeamUnavailable(error) };
   return { admins: (data as unknown as PlatformAdmin[]) ?? [], error: null, unavailable: false };
@@ -75,7 +75,7 @@ export async function listAdminAudit(): Promise<AdminAuditEntry[]> {
 
 export async function setPlatformAdmin(email: string, enabled: boolean): Promise<{ error: string | null; name: string | null }> {
   const supabase = createClient();
-  if (!supabase) return { error: "Supabase n'est pas configuré.", name: null };
+  if (!supabase) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes.", name: null };
   const cleanEmail = email.trim();
   if (!EMAIL_PATTERN.test(cleanEmail)) return { error: "Adresse e-mail invalide.", name: null };
   const { data, error } = await supabase.rpc("owner_set_admin", { p_email: cleanEmail, p_enabled: enabled });

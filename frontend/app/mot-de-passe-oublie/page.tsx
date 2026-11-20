@@ -20,7 +20,7 @@ export default function MotDePasseOubliePage() {
     const supabase = createClient();
     if (!supabase) {
       setStatus("error");
-      setMessage("Supabase non configuré.");
+      setMessage("Le service est momentanément indisponible. Réessayez dans quelques minutes.");
       return;
     }
     if (CAPTCHA_ENABLED && !captchaToken) {

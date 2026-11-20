@@ -170,7 +170,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const supabase = createClient();
     if (!supabase) {
       setError(true);
-      setMessage("Supabase n'est pas encore configuré. Ajoutez les clés dans frontend/.env.local.");
+      setMessage("Le service est momentanément indisponible. Réessayez dans quelques minutes.");
       return;
     }
     if (CAPTCHA_ENABLED && !captchaToken) {
@@ -284,7 +284,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const supabase = createClient();
     if (!supabase) {
       setError(true);
-      setMessage("Supabase n'est pas encore configuré. Ajoutez les clés dans frontend/.env.local.");
+      setMessage("Le service est momentanément indisponible. Réessayez dans quelques minutes.");
       return;
     }
 
@@ -378,7 +378,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const supabase = createClient();
     if (!supabase) {
       setError(true);
-      setMessage("Supabase n'est pas encore configuré.");
+      setMessage("Le service est momentanément indisponible. Réessayez dans quelques minutes.");
       return;
     }
 

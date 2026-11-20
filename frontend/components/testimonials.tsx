@@ -116,7 +116,8 @@ export function Testimonials() {
                   if (!window.confirm("Supprimer votre avis ?")) return;
                   const ok = await deleteReview(myReview.id, userId);
                   if (!ok) {
-                    setMessage("Impossible de supprimer votre avis.");
+                    setStatus("error");
+                    setMessage("Impossible de supprimer votre avis pour le moment. Rechargez la page, puis réessayez.");
                     return;
                   }
                   setMyReview(null);
@@ -145,7 +146,11 @@ export function Testimonials() {
             maxLength={500}
             required
           />
-          {message && <p className="notice mt-3">{message}</p>}
+          {message && (
+            <p className={"notice mt-3" + (status === "error" ? " notice-error" : "")} role={status === "error" ? "alert" : "status"}>
+              {message}
+            </p>
+          )}
           <button className="btn btn-primary mt-4" type="submit" disabled={status === "saving"}>
             <Send size={16} /> {status === "saving" ? "Envoi..." : "Envoyer"}
           </button>

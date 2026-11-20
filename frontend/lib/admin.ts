@@ -1,3 +1,4 @@
+import { friendlyError } from "./errors";
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { escapeIlike } from "./utils";
 import type { Profile, SubscriptionTier, UserRole } from "./types";
@@ -148,7 +149,7 @@ export async function searchProfiles(query: string): Promise<Profile[]> {
  */
 export async function deleteUserAccount(userId: string): Promise<{ ok: boolean; message?: string }> {
   const supabase = createClient();
-  if (!supabase) return { ok: false, message: "Supabase non configuré." };
+  if (!supabase) return { ok: false, message: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -174,17 +175,17 @@ export async function deleteUserAccount(userId: string): Promise<{ ok: boolean; 
     return { ok: true };
   } catch (err) {
     console.error("ADMIN ERROR (deleteUserAccount):", err);
-    return { ok: false, message: "Impossible de contacter le serveur." };
+    return { ok: false, message: "Impossible de joindre le serveur. Vérifiez votre connexion internet, puis réessayez." };
   }
 }
 export async function setUserSuspension(userId: string, suspended: boolean): Promise<{ ok: boolean; message?: string }> {
   const supabase = createClient();
-  if (!supabase) return { ok: false, message: "Supabase non configuré." };
+  if (!supabase) return { ok: false, message: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   // Fonction SQL sécurisée (SECURITY DEFINER) : seul un ADMIN peut l'appeler avec succès.
   const { error } = await supabase.rpc("admin_set_suspension", { target_id: userId, suspended });
   if (error) {
     console.error("ADMIN ERROR (setUserSuspension):", error);
-    return { ok: false, message: error.message || "Impossible de modifier la suspension du compte." };
+    return { ok: false, message: friendlyError(error, "Impossible de modifier la suspension du compte pour le moment. Réessayez dans quelques instants.") };
   }
   return { ok: true };
 }

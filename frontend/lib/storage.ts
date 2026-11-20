@@ -44,7 +44,7 @@ export async function uploadImage(
   folder: string,
 ): Promise<{ url: string | null; error: string | null }> {
   const supabase = createClient();
-  if (!supabase) return { url: null, error: "Supabase non configuré." };
+  if (!supabase) return { url: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const validationError = validateImageFile(file);
   if (validationError) return { url: null, error: validationError };
@@ -88,7 +88,7 @@ export async function uploadMultipleImages(
 /** Uploads a card to the private bucket and returns its storage path only. */
 export async function uploadStudentIdCard(file: File): Promise<{ path: string | null; error: string | null }> {
   const supabase = createClient();
-  if (!supabase) return { path: null, error: "Supabase non configure." };
+  if (!supabase) return { path: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const validationError = validateImageFile(file);
   if (validationError) return { path: null, error: validationError };
 
