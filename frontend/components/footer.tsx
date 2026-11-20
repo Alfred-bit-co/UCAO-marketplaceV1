@@ -73,12 +73,13 @@ export function Footer({ full = false }: { full?: boolean }) {
 }
 
 /**
- * Accès à la connexion des administrateurs. Ce lien ne donne aucun droit : /admin renvoie
- * vers la connexion, puis vers l'accueil tout compte que la base ne reconnaît pas comme admin.
+ * Inscription des administrateurs et du personnel (/inscription-admin, qui mène au formulaire
+ * « Personnel de l'UCAO »). Ce lien ne donne aucun droit : seul le propriétaire du site nomme
+ * un administrateur, et la profession est validée par l'équipe.
  */
 function AdminLink() {
   return (
-    <Link className="text-xs text-white/55 transition-colors hover:text-white" href="/admin" prefetch={false} rel="nofollow">
+    <Link className="text-xs text-white/55 transition-colors hover:text-white" href="/inscription-admin" prefetch={false} rel="nofollow">
       Espace administrateur
     </Link>
   );
