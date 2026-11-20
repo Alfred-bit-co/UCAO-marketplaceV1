@@ -1,7 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/devenir-vendeur", "/profil", "/verification", "/verification-carte"];
+// /espace-clubs demande seulement d'être connecté : le représentant des clubs est un ACHETEUR sans palier,
+// et aucune des redirections ci-dessous (carte d'étudiant, devenir vendeur…) ne s'applique à cette page.
+const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/devenir-vendeur", "/espace-clubs", "/profil", "/verification", "/verification-carte"];
 const AUTH_PAGES = ["/login", "/register", "/devenir-vendeur"];
 
 export async function middleware(request: NextRequest) {
@@ -50,7 +52,8 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, student_id_url")
+      // « * » : les colonnes account_type et verification_status peuvent ne pas encore exister.
+      .select("*")
       .eq("id", user.id)
       .single();
 
@@ -65,9 +68,13 @@ export async function middleware(request: NextRequest) {
     }
 
     if (pathname.startsWith("/admin") && role !== "ADMIN") {
-      const destination = request.nextUrl.clone();
-      destination.pathname = "/";
-      return NextResponse.redirect(destination);
+      // Un admin nommé garde son rôle (acheteur ou vendeur) : c'est la base qui décide.
+      const { data: allowed } = await supabase.rpc("am_i_admin");
+      if (allowed !== true) {
+        const destination = request.nextUrl.clone();
+        destination.pathname = "/";
+        return NextResponse.redirect(destination);
+      }
     }
 
     // Un administrateur n'a pas d'espace vendeur : on l'envoie directement au centre de pilotage.
@@ -89,11 +96,17 @@ export async function middleware(request: NextRequest) {
     // aucune vérification ne bloque l'accès. Les vendeurs existants (renouvellement)
     // et les admins ne sont pas concernés.
     const isBecomingVendor = pathname === "/devenir-vendeur" || pathname.startsWith("/devenir-vendeur/");
-    if (isBecomingVendor && role === "ACHETEUR" && !profile?.student_id_url) {
-      const destination = request.nextUrl.clone();
-      destination.pathname = "/verification-carte";
-      destination.search = "";
-      return NextResponse.redirect(destination);
+    // Personnel de l'UCAO : sa profession doit avoir été VALIDÉE par un administrateur.
+    const staffApproved = profile?.account_type === "personnel" && profile?.verification_status === "approved";
+    if (isBecomingVendor && role === "ACHETEUR" && !profile?.student_id_url && !staffApproved) {
+      // Un administrateur nommé (un enseignant par exemple) n'a pas de carte d'étudiant à fournir.
+      const { data: namedAdmin } = await supabase.rpc("am_i_admin");
+      if (namedAdmin !== true) {
+        const destination = request.nextUrl.clone();
+        destination.pathname = "/verification-carte";
+        destination.search = "";
+        return NextResponse.redirect(destination);
+      }
     }
   }
 
@@ -105,6 +118,7 @@ export const config = {
     "/admin/:path*",
     "/dashboard/:path*",
     "/devenir-vendeur/:path*",
+    "/espace-clubs/:path*",
     "/profil/:path*",
     "/verification/:path*",
     "/verification-carte/:path*",

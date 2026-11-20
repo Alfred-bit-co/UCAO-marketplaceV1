@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "@/lib/icons";
-import { CLUBS } from "@/lib/club-catalog";
 import { IMAGE_ASSETS } from "@/lib/constants";
 import { getStandCategoryLabel } from "@/lib/stand-catalog";
 import type { Stand } from "@/lib/types";
@@ -67,7 +66,7 @@ export function StandsAside({ latest }: { latest: Stand[] }) {
         <span className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,20,38,.92),rgba(18,36,78,.75)_60%,rgba(122,30,45,.55))]" />
         <div className="relative">
           <h2 className="text-xl font-bold">Rejoins un club du campus</h2>
-          <p className="mt-1 text-sm text-white/85">{"Sport, culture, tech… " + CLUBS.length + " clubs t'attendent à l'UCAO."}</p>
+          <p className="mt-1 text-sm text-white/85">Sport, culture, tech… les clubs du campus t&apos;attendent à l&apos;UCAO.</p>
           <Link
             href="/clubs"
             className="mt-4 inline-flex items-center gap-2 rounded-ucao border border-white/30 bg-white/10 px-4 py-2 text-sm font-bold transition hover:bg-white/20"

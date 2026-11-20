@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, LogIn, UserPlus } from "@/lib/icons";
+import { ArrowLeft, Eye, EyeOff, GraduationCap, LogIn, UserPlus, Users } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { Brand } from "./navbar";
 import { GoogleSignInButton } from "./google-signin-button";
 import { TurnstileWidget } from "./turnstile-widget";
 import { ThemeProvider } from "./theme-provider";
+import { amIAdmin } from "@/lib/admin-team";
 import { createClient } from "@/lib/supabase";
-import { getGoogleLoginRedirect, getPostLoginRedirect, safeNextPath } from "@/lib/utils";
+import { STAFF_ACCOUNT_TYPE, getGoogleLoginRedirect, getPostLoginRedirect, safeNextPath, type AccountType } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { validateImageFile } from "@/lib/storage";
 import { submitStudentVerification } from "@/lib/verification";
@@ -122,7 +123,14 @@ async function fetchProfileAfterLogin(supabase: NonNullable<ReturnType<typeof cr
   };
 }
 
+/**
+ * Inscription en deux temps : on choisit d'abord « Étudiant » (carte d'étudiant, filière, niveau)
+ * ou « Personnel de l'UCAO » (profession à la place de la carte). Le choix ne donne aucun droit :
+ * la carte ou la profession est vérifiée par un administrateur avant de pouvoir vendre.
+ */
 export function AuthForm({ mode, embedded = false }: { mode: "login" | "register"; embedded?: boolean }) {
+  const [accountType, setAccountType] = useState<AccountType | null>(null);
+  const staff = mode === "register" && accountType === STAFF_ACCOUNT_TYPE;
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -141,6 +149,8 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setNextPath(safeNextPath(params.get("next")));
+    const profil = params.get("profil");
+    if (profil === "etudiant" || profil === "personnel") setAccountType(profil);
     // Échec du retour OAuth (auth/callback) : jusqu'ici ce message n'était affiché nulle part.
     if (mode === "login" && params.get("error") === "oauth_callback") {
       setError(true);
@@ -150,11 +160,17 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
 
   const switchHref = `${mode === "login" ? "/register" : "/login"}${nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""}`;
 
+  function chooseAccountType(type: AccountType | null) {
+    setAccountType(type);
+    setMessage("");
+    setError(false);
+  }
+
   async function signInWithGoogleCredential(credential: string, rawNonce: string) {
     const supabase = createClient();
     if (!supabase) {
       setError(true);
-      setMessage("Supabase n'est pas encore configuré. Ajoutez les clés dans frontend/.env.local.");
+      setMessage("Le service est momentanément indisponible. Réessayez dans quelques minutes.");
       return;
     }
     if (CAPTCHA_ENABLED && !captchaToken) {
@@ -188,8 +204,10 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const profile = await fetchProfileAfterLogin(supabase);
     setError(false);
     setMessage("Connexion réussie. Redirection...");
+    // Un administrateur nommé n'a pas forcément de carte d'étudiant : pas d'étape « carte » pour lui.
+    const namedAdmin = await amIAdmin();
     // submitting reste vrai pendant la redirection pour éviter un second clic.
-    window.location.href = getGoogleLoginRedirect(profile, nextPath);
+    window.location.href = namedAdmin ? "/admin" : getGoogleLoginRedirect(profile, nextPath);
   }
 
   function handleGoogleError() {
@@ -208,6 +226,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const fieldOfStudy = String(form.get("field_of_study") || "").trim();
     const studyLevel = String(form.get("study_level") || "").trim();
     const studentCard = form.get("student_card");
+    const profession = String(form.get("profession") || "").trim();
 
     if (!EMAIL_PATTERN.test(email)) {
       setError(true);
@@ -231,21 +250,29 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         setMessage("Le numéro de téléphone doit être au format +xxxxxxxxxxx (uniquement des chiffres après le +, sans espace).");
         return;
       }
-      if (!fieldOfStudy || !studyLevel) {
-        setError(true);
-        setMessage("Veuillez renseigner votre filière et votre niveau d'étude.");
-        return;
-      }
-      if (!(studentCard instanceof File) || !studentCard.size) {
-        setError(true);
-        setMessage("La photo de votre carte d'étudiant est obligatoire.");
-        return;
-      }
-      const imageError = validateImageFile(studentCard);
-      if (imageError) {
-        setError(true);
-        setMessage(imageError);
-        return;
+      if (staff) {
+        if (profession.length < 2 || profession.length > 80) {
+          setError(true);
+          setMessage("Indiquez votre profession (2 à 80 caractères).");
+          return;
+        }
+      } else {
+        if (!fieldOfStudy || !studyLevel) {
+          setError(true);
+          setMessage("Veuillez renseigner votre filière et votre niveau d'étude.");
+          return;
+        }
+        if (!(studentCard instanceof File) || !studentCard.size) {
+          setError(true);
+          setMessage("La photo de votre carte d'étudiant est obligatoire.");
+          return;
+        }
+        const imageError = validateImageFile(studentCard);
+        if (imageError) {
+          setError(true);
+          setMessage(imageError);
+          return;
+        }
       }
       if (!accepted) {
         setError(true);
@@ -257,7 +284,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const supabase = createClient();
     if (!supabase) {
       setError(true);
-      setMessage("Supabase n'est pas encore configuré. Ajoutez les clés dans frontend/.env.local.");
+      setMessage("Le service est momentanément indisponible. Réessayez dans quelques minutes.");
       return;
     }
 
@@ -299,14 +326,20 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           captchaToken: captchaToken ?? undefined,
-          data: {
-            full_name: name,
-            phone,
-            field_of_study: fieldOfStudy,
-            study_level: studyLevel,
-          },
+          data: staff
+            ? { full_name: name, phone, account_type: STAFF_ACCOUNT_TYPE, profession }
+            : {
+                full_name: name,
+                phone,
+                field_of_study: fieldOfStudy,
+                study_level: studyLevel,
+              },
         },
       });
+      if (!signUpError && signUpData.session && staff) {
+        window.location.href = "/compte-personnel";
+        return;
+      }
       if (!signUpError && signUpData.session) {
         const verification = await submitStudentVerification(studentCard as File, { phone, fieldOfStudy, studyLevel });
         if (verification.error) {
@@ -322,7 +355,9 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
       setMessage(
         signUpError
           ? friendlyAuthError(signUpError, "signup")
-          : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
+          : staff
+            ? "Compte créé. Ouvrez le lien reçu par e-mail pour le confirmer. Votre profession sera ensuite vérifiée par un administrateur."
+            : "Compte créé. Confirmez votre email, connectez-vous puis envoyez votre carte d'étudiant pour activer votre compte.",
       );
     } catch {
       setError(true);
@@ -343,7 +378,7 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     const supabase = createClient();
     if (!supabase) {
       setError(true);
-      setMessage("Supabase n'est pas encore configuré.");
+      setMessage("Le service est momentanément indisponible. Réessayez dans quelques minutes.");
       return;
     }
 
@@ -364,6 +399,45 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
     setMessage(resendError ? friendlyAuthError(resendError, "resend") : "L'email de confirmation a été renvoyé. Vérifiez aussi vos spams.");
   }
 
+  // Inscription : on demande d'abord qui est la personne.
+  if (mode === "register" && !accountType) {
+    const chooser = (
+      <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
+        <div className="panel w-[min(520px,100%)] p-8">
+          <Brand />
+          <h1 className="mt-7 text-3xl font-medium">Créer un compte</h1>
+          <p className="mb-6 text-ucao-muted dark:text-[#a8b8cc]">Vous êtes :</p>
+          <div className="grid gap-3">
+            <button
+              type="button"
+              onClick={() => chooseAccountType("etudiant")}
+              className="flex items-center gap-4 rounded-ucao border border-ucao-line p-4 text-left transition hover:border-ucao-red hover:bg-ucao-red-soft/40 dark:border-[#263d5c] dark:hover:bg-[#1b2d47]"
+            >
+              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ucao-red-soft text-ucao-red"><GraduationCap size={24} aria-hidden="true" /></span>
+              <span>
+                <span className="block font-semibold">Étudiant(e) de l&apos;UCAO-UUT</span>
+                <span className="block text-sm text-ucao-muted dark:text-[#a8b8cc]">La photo de votre carte d&apos;étudiant sera demandée.</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => chooseAccountType("personnel")}
+              className="flex items-center gap-4 rounded-ucao border border-ucao-line p-4 text-left transition hover:border-ucao-red hover:bg-ucao-red-soft/40 dark:border-[#263d5c] dark:hover:bg-[#1b2d47]"
+            >
+              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ucao-navy-soft text-ucao-navy dark:bg-[#142b4a] dark:text-white"><Users size={24} aria-hidden="true" /></span>
+              <span>
+                <span className="block font-semibold">Personnel de l&apos;UCAO</span>
+                <span className="block text-sm text-ucao-muted dark:text-[#a8b8cc]">Enseignant, administration… Votre profession remplace la carte d&apos;étudiant.</span>
+              </span>
+            </button>
+          </div>
+          <Link className="mt-6 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={switchHref}>J&apos;ai déjà un compte</Link>
+        </div>
+      </main>
+    );
+    return embedded ? chooser : <ThemeProvider>{chooser}</ThemeProvider>;
+  }
+
   const formContent = (
     <main className="grid min-h-screen place-items-center bg-ucao-soft px-4 py-16 dark:bg-[#0a1628]">
       <form className="panel w-[min(520px,100%)] p-8" onSubmit={submit} noValidate>
@@ -376,12 +450,19 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           <ArrowLeft size={20} />
         </Link>
         <Brand />
-        <h1 className="mt-7 text-3xl font-medium">{mode === "login" ? "Connexion" : "Créer un compte étudiant"}</h1>
+        <h1 className="mt-7 text-3xl font-medium">{mode === "login" ? "Connexion" : staff ? "Créer un compte personnel UCAO" : "Créer un compte étudiant"}</h1>
         <p className="mb-5 text-ucao-muted dark:text-[#a8b8cc]">
-          {mode === "login"
+          {staff
+            ? "Pas de carte d'étudiant : indiquez votre profession. Un administrateur la vérifie avant que vous puissiez vendre."
+            : mode === "login"
             ? "Accédez à votre espace après validation de votre carte d'étudiant."
             : "Réservé aux étudiants UCAO-UUT. La photo de votre carte d'étudiant est obligatoire après la confirmation de l'email pour activer le compte."}
         </p>
+        {mode === "register" && (
+          <button className="mb-4 text-sm font-medium text-ucao-red underline-offset-4 hover:underline" type="button" onClick={() => chooseAccountType(null)}>
+            ← Changer : je suis {staff ? "étudiant(e)" : "membre du personnel"}
+          </button>
+        )}
         {mode === "register" && (
           <>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -408,15 +489,25 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
                 Format obligatoire : +suivi uniquement de chiffres, sans espace (ex : +22892982926).
               </span>
             </label>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-1">Filière<input className="input-field" name="field_of_study" required placeholder="Ex. Informatique" /></label>
-              <label className="grid gap-1">Niveau d&apos;étude<input className="input-field" name="study_level" required placeholder="Ex. Licence 2" /></label>
-            </div>
-            <label className="mt-4 grid gap-1">
-              Photo de la carte d&apos;étudiant
-              <input className="input-field py-2" name="student_card" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required />
-              <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">Photo nette, recto visible. JPG, PNG, WebP ou AVIF, 5 Mo maximum.</span>
-            </label>
+            {staff ? (
+              <label className="mt-4 grid gap-1">
+                Profession
+                <input className="input-field" name="profession" required minLength={2} maxLength={80} placeholder="Ex. Enseignant en droit, Secrétaire de la scolarité" />
+                <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">Vérifiée par un administrateur avant que vous puissiez vendre.</span>
+              </label>
+            ) : (
+              <>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-1">Filière<input className="input-field" name="field_of_study" required placeholder="Ex. Informatique" /></label>
+                  <label className="grid gap-1">Niveau d&apos;étude<input className="input-field" name="study_level" required placeholder="Ex. Licence 2" /></label>
+                </div>
+                <label className="mt-4 grid gap-1">
+                  Photo de la carte d&apos;étudiant
+                  <input className="input-field py-2" name="student_card" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required />
+                  <span className="text-xs text-ucao-muted dark:text-[#a8b8cc]">Photo nette, recto visible. JPG, PNG, WebP ou AVIF, 5 Mo maximum.</span>
+                </label>
+              </>
+            )}
           </>
         )}
         {mode === "login" && (
@@ -488,15 +579,20 @@ export function AuthForm({ mode, embedded = false }: { mode: "login" | "register
           {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
           {submitting ? "Veuillez patienter..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
-        <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
-        <GoogleSignInButton
-          mode={mode}
-          ready={!submitting && (!CAPTCHA_ENABLED || Boolean(captchaToken))}
-          notReadyMessage={submitting ? "Veuillez patienter..." : "Valide d'abord la vérification anti-robot ci-dessus pour continuer avec Google."}
-          resetKey={googleAttempt}
-          onCredential={signInWithGoogleCredential}
-          onError={handleGoogleError}
-        />
+        {/* Une première connexion Google passe par l'étape « carte d'étudiant » : pas ici. */}
+        {!staff && (
+          <>
+            <div className="my-4 flex items-center gap-3 text-xs text-ucao-muted before:h-px before:flex-1 before:bg-ucao-line after:h-px after:flex-1 after:bg-ucao-line">ou</div>
+            <GoogleSignInButton
+              mode={mode}
+              ready={!submitting && (!CAPTCHA_ENABLED || Boolean(captchaToken))}
+              notReadyMessage={submitting ? "Veuillez patienter..." : "Valide d'abord la vérification anti-robot ci-dessus pour continuer avec Google."}
+              resetKey={googleAttempt}
+              onCredential={signInWithGoogleCredential}
+              onError={handleGoogleError}
+            />
+          </>
+        )}
         <Link className="mt-5 block text-center font-medium text-ucao-green dark:text-ucao-gold" href={switchHref}>
           {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
         </Link>

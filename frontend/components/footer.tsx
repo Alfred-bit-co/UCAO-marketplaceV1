@@ -15,7 +15,10 @@ export function Footer({ full = false }: { full?: boolean }) {
         <div className="container-ucao flex flex-col items-center justify-between gap-3 text-sm md:flex-row">
           <p>© {year} UCAO Marketplace. Tous droits réservés.</p>
           <p>UCAO Marketplace est un projet étudiant indépendant, non affilié officiellement à l&apos;administration de l&apos;UCAO-UUT.</p>
-          <LegalLinks />
+          <div className="flex flex-col items-center gap-1">
+            <LegalLinks />
+            <AdminLink />
+          </div>
         </div>
       </footer>
     );
@@ -63,8 +66,21 @@ export function Footer({ full = false }: { full?: boolean }) {
       </div>
       <p className="mx-auto mt-10 border-t border-white/10 pt-5 text-center">
         © {year} UCAO Marketplace. Tous droits réservés.
+        <span className="mt-1 block"><AdminLink /></span>
       </p>
     </footer>
+  );
+}
+
+/**
+ * Accès à la connexion des administrateurs. Ce lien ne donne aucun droit : /admin renvoie
+ * vers la connexion, puis vers l'accueil tout compte que la base ne reconnaît pas comme admin.
+ */
+function AdminLink() {
+  return (
+    <Link className="text-xs text-white/55 transition-colors hover:text-white" href="/admin" prefetch={false} rel="nofollow">
+      Espace administrateur
+    </Link>
   );
 }
 

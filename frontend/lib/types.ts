@@ -75,14 +75,82 @@ export type Stand = {
   created_at?: string;
 };
 
+// ============================================
+// CLUBS DU CAMPUS (tables clubs, club_sessions, club_announcements)
+// ============================================
 export type Club = {
   id: string;
   name: string;
-  banner_url: string;
-  external_url: string;
-  short_description?: string | null;
+  short_description: string | null;
+  // Chemin local (/images/clubs/xxx.jpg) ou URL publique du stockage.
+  banner_url: string | null;
+  external_url: string | null;
+  // Couleur du club dans le calendrier (#RRGGBB, unique parmi les clubs non supprimés).
+  color: string;
+  // Numéro WhatsApp du responsable (+22890123456), null = « Contact bientôt disponible ».
+  whatsapp: string | null;
+  sort_order: number;
+  // false = club caché du public (visible seulement par les gestionnaires).
+  is_active: boolean;
   created_at?: string;
-  created_by?: string | null;
+  updated_at?: string;
+  deleted_at?: string | null;
+};
+
+/** Séance hebdomadaire d'un club (se répète chaque semaine). */
+export type ClubSession = {
+  id: string;
+  club_id: string;
+  // 1 = lundi … 7 = dimanche
+  day_of_week: number;
+  // Format HH:MM:SS (heure locale du campus).
+  start_time: string;
+  end_time: string;
+  // Précision du lieu (le lieu général est toujours l'université).
+  location_detail: string | null;
+  activity: string | null;
+};
+
+export type ClubAnnouncement = {
+  id: string;
+  // null = annonce générale pour tous les clubs.
+  club_id: string | null;
+  title: string;
+  body: string;
+  event_at: string | null;
+  is_pinned: boolean;
+  created_at: string;
+};
+
+/** Club supprimé (réversible), vu par l'administrateur. */
+export type DeletedClub = {
+  id: string;
+  name: string;
+  color: string;
+  deleted_at: string;
+  deleted_by_name: string | null;
+  sessions_count: number;
+};
+
+export type ClubManager = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  added_at: string;
+};
+
+/** Ligne de l'onglet « Équipe » de l'espace clubs (fonction club_list_team). */
+export type ClubTeamMember = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  profession: string | null;
+  signed_up_at: string;
+  is_manager: boolean;
+  added_at: string | null;
+  /** Vrai si la personne connectée peut lui retirer l'accès (elle l'a ajoutée, ou c'est l'admin). */
+  can_remove: boolean;
+  is_me: boolean;
 };
 
 export type ProductCategory =
@@ -139,6 +207,9 @@ export type Profile = {
   student_id_url?: string | null;
   verification_note?: string | null;
   cgu_accepted_at?: string | null;
+  // Choisi à l'inscription. « personnel » : profession vérifiée par un admin à la place de la carte.
+  account_type?: "etudiant" | "personnel";
+  profession?: string | null;
   // false = compte suspendu par un administrateur (ne bloque ni connexion ni navigation,
   // seulement les nouvelles publications). Absent/true = compte normal.
   is_active?: boolean;

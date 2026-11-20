@@ -1,3 +1,4 @@
+import { friendlyError } from "./errors";
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { getPublicProfiles, toSeller, type PublicProfile } from "./public-profiles";
 import { PRODUCTS_PER_PAGE, DEMO_PRODUCTS } from "./constants";
@@ -380,10 +381,10 @@ export async function createProduct(
     stand_id?: string;
   },
 ): Promise<{ product: Product | null; error: string | null }> {
-  if (!isSupabaseConfigured()) return { product: null, error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { product: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const supabase = createClient();
-  if (!supabase) return { product: null, error: "Supabase non configuré." };
+  if (!supabase) return { product: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const { image_urls, ...productPayload } = payload;
   const { data, error } = await supabase
@@ -394,7 +395,7 @@ export async function createProduct(
 
   if (error || !data) {
     console.error("SUPABASE ERROR (createProduct):", error);
-    return { product: null, error: error?.message ?? "Erreur inconnue." };
+    return { product: null, error: friendlyError(error, "Impossible d'enregistrer le produit pour le moment. Réessayez dans quelques instants.") };
   }
 
   if (image_urls?.length) {
@@ -416,10 +417,10 @@ export async function updateProduct(
     image_urls?: string[];
   },
 ): Promise<{ product: Product | null; error: string | null }> {
-  if (!isSupabaseConfigured()) return { product: null, error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { product: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const supabase = createClient();
-  if (!supabase) return { product: null, error: "Supabase non configuré." };
+  if (!supabase) return { product: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const { image_urls, ...productPayload } = payload;
   const { data, error } = await supabase
@@ -432,7 +433,7 @@ export async function updateProduct(
 
   if (error || !data) {
     console.error("SUPABASE ERROR (updateProduct):", error);
-    return { product: null, error: error?.message ?? "Erreur inconnue." };
+    return { product: null, error: friendlyError(error, "Impossible d'enregistrer le produit pour le moment. Réessayez dans quelques instants.") };
   }
 
   await replaceProductImages(supabase, productId, image_urls);

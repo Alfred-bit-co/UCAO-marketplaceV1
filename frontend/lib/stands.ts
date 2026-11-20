@@ -1,4 +1,5 @@
 import { DEMO_STANDS } from "./constants";
+import { friendlyError } from "./errors";
 import { trustedMediaUrl } from "./media";
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { getPublicProfiles, toSeller, type PublicProfile } from "./public-profiles";
@@ -187,9 +188,9 @@ export async function createStand(
   userId: string,
   payload: StandPayload,
 ): Promise<{ stand: Stand | null; error: string | null }> {
-  if (!isSupabaseConfigured()) return { stand: null, error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { stand: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { stand: null, error: "Supabase non configuré." };
+  if (!supabase) return { stand: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const clean = cleanPayload(payload);
   if (!clean.ok) return { stand: null, error: clean.error };
@@ -202,7 +203,7 @@ export async function createStand(
 
   if (error || !data) {
     console.error("SUPABASE ERROR (createStand):", error);
-    return { stand: null, error: error?.message ?? "Erreur inconnue." };
+    return { stand: null, error: friendlyError(error, "Impossible d'enregistrer le stand pour le moment. Réessayez dans quelques instants.") };
   }
   return { stand: (await mapStands([data as unknown as StandRow]))[0] ?? null, error: null };
 }
@@ -213,9 +214,9 @@ export async function updateMyStand(
   standId: string,
   payload: StandPayload,
 ): Promise<{ stand: Stand | null; error: string | null }> {
-  if (!isSupabaseConfigured()) return { stand: null, error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { stand: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { stand: null, error: "Supabase non configuré." };
+  if (!supabase) return { stand: null, error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const clean = cleanPayload(payload);
   if (!clean.ok) return { stand: null, error: clean.error };
@@ -230,7 +231,7 @@ export async function updateMyStand(
 
   if (error || !data) {
     console.error("SUPABASE ERROR (updateMyStand):", error);
-    return { stand: null, error: error?.message ?? "Erreur inconnue." };
+    return { stand: null, error: friendlyError(error, "Impossible d'enregistrer le stand pour le moment. Réessayez dans quelques instants.") };
   }
   return { stand: (await mapStands([data as unknown as StandRow]))[0] ?? null, error: null };
 }
@@ -263,30 +264,30 @@ export async function updateStandStatus(standId: string, status: "approved" | "r
 }
 
 export async function deleteStandForAdmin(standId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured()) return { error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { error: "Supabase non configuré." };
+  if (!supabase) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const { data, error } = await supabase.from("stands").delete().eq("id", standId).select("id");
   if (error) {
     console.error("SUPABASE ERROR (deleteStandForAdmin):", error);
-    return { error: error.message || "Impossible de supprimer ce stand." };
+    return { error: friendlyError(error, "Impossible de supprimer ce stand pour le moment. Réessayez dans quelques instants.") };
   }
   if (!data?.length) {
-    return { error: "Suppression refusée : vérifiez que la migration des droits administrateur a été appliquée." };
+    return { error: "Suppression impossible : ce stand a peut-être déjà été supprimé, ou vos droits d'administrateur ne sont plus actifs. Rechargez la page." };
   }
   return { error: null };
 }
 
 export async function deleteStand(userId: string, standId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured()) return { error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { error: "Supabase non configuré." };
+  if (!supabase) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const { error } = await supabase.from("stands").delete().eq("id", standId).eq("user_id", userId);
   if (error) {
     console.error("SUPABASE ERROR (deleteStand):", error);
-    return { error: error.message || "Impossible de supprimer ce stand." };
+    return { error: friendlyError(error, "Impossible de supprimer ce stand pour le moment. Réessayez dans quelques instants.") };
   }
   return { error: null };
 }

@@ -86,7 +86,7 @@ export function ProductCard({
 
   return (
     <article
-      className={`group relative flex h-full min-w-0 flex-col rounded-2xl bg-white shadow-[0_8px_26px_-14px_rgba(24,36,95,0.4)] ring-1 ring-black/5 transition duration-300 motion-safe:hover:-translate-y-1 hover:shadow-[0_18px_40px_-16px_rgba(24,36,95,0.45)] dark:bg-[#10233b] dark:ring-white/10 ${className}`}
+      className={`group relative flex h-full min-w-0 flex-col rounded-2xl bg-white shadow-[0_6px_20px_-12px_rgba(24,36,95,0.35)] ring-1 ring-black/5 transition duration-300 motion-safe:hover:-translate-y-1 hover:shadow-[0_18px_40px_-16px_rgba(24,36,95,0.45)] dark:bg-[#10233b] dark:ring-white/10 ${className}`}
     >
       {/* Image : le conteneur n'est pas coupé pour que le cœur puisse dépasser sur le contenu */}
       <div className="relative">
@@ -108,8 +108,12 @@ export function ProductCard({
             )}
           </Link>
 
+          <span className="pointer-events-none absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-ucao-navy shadow-sm backdrop-blur sm:text-[11px] dark:bg-[#0b1c31]/85 dark:text-white">
+            {categoryLabel}
+          </span>
+
           {published && (
-            <span className="pointer-events-none absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
+            <span className="pointer-events-none absolute bottom-2 left-2 hidden sm:inline-flex inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
               <Clock3 size={12} aria-hidden="true" />
               <span suppressHydrationWarning>{published}</span>
             </span>
@@ -120,18 +124,16 @@ export function ProductCard({
       </div>
 
       {/* Contenu */}
-      <div className="flex flex-1 flex-col p-2.5 pt-5 sm:p-3 sm:pt-5">
-        <p className="text-[15px] font-bold leading-tight text-ucao-red sm:text-base dark:text-[#f0b429]">
-          {formatPrice(product.price)} <span className="text-xs font-semibold">FCFA</span>
-        </p>
-
-        <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-ucao-ink dark:text-white">
+      <div className="flex flex-1 flex-col px-2.5 pb-2.5 pt-4 sm:p-3 sm:pt-5">
+        <h3 className="line-clamp-2 min-h-[2.5em] text-[13px] font-semibold leading-tight text-ucao-ink sm:text-sm dark:text-white">
           <Link href={href} className="hover:underline focus-visible:underline">
             {product.name}
           </Link>
         </h3>
 
-        <p className="mt-1 text-xs font-medium text-ucao-muted dark:text-[#a8b8cc]">{categoryLabel}</p>
+        <p className="mt-1 text-base font-extrabold leading-tight text-ucao-red dark:text-[#f0b429]">
+          {formatPrice(product.price)} <span className="text-[11px] font-semibold">FCFA</span>
+        </p>
 
         {showDescription && product.description && (
           <p className="mt-1.5 line-clamp-2 hidden text-[13px] leading-5 text-ucao-muted sm:block dark:text-[#a8b8cc]">{product.description}</p>
@@ -139,13 +141,13 @@ export function ProductCard({
 
         <div className="mt-auto">
           {sellerName && (
-            <div className="mt-2.5 flex items-center gap-2 border-t border-ucao-line pt-2 dark:border-[#263d5c]">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-ucao-navy text-[10px] font-bold text-white" aria-hidden="true">
+            <div className="mt-2 flex items-center gap-1.5 sm:mt-2.5 sm:gap-2 sm:border-t sm:border-ucao-line sm:pt-2 dark:sm:border-[#263d5c]">
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-ucao-navy text-[9px] font-bold text-white sm:size-6 sm:text-[10px]" aria-hidden="true">
                 {initials(sellerName)}
               </span>
-              <span className="min-w-0 flex-1 truncate text-xs font-semibold text-ucao-muted dark:text-[#a8b8cc]">{sellerName}</span>
+              <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-ucao-muted sm:text-xs sm:font-semibold dark:text-[#a8b8cc]">{sellerName}</span>
               {badge && (
-                <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badge.className}`}>
+                <span className={`shrink-0 rounded-md px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide sm:px-1.5 sm:text-[10px] ${badge.className}`}>
                   {badge.label}
                 </span>
               )}
@@ -156,7 +158,7 @@ export function ProductCard({
             (contactUrl ? (
               <ContactLink
                 productId={id}
-                className="btn btn-primary mt-2.5 min-h-9 w-full gap-1.5 px-3 text-xs sm:text-sm"
+                className="btn btn-primary mt-2 min-h-9 w-full gap-1.5 rounded-full px-3 text-xs shadow-none sm:mt-2.5 sm:rounded-ucao sm:text-sm sm:shadow-[0_14px_28px_rgba(122,30,45,0.28)]"
                 href={contactUrl}
                 ariaLabel={`Contacter le vendeur de ${product.name} sur WhatsApp`}
               >
@@ -165,7 +167,7 @@ export function ProductCard({
             ) : (
               // Vendeur sans numéro : aucun lien WhatsApp (ni vers un autre numéro, ni vers la plateforme).
               <button
-                className="btn btn-ghost mt-2.5 min-h-9 w-full px-3 text-xs sm:text-sm"
+                className="btn btn-ghost mt-2 min-h-9 w-full rounded-full px-3 text-[11px] sm:mt-2.5 sm:rounded-ucao sm:text-sm"
                 type="button"
                 disabled
                 title="Ce vendeur n'a pas encore ajouté son numéro WhatsApp"

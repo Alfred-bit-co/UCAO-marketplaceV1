@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
   // another lockfile (otherwise Next may pick the wrong project root).
   outputFileTracingRoot: path.join(__dirname),
   poweredByHeader: false,
+  experimental: {
+    // Navigation : une page déjà ouverte reste en mémoire dans le navigateur (30 s pour les pages
+    // recalculées à chaque visite, 5 min pour les autres). Revenir en arrière ou recliquer sur
+    // « Produits » ne refait donc pas d'aller-retour vers le serveur.
+    staleTimes: { dynamic: 30, static: 300 },
+  },
   images: {
     // Images optimisées : uniquement les fichiers publics de NOTRE projet Supabase
     // (pas n'importe quel *.supabase.co), pour que personne ne fasse passer ses propres

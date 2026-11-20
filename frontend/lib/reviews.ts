@@ -1,4 +1,5 @@
 import { getPublicProfiles, type PublicProfile } from "./public-profiles";
+import { SESSION_EXPIRED, friendlyError } from "./errors";
 import { createClient, isSupabaseConfigured } from "./supabase";
 
 export type PlatformReview = {
@@ -85,17 +86,27 @@ export async function submitReview(
   userId: string,
   payload: { rating: number; comment: string },
 ): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured()) return { error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { error: "Supabase non configuré." };
+  if (!supabase) return { error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
+
+  // La base n'accepte l'avis que si la session en cours appartient à ce compte (auth.uid() = user_id).
+  // On relit donc la session au moment de l'envoi : elle a pu expirer, ou changer dans un autre onglet.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: SESSION_EXPIRED };
+  if (user.id !== userId) {
+    return { error: "Vous avez changé de compte dans un autre onglet. Rechargez la page, puis renvoyez votre avis." };
+  }
 
   const { error } = await supabase
     .from("platform_reviews")
-    .upsert({ user_id: userId, rating: payload.rating, comment: payload.comment }, { onConflict: "user_id" });
+    .upsert({ user_id: user.id, rating: payload.rating, comment: payload.comment }, { onConflict: "user_id" });
 
   if (error) {
     console.error("SUPABASE ERROR (submitReview):", error);
-    return { error: error.message };
+    return { error: friendlyError(error, "Impossible d'envoyer votre avis pour le moment. Réessayez dans quelques instants.") };
   }
   return { error: null };
 }
@@ -120,9 +131,9 @@ export async function getPendingReviewsForAdmin(): Promise<PlatformReview[]> {
 }
 
 export async function getAllReviewsForAdmin(): Promise<ReviewAdminResult> {
-  if (!isSupabaseConfigured()) return { reviews: [], error: "Supabase non configuré." };
+  if (!isSupabaseConfigured()) return { reviews: [], error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
   const supabase = createClient();
-  if (!supabase) return { reviews: [], error: "Supabase non configuré." };
+  if (!supabase) return { reviews: [], error: "Le service est momentanément indisponible. Réessayez dans quelques minutes." };
 
   const { data, error } = await supabase
     .from("platform_reviews")
@@ -133,7 +144,7 @@ export async function getAllReviewsForAdmin(): Promise<ReviewAdminResult> {
     console.error("SUPABASE ERROR (getAllReviewsForAdmin):", error);
     return {
       reviews: [],
-      error: error?.message || "Impossible de charger les avis. Vérifiez la table et les policies Supabase.",
+      error: friendlyError(error, "Impossible de charger les avis pour le moment. Rechargez la page."),
     };
   }
 

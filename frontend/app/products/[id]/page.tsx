@@ -13,6 +13,15 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ id: string }> };
 
+// Page gardée en cache 60 s (ISR) : un clic sur une fiche déjà vue par quelqu'un s'affiche tout de suite,
+// sans recalcul ni aller-retour vers la base. Une modification apparaît donc en 1 minute au plus.
+export const revalidate = 60;
+
+// Aucune fiche construite à l'avance : chacune est créée à sa première visite, puis mise en cache.
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const product = await getProductById(id);

@@ -17,6 +17,8 @@ import {
   X,
 } from "@/lib/icons";
 import { useEffect, useMemo, useState } from "react";
+import { amIAdmin } from "@/lib/admin-team";
+import { amIClubManager } from "@/lib/clubs";
 import { createClient } from "@/lib/supabase";
 import type { UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -92,6 +94,10 @@ export function Topbar() {
 // les liens « Connexion » / « Mon profil » clignotaient le temps de relire la session.
 // undefined = pas encore connu (premier chargement).
 let cachedRole: UserRole | null | undefined;
+// Même principe pour le droit « gestionnaire des clubs » (fonction am_i_club_manager, vraie aussi pour l'admin).
+let cachedClubManager: boolean | undefined;
+// Administrateur nommé : il garde son rôle d'acheteur ou de vendeur.
+let cachedNamedAdmin: boolean | undefined;
 
 export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const pathname = usePathname();
@@ -99,16 +105,26 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<UserRole | null>(cachedRole ?? null);
   const [roleKnown, setRoleKnown] = useState(cachedRole !== undefined);
+  const [clubManager, setClubManager] = useState(cachedClubManager ?? false);
+  const [namedAdmin, setNamedAdmin] = useState(cachedNamedAdmin ?? false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     let active = true;
     const refreshRole = () =>
-      getCurrentUserRole().then((currentRole) => {
+      getCurrentUserRole().then(async (currentRole) => {
         cachedRole = currentRole;
         if (!active) return;
         setRole(currentRole);
         setRoleKnown(true);
+        const [manager, admin] = currentRole
+          ? await Promise.all([amIClubManager(), currentRole === "ADMIN" ? Promise.resolve(true) : amIAdmin()])
+          : [false, false];
+        cachedClubManager = manager;
+        cachedNamedAdmin = admin;
+        if (!active) return;
+        setClubManager(manager);
+        setNamedAdmin(admin);
       });
     refreshRole();
     const supabase = createClient();
@@ -140,7 +156,11 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
   async function handleSignOut() {
     await signOut();
     cachedRole = null;
+    cachedClubManager = false;
+    cachedNamedAdmin = false;
     setRole(null);
+    setClubManager(false);
+    setNamedAdmin(false);
     setOpen(false);
     router.push("/");
     router.refresh();
@@ -154,11 +174,19 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     if (role === "VENDEUR") {
       links.push({ href: "/dashboard", label: "Tableau de bord" });
     }
-    if (role === "ADMIN") {
+    if (role === "ADMIN" || (role && namedAdmin)) {
       links.push({ href: "/admin", label: "Administration" });
     }
+    // Réservé au représentant des clubs (et à l'admin) : jamais dans la navigation publique.
+    if (role && clubManager) {
+      links.push({ href: "/espace-clubs", label: "Espace clubs" });
+    }
     return links;
-  }, [role]);
+  }, [role, clubManager, namedAdmin]);
+
+  // « Devenir vendeur » : visiteurs et acheteurs seulement (jamais vendeur ni admin, même nommé).
+  // Masqué tant que le rôle n'est pas connu, pour éviter un clignotement.
+  const showSellerCta = roleKnown && (!role || (role === "ACHETEUR" && !namedAdmin));
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
@@ -286,9 +314,11 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
             </button>
           )}
 
-            <Link className="btn btn-primary ml-1 min-h-11 whitespace-nowrap rounded-2xl px-4 shadow-[0_8px_20px_rgba(122,30,45,0.25)]" href="/devenir-vendeur">
-              <CirclePlus size={18} /> Devenir vendeur
-            </Link>
+            {showSellerCta && (
+              <Link className="fade-in btn btn-primary ml-1 min-h-11 whitespace-nowrap rounded-2xl px-4 shadow-[0_8px_20px_rgba(122,30,45,0.25)]" href="/devenir-vendeur">
+                <CirclePlus size={18} /> Devenir vendeur
+              </Link>
+            )}
           </div>
         </div>
       </nav>
