@@ -36,7 +36,7 @@ const FAQ_GROUPS = [
     items: [
       {
         question: "Comment devenir vendeur ?",
-        answer: "Clique sur « Devenir vendeur », ajoute ton numéro WhatsApp (c'est par là que les acheteurs te contactent), choisis un palier (STANDARD, PREMIUM ou VIP), puis paie l'abonnement. Paiement par Mobile Money, via un prestataire de paiement agréé (bientôt disponible).",
+        answer: "Clique sur « Devenir vendeur », ajoute ton numéro WhatsApp (c'est par là que les acheteurs te contactent), choisis un palier (STANDARD, PREMIUM ou VIP), puis paie l'abonnement. Paiement par Mobile Money (Moov Money ou Mixx by Yas), via notre prestataire de paiement agréé. Des frais de l'opérateur (environ 4 %) s'ajoutent au prix et sont affichés avant la validation du paiement.",
       },
       {
         question: "Quels sont les abonnements ?",
