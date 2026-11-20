@@ -184,6 +184,10 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
     return links;
   }, [role, clubManager, namedAdmin]);
 
+  // « Devenir vendeur » : visiteurs et acheteurs seulement (jamais vendeur ni admin, même nommé).
+  // Masqué tant que le rôle n'est pas connu, pour éviter un clignotement.
+  const showSellerCta = roleKnown && (!role || (role === "ACHETEUR" && !namedAdmin));
+
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
@@ -310,9 +314,11 @@ export function Navbar({ showTopbar = false }: { showTopbar?: boolean }) {
             </button>
           )}
 
-            <Link className="btn btn-primary ml-1 min-h-11 whitespace-nowrap rounded-2xl px-4 shadow-[0_8px_20px_rgba(122,30,45,0.25)]" href="/devenir-vendeur">
-              <CirclePlus size={18} /> Devenir vendeur
-            </Link>
+            {showSellerCta && (
+              <Link className="fade-in btn btn-primary ml-1 min-h-11 whitespace-nowrap rounded-2xl px-4 shadow-[0_8px_20px_rgba(122,30,45,0.25)]" href="/devenir-vendeur">
+                <CirclePlus size={18} /> Devenir vendeur
+              </Link>
+            )}
           </div>
         </div>
       </nav>

@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { PageHero } from "@/components/page-hero";
 import { PageShell } from "@/components/page-shell";
 import { PageSkeleton } from "@/components/skeletons";
-import { SUBSCRIPTION_PLANS, initiateSubscriptionPayment } from "@/lib/subscriptions";
+import { SUBSCRIPTION_PLANS, formatSubscriptionDate, getMySubscriptionStatus, initiateSubscriptionPayment } from "@/lib/subscriptions";
+import type { SubscriptionStatus } from "@/lib/subscriptions";
 import { TRIAL_DURATIONS, getTrialStatus, startTrial } from "@/lib/trial";
 import type { TrialStatus } from "@/lib/trial";
 import { cn, normalizeWhatsAppNumber } from "@/lib/utils";
@@ -47,6 +48,8 @@ export default function DevenirVendeurPage() {
   const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
   const [loadingTrialTier, setLoadingTrialTier] = useState<SubscriptionTier | null>(null);
   const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
+  // Abonnement en cours d'un vendeur déjà abonné : affiché en haut de page, n'empêche pas de payer.
+  const [currentSubscription, setCurrentSubscription] = useState<SubscriptionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function loadProfile() {
@@ -58,6 +61,9 @@ export default function DevenirVendeurPage() {
         return;
       }
       setProfile(current);
+      if (current.role === "VENDEUR") {
+        setCurrentSubscription(await getMySubscriptionStatus());
+      }
       if (current.phone) {
         setTrialStatus(await getTrialStatus());
         setState("ready");
@@ -211,16 +217,32 @@ export default function DevenirVendeurPage() {
   const canTrial = trialStatus?.eligible === true;
   const trialUsed = trialStatus?.reason === "already_used";
   const busy = loadingTier !== null || loadingTrialTier !== null;
+  const currentExpiry = currentSubscription?.expiresAt ?? null;
+  const showCurrentPlan = Boolean(
+    profile?.role === "VENDEUR" &&
+      currentSubscription?.tier &&
+      currentExpiry &&
+      new Date(currentExpiry).getTime() > Date.now(),
+  );
 
   return (
     <PageShell>
       <main>
         <PageHero icon={ShieldAlert} eyebrow="Devenir vendeur" title="Choisissez votre palier">
-          Chaque palier est un abonnement mensuel. Paiement par Mobile Money, via un prestataire de paiement agréé (bientôt disponible). Aucun renouvellement automatique : pensez à renouveler chaque mois.
+          Chaque palier est un abonnement mensuel. Paiement par Mobile Money (Moov Money ou Mixx by Yas), via notre prestataire de paiement agréé. Des frais de l&apos;opérateur (environ 4 %) s&apos;ajoutent au prix et sont affichés avant la validation du paiement. Aucun renouvellement automatique : pensez à renouveler chaque mois.
         </PageHero>
 
-        {canTrial && (
+        {showCurrentPlan && (
           <section className="container-ucao pt-[42px]">
+            <p className="notice" role="status">
+              Votre palier actuel : <strong>{currentSubscription?.tier}</strong>, valable jusqu&apos;au{" "}
+              {formatSubscriptionDate(currentExpiry)}. Choisir le même palier ajoute un mois à la suite.
+            </p>
+          </section>
+        )}
+
+        {canTrial && (
+          <section className={cn("container-ucao", showCurrentPlan ? "pt-[28px]" : "pt-[42px]")}>
             <div className="panel flex items-start gap-3 border-2 border-ucao-success/40 p-5">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-green-50 text-ucao-success dark:bg-green-500/10">
                 <Clock3 size={20} />
@@ -236,12 +258,12 @@ export default function DevenirVendeurPage() {
         )}
 
         {trialUsed && (
-          <section className="container-ucao pt-[42px]">
+          <section className={cn("container-ucao", showCurrentPlan ? "pt-[28px]" : "pt-[42px]")}>
             <p className="notice" role="status">Votre essai gratuit a déjà été utilisé. Choisissez un abonnement pour continuer à vendre.</p>
           </section>
         )}
 
-        <section className={cn("container-ucao grid gap-6 pb-[54px] md:grid-cols-3", canTrial || trialUsed ? "pt-[28px]" : "pt-[42px]")}>
+        <section className={cn("container-ucao grid gap-6 pb-[54px] md:grid-cols-3", canTrial || trialUsed || showCurrentPlan ? "pt-[28px]" : "pt-[42px]")}>
           {SUBSCRIPTION_PLANS.map((plan) => {
             const style = TIER_STYLES[plan.tier];
             const trialLabel = TRIAL_DURATIONS[plan.tier].label;
@@ -273,6 +295,9 @@ export default function DevenirVendeurPage() {
                   <span className="text-4xl font-bold tracking-tight">{plan.price.toLocaleString("fr-FR")}</span>
                   <span className="text-base font-semibold">FCFA</span>
                   <span className="text-sm text-ucao-muted dark:text-[#a8b8cc]">/ mois</span>
+                </p>
+                <p className="px-6 pt-1 text-sm text-ucao-muted dark:text-[#a8b8cc]">
+                  + frais de l&apos;opérateur Mobile Money (≈ 4 %), affichés avant validation
                 </p>
                 <ul className="mt-5 flex-1 space-y-3 border-t border-ucao-line px-6 pt-5 text-sm dark:border-[#2a3a52]">
                   <PlanFeature variant="yes">{plan.productLimit} produits maximum</PlanFeature>

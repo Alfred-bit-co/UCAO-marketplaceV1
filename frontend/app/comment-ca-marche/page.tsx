@@ -61,7 +61,7 @@ const sellerSteps: Step[] = [
   {
     Icon: Star,
     title: "Choisis ton palier",
-    text: "STANDARD, PREMIUM ou VIP : un abonnement mensuel, sans renouvellement automatique. Paiement par Mobile Money, via un prestataire de paiement agréé (bientôt disponible).",
+    text: "STANDARD, PREMIUM ou VIP : un abonnement mensuel, sans renouvellement automatique. Paiement par Mobile Money (Moov Money ou Mixx by Yas), via notre prestataire de paiement agréé. Des frais de l'opérateur (environ 4 %) s'ajoutent au prix et sont affichés avant la validation du paiement.",
   },
   {
     Icon: PackagePlus,
