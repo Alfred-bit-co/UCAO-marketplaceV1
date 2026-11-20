@@ -173,7 +173,10 @@ def payment_refusal(profile, is_named_admin=False):
     if not isinstance(profile, dict) or not profile:
         return "Profil introuvable. Reconnectez-vous, puis réessayez."
     if profile.get("is_active") is False:
-        return "Votre compte est suspendu : le paiement est impossible. Contactez l'équipe : ucaomarketplace2026@gmail.com."
+        return (
+            "Votre compte est suspendu : le paiement est impossible. "
+            "Contactez l'équipe : ucaomarketplace2026@gmail.com."
+        )
     if not str(profile.get("phone") or "").strip():
         return "Ajoutez votre numéro WhatsApp sur la page « Devenir vendeur » avant de payer."
     if profile.get("role") in ("VENDEUR", "ADMIN"):
