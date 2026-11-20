@@ -6,7 +6,13 @@ import { buildContentSecurityPolicy, ENFORCED_CSP, PAYMENT_API_ORIGIN, SUPABASE_
 const csp = buildContentSecurityPolicy();
 const directive = (name: string) => csp.split("; ").find((part) => part.startsWith(name + " ")) ?? "";
 
-describe("CSP (Report-Only)", () => {
+describe("CSP (appliquée)", () => {
+  it("est envoyée en mode bloquant, plus en Report-Only", () => {
+    const config = readFileSync(join(__dirname, "..", "next.config.ts"), "utf8");
+    expect(config).toContain('key: "Content-Security-Policy", value: buildContentSecurityPolicy()');
+    expect(config).not.toContain("Content-Security-Policy-Report-Only");
+  });
+
   it("autorise Google Identity Services et Cloudflare Turnstile (scripts et cadres)", () => {
     for (const name of ["script-src", "frame-src"]) {
       expect(directive(name)).toContain("https://accounts.google.com");
@@ -32,6 +38,13 @@ describe("CSP (Report-Only)", () => {
   it("applique dès maintenant la partie anti-clickjacking", () => {
     expect(ENFORCED_CSP).toContain("frame-ancestors 'none'");
     expect(ENFORCED_CSP).toContain("object-src 'none'");
+  });
+});
+
+describe("formulaire de connexion", () => {
+  it("s'envoie en POST : jamais de mot de passe dans l'adresse, même avant le chargement complet", () => {
+    const form = readFileSync(join(__dirname, "..", "components", "auth-form.tsx"), "utf8");
+    expect(form).toMatch(/<form [^>]*method="post"[^>]*onSubmit=\{submit\}/);
   });
 });
 

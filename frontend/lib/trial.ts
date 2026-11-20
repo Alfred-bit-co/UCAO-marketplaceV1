@@ -83,6 +83,10 @@ export async function startTrial(tier: SubscriptionTier): Promise<StartTrialResu
     if (text.includes("compte suspendu")) {
       return { ok: false, reason: "suspended", message: "Votre compte est suspendu. Contactez un administrateur." };
     }
+    // Règle ajoutée par PROPOSITION_20261120_audit_securite.sql (bloc A).
+    if (text.includes("verification requise")) {
+      return { ok: false, message: "Envoyez d'abord votre carte d'étudiant (ou faites valider votre profession) avant de démarrer l'essai." };
+    }
     console.error("START TRIAL ERROR:", error.message);
     return { ok: false, message: "Impossible de démarrer l'essai pour le moment. Réessayez dans un instant." };
   }

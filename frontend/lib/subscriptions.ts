@@ -105,8 +105,8 @@ export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promi
       return { ok: false, reason: response.status === 401 ? "not_authenticated" : "server_error", message: paymentErrorMessage(response.status, data?.error) };
     }
 
-    if (!data?.payment_url) {
-      console.error("SUBSCRIPTION ERROR: pas d'URL de paiement dans la réponse", data);
+    if (!isFedaPayCheckoutUrl(data?.payment_url)) {
+      console.error("SUBSCRIPTION ERROR: URL de paiement absente ou hors FedaPay", data);
       return { ok: false, reason: "server_error", message: "Le lien de paiement n'a pas pu être créé. Réessayez dans quelques minutes : vous n'avez pas été débité." };
     }
 
@@ -118,6 +118,20 @@ export async function initiateSubscriptionPayment(tier: SubscriptionTier): Promi
       reason: "network_error",
       message: "Impossible de joindre le service de paiement. Vérifiez votre connexion internet, puis réessayez.",
     };
+  }
+}
+
+/**
+ * Vrai seulement pour une page de paiement FedaPay en https (process.fedapay.com, sandbox-process.fedapay.com…).
+ * Même si le serveur de paiement était compromis, le navigateur ne serait jamais envoyé vers un faux site de paiement.
+ */
+export function isFedaPayCheckoutUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && (url.hostname === "fedapay.com" || url.hostname.endsWith(".fedapay.com")) && !url.username && !url.password;
+  } catch {
+    return false;
   }
 }
 

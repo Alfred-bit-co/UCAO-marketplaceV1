@@ -1,20 +1,20 @@
 import path from "node:path";
 import type { NextConfig } from "next";
-import { buildContentSecurityPolicy, ENFORCED_CSP, SUPABASE_HOST } from "./lib/security-headers";
+import { buildContentSecurityPolicy, SUPABASE_HOST } from "./lib/security-headers";
 
 // En-têtes de sécurité envoyés avec chaque page.
-// - La CSP complète est en mode « Report-Only » : le navigateur signale (console) ce qu'elle
-//   bloquerait, sans rien bloquer. À passer en « Content-Security-Policy » après vérification.
-// - Une CSP minimale, elle, est appliquée tout de suite : frame-ancestors, object-src et
-//   base-uri ne sont pas pris en compte en mode Report-Only.
+// La CSP complète est APPLIQUÉE (audit du 20/11/2026) : elle était en Report-Only depuis le 02/11,
+// sans violation relevée. Elle n'autorise que nos propres scripts, Google (connexion), Cloudflare
+// Turnstile, notre projet Supabase et le service de paiement : un script injecté ne peut ni se
+// charger depuis un autre site, ni envoyer des données ailleurs.
 const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
-  { key: "Content-Security-Policy", value: ENFORCED_CSP },
-  { key: "Content-Security-Policy-Report-Only", value: buildContentSecurityPolicy() },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+  { key: "Content-Security-Policy", value: buildContentSecurityPolicy() },
 ];
 
 const nextConfig: NextConfig = {
