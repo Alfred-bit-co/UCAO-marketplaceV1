@@ -2,7 +2,7 @@ import { STORAGE_BUCKET } from "./constants";
 import { isHexColor } from "./club-colors";
 import { SUPABASE_HOST } from "./security-headers";
 import { createClient, isSupabaseConfigured } from "./supabase";
-import type { Club, ClubAnnouncement, ClubManager, ClubSession, DeletedClub } from "./types";
+import type { Club, ClubAnnouncement, ClubManager, ClubSession, ClubTeamMember, DeletedClub } from "./types";
 import { isValidPhoneNumber, normalizeWhatsAppNumber } from "./utils";
 
 /**
@@ -29,6 +29,10 @@ export function friendlyClubError(error: SupabaseErrorLike): string {
   if (message.includes("USER_NOT_FOUND")) {
     return "Aucun compte n'utilise cet e-mail. Le représentant doit d'abord créer son compte sur la plateforme.";
   }
+  if (message.includes("NOT_STAFF")) return "Seuls les comptes inscrits comme « Personnel de l'UCAO » peuvent être ajoutés à l'équipe des clubs.";
+  if (message.includes("ACCOUNT_SUSPENDED")) return "Ce compte est suspendu : il ne peut pas gérer les clubs.";
+  if (message.includes("CANNOT_REMOVE_SELF")) return "Vous ne pouvez pas retirer votre propre accès. Demandez-le à l'administrateur.";
+  if (message.includes("NOT_ALLOWED")) return "Vous ne pouvez retirer que les personnes que vous avez vous-même ajoutées. Pour les autres, contactez l'administrateur.";
   if (code === "23505") {
     if (details.includes("clubs_color_unique_alive")) return "Cette couleur est déjà utilisée par un autre club. Choisissez-en une autre.";
     if (details.includes("clubs_name_unique_alive")) return "Un club porte déjà ce nom.";
@@ -519,6 +523,36 @@ export async function adminPurgeClub(id: string): Promise<{ error: string | null
   const { error } = await supabase.rpc("admin_purge_club", { p_club_id: id });
   if (error) {
     console.error("SUPABASE ERROR (adminPurgeClub):", error);
+    return { error: friendlyClubError(error) };
+  }
+  return { error: null };
+}
+
+// ===== Équipe des clubs (onglet « Équipe » de l'espace clubs) =====
+
+/**
+ * Gestionnaires actuels et comptes « Personnel de l'UCAO » qu'un gestionnaire peut ajouter.
+ * unavailable = true tant que le SQL PROPOSITION_20261120_equipe_clubs.sql n'est pas lancé.
+ */
+export async function listClubTeam(): Promise<{ data: ClubTeamMember[]; error: string | null; unavailable: boolean }> {
+  const supabase = createClient();
+  if (!supabase) return { data: [], error: NOT_CONFIGURED, unavailable: false };
+  const { data, error } = await supabase.rpc("club_list_team");
+  if (error) {
+    if (error.code === "PGRST202" || error.code === "42883") return { data: [], error: null, unavailable: true };
+    console.error("SUPABASE ERROR (listClubTeam):", error);
+    return { data: [], error: friendlyClubError(error), unavailable: false };
+  }
+  return { data: (data as unknown as ClubTeamMember[]) ?? [], error: null, unavailable: false };
+}
+
+/** Ajoute (enabled = true) ou retire un gestionnaire des clubs. Les droits sont vérifiés par la base. */
+export async function setClubTeamMember(userId: string, enabled: boolean): Promise<{ error: string | null }> {
+  const supabase = createClient();
+  if (!supabase) return { error: NOT_CONFIGURED };
+  const { error } = await supabase.rpc("club_set_manager", { p_user_id: userId, p_enabled: enabled });
+  if (error) {
+    console.error("SUPABASE ERROR (setClubTeamMember):", error);
     return { error: friendlyClubError(error) };
   }
   return { error: null };

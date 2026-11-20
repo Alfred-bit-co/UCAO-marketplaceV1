@@ -139,6 +139,20 @@ export type ClubManager = {
   added_at: string;
 };
 
+/** Ligne de l'onglet « Équipe » de l'espace clubs (fonction club_list_team). */
+export type ClubTeamMember = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  profession: string | null;
+  signed_up_at: string;
+  is_manager: boolean;
+  added_at: string | null;
+  /** Vrai si la personne connectée peut lui retirer l'accès (elle l'a ajoutée, ou c'est l'admin). */
+  can_remove: boolean;
+  is_me: boolean;
+};
+
 export type ProductCategory =
   | "nourriture"
   | "vetements"

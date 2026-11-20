@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CalendarDays, Eye, EyeOff, Mail, MessageSquareQuote, Pencil, Phone, Plus, Trash2, UsersRound } from "@/lib/icons";
+import { CalendarDays, Eye, EyeOff, Mail, MessageSquareQuote, Pencil, Phone, Plus, Trash2, UserPlus, UsersRound } from "@/lib/icons";
 import Image from "next/image";
 import { AnnouncementCard } from "@/components/clubs/announcement-card";
 import { AnnouncementForm } from "@/components/clubs/announcement-form";
 import { ClubForm } from "@/components/clubs/club-form";
+import { ClubTeam } from "@/components/clubs/club-team";
 import { ClubWeekCalendar } from "@/components/clubs/club-week-calendar";
 import { ConfirmDialog } from "@/components/clubs/confirm-dialog";
 import { SessionForm, type SessionDefaults } from "@/components/clubs/session-form";
@@ -22,12 +23,13 @@ import type { Club, ClubAnnouncement, ClubSession, Profile } from "@/lib/types";
 import { getCurrentProfile } from "@/lib/users";
 import { cn } from "@/lib/utils";
 
-type Tab = "clubs" | "programme" | "annonces";
+type Tab = "clubs" | "programme" | "annonces" | "equipe";
 
 const TABS: { key: Tab; label: string; Icon: typeof UsersRound }[] = [
   { key: "clubs", label: "Clubs", Icon: UsersRound },
   { key: "programme", label: "Programme", Icon: CalendarDays },
   { key: "annonces", label: "Annonces", Icon: MessageSquareQuote },
+  { key: "equipe", label: "Équipe", Icon: UserPlus },
 ];
 
 export default function EspaceClubsPage() {
@@ -214,7 +216,7 @@ export default function EspaceClubsPage() {
 
         <div className="sticky top-[72px] z-30 border-b border-ucao-line bg-white/95 backdrop-blur-sm dark:border-[#263d5c] dark:bg-[#0b1c31]/95 lg:top-[82px]">
           <div className="container-ucao">
-            <div role="tablist" aria-label="Sections de l'espace clubs" className="grid grid-cols-3">
+            <div role="tablist" aria-label="Sections de l'espace clubs" className="grid grid-cols-4">
               {TABS.map(({ key, label, Icon }) => (
                 <button
                   key={key}
@@ -223,7 +225,7 @@ export default function EspaceClubsPage() {
                   aria-selected={tab === key}
                   onClick={() => setTab(key)}
                   className={cn(
-                    "inline-flex min-h-12 items-center justify-center gap-2 border-b-2 text-sm font-semibold transition",
+                    "inline-flex min-h-12 items-center justify-center gap-1.5 border-b-2 text-xs font-semibold transition sm:gap-2 sm:text-sm",
                     tab === key ? "border-ucao-red text-ucao-red dark:text-[#ff9aa0]" : "border-transparent text-ucao-muted hover:text-ucao-ink dark:hover:text-white",
                   )}
                 >
@@ -341,6 +343,8 @@ export default function EspaceClubsPage() {
               )}
             </article>
           )}
+
+          {tab === "equipe" && <ClubTeam />}
         </section>
 
         <p className="container-ucao mt-6 text-xs text-ucao-muted">
